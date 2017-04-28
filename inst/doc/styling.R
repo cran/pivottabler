@@ -253,8 +253,8 @@ pt$theme <- theme
 # evaluate the pivot to generate the cells
 pt$evaluatePivot()
 # apply an additional highlight to one cell (3rd row, 2nd column)
-cell <- pt$cells$getCell(3, 2)
-cell$style <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFFF00"))
+cells <- pt$getCells(3, 2)
+cells[[1]]$style <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFFF00"))
 # draw the pivot table
 pt$renderPivot(styleNamePrefix="t5")
 

@@ -101,8 +101,7 @@ library(lubridate)
 
 # derive some additional data
 trains <- mutate(bhmtrains,
-   GbttDateTime=as.POSIXct(ifelse(is.na(GbttArrival), GbttDeparture, GbttArrival),
-                       origin = "1970-01-01"),
+   GbttDateTime=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
    GbttMonth=make_date(year=year(GbttDateTime), month=month(GbttDateTime), day=1),
    ArrivalDelta=difftime(ActualArrival, GbttArrival, units="mins"),
    ArrivalDelay=ifelse(ArrivalDelta<0, 0, ArrivalDelta),
@@ -130,8 +129,7 @@ library(lubridate)
 
 # derive some additional data
 trains <- mutate(bhmtrains,
-   GbttDateTime=as.POSIXct(ifelse(is.na(GbttArrival), GbttDeparture, GbttArrival),
-                           origin = "1970-01-01"),
+   GbttDateTime=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
    GbttDate=make_date(year=year(GbttDateTime), month=month(GbttDateTime), day=day(GbttDateTime)),
    GbttMonth=make_date(year=year(GbttDateTime), month=month(GbttDateTime), day=1),
    ArrivalDelta=difftime(ActualArrival, GbttArrival, units="mins"),
@@ -174,8 +172,7 @@ library(lubridate)
 
 # derive some additional data
 trains <- mutate(bhmtrains,
-   GbttDateTime=as.POSIXct(ifelse(is.na(GbttArrival), GbttDeparture, GbttArrival),
-                           origin = "1970-01-01"),
+   GbttDateTime=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
    GbttDate=make_date(year=year(GbttDateTime), month=month(GbttDateTime), day=day(GbttDateTime)),
    GbttMonth=make_date(year=year(GbttDateTime), month=month(GbttDateTime), day=1),
    ArrivalDelta=difftime(ActualArrival, GbttArrival, units="mins"),
@@ -308,6 +305,32 @@ pt$defineCalculation(calculationName="DelayedTrains", dataName="trains",
 pt$defineCalculation(calculationName="CancelledTrains", dataName="cancellations", 
                      caption="Cancelled", 
                      summariseExpression="sum(CancelledInBirmingham, na.rm=TRUE)")
+pt$renderPivot()
+
+## ---- warning=FALSE------------------------------------------------------
+library(dplyr)
+library(lubridate)
+library(pivottabler)
+
+# get the date of each train and whether that date is a weekday or weekend
+trains <- bhmtrains %>%
+  mutate(GbttDateTime=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
+         DayNumber=wday(GbttDateTime),
+         WeekdayOrWeekend=ifelse(DayNumber %in% c(1,7), "Weekend", "Weekday"))
+
+# render the pivot table
+pt <- PivotTable$new()
+pt$addData(trains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addRowDataGroups("TOC")
+weekendFilter <- PivotFilters$new(pt, variableName="WeekdayOrWeekend", values="Weekend")
+pt$defineCalculation(calculationName="WeekendTrains", summariseExpression="n()", 
+                     filters=weekendFilter, visible=FALSE)
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()", visible=FALSE)
+pt$defineCalculation(calculationName="WeekendTrainsPercentage",
+                     type="calculation", basedOn=c("WeekendTrains", "TotalTrains"),
+                     format="%.1f %%",
+                     calculationExpression="values$WeekendTrains/values$TotalTrains*100")
 pt$renderPivot()
 
 ## ---- warning=FALSE------------------------------------------------------

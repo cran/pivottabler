@@ -1,13 +1,14 @@
 #' A class that computes the value of a cell.
 #'
-#' The PivotCalculator class has various functions and methods that assist with calculating the value of a cell in a pivot table.
+#' The PivotCalculator class has various functions and methods that assist with
+#' calculating the value of a cell in a pivot table.
 #'
 #' @docType class
 #' @importFrom R6 R6Class
 #' @import dplyr
 #' @import jsonlite
-#' @keywords calculation
-#' @return Object of \code{\link{R6Class}} with properties and methods that help calculate the value of a pivot table cell.
+#' @return Object of \code{\link{R6Class}} with properties and methods that help
+#'   calculate the value of a pivot table cell.
 #' @format \code{\link{R6Class}} object.
 #' @examples
 #' # This class should only be created by the pivot table.
@@ -16,27 +17,63 @@
 
 #' @section Methods:
 #' \describe{
-#'   \item{Documentation}{For more complete explanations and examples please see the extensive vignettes supplied with this package.}
-#'   \item{\code{new(...)}}{Create a new pivot table calculator, specifying the field value documented above.}
+#'   \item{Documentation}{For more complete explanations and examples please see
+#'   the extensive vignettes supplied with this package.}
+#'   \item{\code{new(...)}}{Create a new pivot table calculator, specifying the
+#'   field value documented above.}
 #'
-#'   \item{\code{getDataFrame(dataName)}}{Gets a data frame with the specified name from the data frames added to the pivot table.}
-#'   \item{\code{getCalculationGroup(calculationGroupName)}}{Gets a calculation group with the specified name from the calculation groups added to the pivot table.}
-#'   \item{\code{getCalculation(calculationGroupName, calculationName)}}{Gets a calculation with the specified name and group from the calculation groups added to the pivot table.}
-#'   \item{\code{newFilter(variableName, values)}}{Creates a new PivotFilter object associated with the specified data frame column name and column values.}
-#'   \item{\code{newFilters(variableName, values)}}{Creates a new PivotFilters object associated with the specified data frame column name and column values.}
-#'   \item{\code{setFilters(filters1, filters2, action="replace")}}{Combines two PivotFilters objects (e.g. to intersect the filters coming from the row and column headings for a particular cell).}
-#'   \item{\code{setFilterValues(filters, variableName, values, action="replace")}}{Updates a PivotFilters object based on a PivotFilter object (e.g. to union the filter criteria arising from multiple row headers).}
-#'   \item{\code{getFilteredDataFrame(dataFrame, filters)}}{Applies a PivotFilters object to a data frame, returning a new data frame.}
-#'   \item{\code{getDistinctValues(dataFrame, variableName)}}{Gets the distinct values from the specified column of a data frame.}
-#'   \item{\code{formatValue(value, format)}}{Formats a numerical value using either an sprintf string, a list of arguments for the base::format() function or using a custom R function.}
-#'   \item{\code{getSingleValue(dataFrame, valueName)}}{Gets a single value from a data frame.  Essentially the same as the getSummaryValue() function but with no aggregation.}
-#'   \item{\code{getSummaryValue(dataFrame, summaryName, summariseExpression)}}{Aggregates a data frame using the dplyr::summarise() function to calculate and return an aggregate value.}
-#'   \item{\code{evaluateSingleValue(dataFrame, rowColFilters, calcFilters, valueName, format, noDataValue, noDataCaption)}}{A wrapper for getSingleValue() which performs filtering and handles edge cases.}
-#'   \item{\code{evaluateSummariseExpression(dataFrame, rowColFilters, calcFilters, summaryName, summariseExpression, format, noDataValue, noDataCaption)}}{A wrapper for getSummaryValue() which performs filtering and handles edge cases.}
-#'   \item{\code{evaluateCalculationExpression(values, calculationExpression, format, noDataValue, noDataCaption)}}{Evaluates an R expression in order to combine the results of other calculations.}
-#'   \item{\code{evaluateCalculateFunction(rowColFilters, calcFilters, calculationFunction, format, baseValues, cell)}}{Invokes a user-provided custom R function to aggregate data and perform calculations.}
-#'   \item{\code{evaluateNamedCalculation(calculationName, calculationGroupName, rowColFilters, cell)}}{Invokes the relevant calculation function above based upon the calculation type.}
-#'   \item{\code{evaluateCell(cell)}}{Top-level calculation function responsible for calculating the value of a pivot table cell.}
+#'   \item{\code{getDataFrame(dataName)}}{Gets a data frame with the specified
+#'   name from the data frames added to the pivot table.}
+#'   \item{\code{getCalculationGroup(calculationGroupName)}}{Gets a calculation
+#'   group with the specified name from the calculation groups added to the
+#'   pivot table.}
+#'   \item{\code{getCalculation(calculationGroupName, calculationName)}}{Gets a
+#'   calculation with the specified name and group from the calculation groups
+#'   added to the pivot table.}
+#'   \item{\code{newFilter(variableName, values)}}{Creates a new PivotFilter
+#'   object associated with the specified data frame column name and column
+#'   values.}
+#'   \item{\code{newFilters(variableName, values)}}{Creates a new PivotFilters
+#'   object associated with the specified data frame column name and column
+#'   values.}
+#'   \item{\code{setFilters(filters1, filters2, action="replace")}}{Combines two
+#'   PivotFilters objects (e.g. to intersect the filters coming from the row and
+#'   column headings for a particular cell).}
+#'   \item{\code{setFilterValues(filters, variableName, values,
+#'   action="replace")}}{Updates a PivotFilters object based on a PivotFilter
+#'   object (e.g. to union the filter criteria arising from multiple row
+#'   headers).}
+#'   \item{\code{getFilteredDataFrame(dataFrame, filters)}}{Applies a
+#'   PivotFilters object to a data frame, returning a new data frame.}
+#'   \item{\code{getDistinctValues(dataFrame, variableName)}}{Gets the distinct
+#'   values from the specified column of a data frame.}
+#'   \item{\code{formatValue(value, format)}}{Formats a numerical value using
+#'   either an sprintf string, a list of arguments for the base::format()
+#'   function or using a custom R function.}
+#'   \item{\code{getSingleValue(dataFrame, valueName)}}{Gets a single value from
+#'   a data frame.  Essentially the same as the getSummaryValue() function but
+#'   with no aggregation.}
+#'   \item{\code{getSummaryValue(dataFrame, summaryName,
+#'   summariseExpression)}}{Aggregates a data frame using the dplyr::summarise()
+#'   function to calculate and return an aggregate value.}
+#'   \item{\code{evaluateSingleValue(dataFrame, rowColFilters, calcFilters,
+#'   valueName, format, noDataValue, noDataCaption)}}{A wrapper for
+#'   getSingleValue() which performs filtering and handles edge cases.}
+#'   \item{\code{evaluateSummariseExpression(dataFrame, rowColFilters,
+#'   calcFilters, summaryName, summariseExpression, format, noDataValue,
+#'   noDataCaption)}}{A wrapper for getSummaryValue() which performs filtering
+#'   and handles edge cases.}
+#'   \item{\code{evaluateCalculationExpression(values, calculationExpression,
+#'   format, noDataValue, noDataCaption)}}{Evaluates an R expression in order to
+#'   combine the results of other calculations.}
+#'   \item{\code{evaluateCalculateFunction(rowColFilters, calcFilters,
+#'   calculationFunction, format, baseValues, cell)}}{Invokes a user-provided
+#'   custom R function to aggregate data and perform calculations.}
+#'   \item{\code{evaluateNamedCalculation(calculationName, calculationGroupName,
+#'   rowColFilters, cell)}}{Invokes the relevant calculation function above
+#'   based upon the calculation type.}
+#'   \item{\code{evaluateCell(cell)}}{Top-level calculation function responsible
+#'   for calculating the value of a pivot table cell.}
 #' }
 
 PivotCalculator <- R6::R6Class("PivotCalculator",
@@ -128,6 +165,7 @@ PivotCalculator <- R6::R6Class("PivotCalculator",
      if (filters$count > 0)
      {
        filterCmd <- NULL
+       filterCount <- 0
        for(j in 1:length(filters$filters)) {
          filter <- filters$filters[[j]]
          if(is.null(filter$variableName)) stop("PivotCalculator$getFilteredDataFrame(): filter$variableName must not be null", call. = FALSE)
@@ -137,10 +175,13 @@ PivotCalculator <- R6::R6Class("PivotCalculator",
          if(length(filter$values)>0) {
            # %in% handles NA correctly for our use-case, i.e. NA %in% NA returns TRUE, not NA
            filterCmd <- paste0(filterCmd, "(", filter$variableName, " %in% filters$filters[[", j, "]]$values)")
+           filterCount <- filterCount + 1
          }
        }
-       filterCmd <- paste0("data <- dplyr::filter(data,", filterCmd, ")")
-       eval(parse(text=filterCmd))
+       if(filterCount > 0) {
+         filterCmd <- paste0("data <- dplyr::filter(data,", filterCmd, ")")
+         eval(parse(text=filterCmd))
+       }
      }
      private$p_parentPivot$message("PivotCalculator$getFilteredDataFrame", "Got filtered data frame.")
      return(invisible(data))
@@ -260,7 +301,7 @@ PivotCalculator <- R6::R6Class("PivotCalculator",
      }
      else {
        filters <- rowColFilters$getCopy()
-       if(!is.null(calcFilters)) { filters <- filters$setFilters(filters=calcFilters) }
+       if(!is.null(calcFilters)) filters$setFilters(filters=calcFilters)
      }
      # if we have some filters, filter the data frame
      if(!is.null(filters)) {
@@ -304,7 +345,7 @@ PivotCalculator <- R6::R6Class("PivotCalculator",
      }
      else {
        filters <- rowColFilters$getCopy()
-       if(!is.null(calcFilters)) { filters <- filters$setFilters(filters=calcFilters) }
+       if(!is.null(calcFilters)) filters$setFilters(filters=calcFilters)
      }
      # if we have some filters, filter the data frame
      if(!is.null(filters)) {
@@ -377,7 +418,7 @@ PivotCalculator <- R6::R6Class("PivotCalculator",
      }
      else {
        filters <- rowColFilters$getCopy()
-       if(!is.null(calcFilters)) { filters <- filters$setFilters(filters=calcFilters) }
+       if(!is.null(calcFilters)) filters$setFilters(filters=calcFilters)
      }
      # calculate the value by calling the calculation function
      rv <- calculationFunction(pivotCalculator=self, netFilters=filters, format=format, baseValues=baseValues, cell=cell)

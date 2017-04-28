@@ -1,13 +1,15 @@
 #' A class that defines a set of filter conditions
 #'
-#' The PivotFilters class allows multiple filter conditions relating to different data frame columns to be combined, i.e. a PivotFilters object can contain multiple \code{\link{PivotFilter}} objects.
+#' The PivotFilters class allows multiple filter conditions relating to
+#' different data frame columns to be combined, i.e. a PivotFilters object can
+#' contain multiple \code{\link{PivotFilter}} objects.
 #'
 #' @docType class
 #' @importFrom R6 R6Class
 #' @import jsonlite
 #' @export
-#' @keywords filter
-#' @return Object of \code{\link{R6Class}} with properties and methods that define a set of filter conditions.
+#' @return Object of \code{\link{R6Class}} with properties and methods that
+#'   define a set of filter conditions.
 #' @format \code{\link{R6Class}} object.
 #' @examples
 #' pt <- PivotTable$new()
@@ -20,23 +22,41 @@
 #' filters$setFilter(filter)
 #' # filters now contains criteria for both Year and Country
 #' # Now add another filter, this time via an alternative method
-#' filters$setFilterValues(variableName="Product", values="Cadbury Dairy Milk Chocolate 100g")
+#' filters$setFilterValues(variableName="Product", values="Cadbury Dairy Milk
+#' Chocolate 100g")
 #' # filters now contains criteria for Year, Country and Product
 #' @field parentPivot Owning pivot table.
 
 #' @section Methods:
 #' \describe{
-#'   \item{Documentation}{For more complete explanations and examples please see the extensive vignettes supplied with this package.}
-#'   \item{\code{new(...)}}{Create a new pivot calculation, specifying the field values documented above.}
+#'   \item{Documentation}{For more complete explanations and examples please see
+#'   the extensive vignettes supplied with this package.}
+#'   \item{\code{new(...)}}{Create a new pivot calculation, specifying the field
+#'   values documented above.}
 #'
-#'   \item{\code{setFilters(filters, action="replace"}}{Update the value of this PivotFilters object with the filters from the specified PivotFilters object, either unioning, intersecting or replacing the filter criteria.}
-#'   \item{\code{setFilter(filter, action="replace")}}{Update the value of this PivotFilters object with the specified PivotFilter object, either unioning, intersecting or replacing the filter criteria.}
-#'   \item{\code{setFilterValues(variableName=NULL, values=NULL, action="replace")}}{Update the value of this PivotFilters object with the specified criteria, either unioning, intersecting or replacing the filter criteria.}
-#'   \item{\code{addFilter()}}{Directly add a PivotFilter object to this PivotFilters object.}
+#'   \item{\code{getFilter(variableName=NULL)}}{Find a filter with the specified
+#'   variable name.}
+#'   \item{\code{isFilterMatch(variableNames=NULL, variableValues=NULL)}}{Tests
+#'   whether these filters match the specified criteria.}
+#'   \item{\code{setFilters(filters=NULL, action="replace")}}{Update the value of this
+#'   PivotFilters object with the filters from the specified PivotFilters
+#'   object, either unioning, intersecting or replacing the filter criteria.}
+#'   \item{\code{setFilter(filter=NULL, action="replace")}}{Update the value of this
+#'   PivotFilters object with the specified PivotFilter object, either unioning,
+#'   intersecting or replacing the filter criteria.}
+#'   \item{\code{setFilterValues(variableName=NULL, values=NULL,
+#'   action="replace")}}{Update the value of this PivotFilters object with the
+#'   specified criteria, either unioning, intersecting or replacing the filter
+#'   criteria.}
+#'   \item{\code{addFilter()}}{Directly add a PivotFilter object to this
+#'   PivotFilters object.}
 #'   \item{\code{getCopy()}}{Get a copy of this set of filters.}
-#'   \item{\code{asList()}}{Get a list representation of this PivotFilters object.}
-#'   \item{\code{asJSON()}}{Get a JSON representation of this PivotFilters object.}
-#'   \item{\code{asString(includeVariableName=TRUE, seperator=", ")}}{Get a text representation of this PivotFilters object.}
+#'   \item{\code{asList()}}{Get a list representation of this PivotFilters
+#'   object.}
+#'   \item{\code{asJSON()}}{Get a JSON representation of this PivotFilters
+#'   object.}
+#'   \item{\code{asString(includeVariableName=TRUE, seperator=", ")}}{Get a text
+#'   representation of this PivotFilters object.}
 #' }
 
 PivotFilters <- R6::R6Class("PivotFilters",
@@ -54,20 +74,121 @@ PivotFilters <- R6::R6Class("PivotFilters",
       }
       private$p_parentPivot$message("PivotFilters$new", "Created new Pivot Filters.")
     },
-    setFilters = function(filters, action="replace") {
+    getFilter = function(variableName=NULL) {
+      checkArgument("PivotFilters", "initialize", variableName, missing(variableName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+      private$p_parentPivot$message("PivotFilters$getFilter", "Getting filter...", list(variableName=variableName))
+      if(length(private$p_filters)>0) {
+        for(i in 1:length(private$p_filters)) {
+          if(private$p_filters[[i]]$variableName==variableName) {
+            return(invisible(private$p_filters[[i]]))
+          }
+        }
+      }
+      private$p_parentPivot$message("PivotFilters$getFilter", "Got filter.")
+      return(invisible())
+    },
+    isFilterMatch = function(matchMode="simple", variableNames=NULL, variableValues=NULL) {
+      checkArgument("PivotFilters", "isFilterMatch", matchMode, missing(matchMode), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("simple", "combinations"))
+      checkArgument("PivotFilters", "isFilterMatch", variableNames, missing(variableNames), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+      checkArgument("PivotFilters", "isFilterMatch", variableValues, missing(variableValues), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", listElementsMustBeAtomic=TRUE)
+      private$p_parentPivot$message("PivotFilters$isFilterMatch", "Checking if is filter match...")
+      # Summary
+      # variableNames can be a vector (i.e. more than one item specified)
+      # variableValues can be a vector (i.e. more than one item specified)
+      # For matchMode=simple, a single match is good enough, i.e. any given data group
+      # must match only one variableNames element and only one variableValues element.
+      # For matchMode=combinations, any given data group must match all of the
+      # specified variablesNames and variableValues
+      if(!is.null(variableNames)) {
+        matched <- FALSE
+        if(length(variableNames) > 0) {
+          for(i in 1:length(variableNames)) {
+            filter <- self$getFilter(variableNames[i])
+            if((matchMode=="simple")&&(!is.null(filter))) {
+              matched <- TRUE
+              break # i.e. one match from variableNames is enough
+            }
+            if((matchMode=="combinations")&&(is.null(filter))) return(invisible(FALSE))
+          }
+          if((matchMode=="simple")&&(!matched)) return(invisible(FALSE))
+        }
+      }
+      if(is.null(variableValues)) {
+        if(matchMode=="simple") return(invisible(TRUE))
+      }
+      else {
+        if(length(variableValues) > 0) {
+          varNames <- names(variableValues)
+          for(i in 1:length(varNames)) {
+            filter <- self$getFilter(varNames[i])
+            varValues <- variableValues[[i]]
+            # special cases
+            if("**" %in% varValues) {
+              # asterix means the filter should exist and the filter values should be null
+              if(is.null(filter)) {
+                if(matchMode=="simple") next
+                return(invisible(FALSE))
+              }
+              if(is.null(filter$values)) {
+                if(matchMode=="simple") return(invisible(TRUE))
+                else next
+              }
+              else return(invisible(FALSE))
+            }
+            if("!*" %in% varValues) {
+              # asterix means the filter should exist and  the filter values should not be null
+              if(is.null(filter)) {
+                if(matchMode=="simple") next
+                return(invisible(FALSE))
+              }
+              if(is.null(filter$values)) {
+                if(matchMode=="simple") next
+                else return(invisible(FALSE))
+              }
+              else {
+                if(matchMode=="simple") return(invisible(TRUE))
+                next
+              }
+            }
+            # normal values criteria
+            if(is.null(filter)) {
+              if(matchMode=="simple") next
+              else return(invisible(FALSE))
+            }
+            if(is.null(varValues)) next
+            if(length(varValues)==0) next
+            intrsct <- intersect(filter$values, varValues)
+            if(is.null(intrsct)) {
+              if(matchMode=="simple") next
+              else return(invisible(FALSE))
+            }
+            if(length(intrsct)==0) {
+              if(matchMode=="simple") next
+              else return(invisible(FALSE))
+            }
+            if((length(intrsct)>0)&&(matchMode=="simple")) {
+              return(invisible(TRUE)) # i.e. a single match is good enough
+            }
+          }
+        }
+      }
+      private$p_parentPivot$message("PivotFilters$isFilterMatch", "Checked if is filter match.")
+      if(matchMode=="simple") return(invisible(FALSE))
+      else return(invisible(TRUE))
+    },
+    setFilters = function(filters=NULL, action="replace") {
       checkArgument("PivotFilters", "setFilters", filters, missing(filters), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotFilters")
       checkArgument("PivotFilters", "setFilters", action, missing(action), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("union", "intersect", "replace"))
       private$p_parentPivot$message("PivotFilters$setFilters", "Setting filters...", list(action=action, filters=filters$asString()))
       if(length(filters$filters)>0) {
-        for(i in 1:length(filters$filters))
-        {
+        for(i in 1:length(filters$filters)) {
           self$setFilter(filters$filters[[i]], action)
         }
       }
       private$p_parentPivot$message("PivotFilters$setFilters", "Set filters.")
       return(invisible())
     },
-    setFilter = function(filter, action="replace") {
+    setFilter = function(filter=NULL, action="replace") {
       checkArgument("PivotFilters", "setFilter", filter, missing(filter), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotFilter")
       checkArgument("PivotFilters", "setFilters", action, missing(action), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("union", "intersect", "replace"))
       private$p_parentPivot$message("PivotFilters$setFilters", "Setting filter...", list(action=action, filter=filter$asString()))
@@ -101,7 +222,7 @@ PivotFilters <- R6::R6Class("PivotFilters",
       private$p_parentPivot$message("PivotFilters$setFilterValues", "Set filter values.")
       return(invisible())
     },
-    addFilter = function(filter) {
+    addFilter = function(filter=NULL) {
       checkArgument("PivotFilters", "addFilter", filter, missing(filter), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotFilter")
       private$p_parentPivot$message("PivotFilters$addFilter", "Adding filter...", list(filter=filter$asString()))
 

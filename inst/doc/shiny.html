@@ -12,7 +12,7 @@
 
 <meta name="author" content="Chris Bailiss" />
 
-<meta name="date" content="2017-03-27" />
+<meta name="date" content="2017-04-28" />
 
 <title></title>
 
@@ -68,11 +68,11 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 
 
-<h1 class="title toc-ignore"><ol start="5" style="list-style-type: decimal">
+<h1 class="title toc-ignore"><ol start="10" style="list-style-type: decimal">
 <li>Shiny</li>
 </ol></h1>
 <h4 class="author"><em>Chris Bailiss</em></h4>
-<h4 class="date"><em>2017-03-27</em></h4>
+<h4 class="date"><em>2017-04-28</em></h4>
 
 
 
@@ -191,8 +191,7 @@ trains &lt;-<span class="st"> </span>bhmtrains <span class="op">%&gt;%</span>
          GbttArrival, ActualArrival, GbttDeparture, ActualDeparture,
          <span class="dt">Destination=</span>StationName.y, DestinationGbttArrival, DestinationActualArrival) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">mutate</span>(<span class="dt">Status=</span><span class="kw">recode</span>(Status, <span class="st">&quot;A&quot;</span>=<span class="st">&quot;Normal&quot;</span>, <span class="st">&quot;C&quot;</span>=<span class="st">&quot;Cancelled&quot;</span>, <span class="st">&quot;R&quot;</span>=<span class="st">&quot;Reinstated&quot;</span>),
-         <span class="dt">GbttDateTime=</span><span class="kw">as.POSIXct</span>(<span class="kw">ifelse</span>(<span class="kw">is.na</span>(GbttArrival), GbttDeparture, GbttArrival),
-                                 <span class="dt">origin =</span> <span class="st">&quot;1970-01-01&quot;</span>),
+         <span class="dt">GbttDateTime=</span><span class="kw">if_else</span>(<span class="kw">is.na</span>(GbttArrival), GbttDeparture, GbttArrival),
          <span class="dt">GbttHourOfDay=</span><span class="kw">hour</span>(GbttDateTime),
          <span class="dt">GbttDate=</span><span class="kw">make_date</span>(<span class="dt">year=</span><span class="kw">year</span>(GbttDateTime), <span class="dt">month=</span><span class="kw">month</span>(GbttDateTime), <span class="dt">day=</span><span class="kw">day</span>(GbttDateTime)),
          <span class="dt">GbttMonth=</span><span class="kw">make_date</span>(<span class="dt">year=</span><span class="kw">year</span>(GbttDateTime), <span class="dt">month=</span><span class="kw">month</span>(GbttDateTime), <span class="dt">day=</span><span class="dv">1</span>),
@@ -276,7 +275,12 @@ server &lt;-<span class="st"> </span><span class="cf">function</span>(input, out
 <li><a href="introduction.html">Introduction</a></li>
 <li><a href="datagroups.html">Data Groups</a></li>
 <li><a href="calculations.html">Calculations</a></li>
+<li><a href="outputs.html">Outputs</a></li>
+<li><a href="latexoutput.html">Latex Output</a></li>
 <li><a href="styling.html">Styling</a></li>
+<li><a href="findingandformatting.html">Finding and Formatting</a></li>
+<li><a href="cellcontext.html">Cell Context</a></li>
+<li><a href="irregularlayout.html">Irregular Layout</a></li>
 <li><a href="shiny.html">Shiny</a></li>
 </ol>
 </div>
@@ -288,7 +292,7 @@ server &lt;-<span class="st"> </span><span class="cf">function</span>(input, out
   (function () {
     var script = document.createElement("script");
     script.type = "text/javascript";
-    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
     document.getElementsByTagName("head")[0].appendChild(script);
   })();
 </script>

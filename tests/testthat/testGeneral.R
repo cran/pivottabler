@@ -10,10 +10,22 @@ context("General tests")
 # warning:         expect_warning()
 # errors:          expect_error()
 
-checkDigestAvailable <- function() {
-  if(!requireNamespace("digest", quietly = TRUE)) skip("digest package not available")
+escapeString <- function(s) {
+  t <- gsub("(\\\\)", "\\\\\\\\", s)
+  t <- gsub("(\n)", "\\\\n", t)
+  t <- gsub("(\r)", "\\\\r", t)
+  t <- gsub("(\")", "\\\\\"", t)
+  return(t)
 }
 
+prepStr <- function(s) {
+  t <- escapeString(s)
+  u <- eval(parse(text=paste0("\"", t, "\"")))
+  if(s!=u) stop("Unable to escape string!")
+  t <- paste0("\thtml <- \"", t, "\"")
+  utils::writeClipboard(t)
+  return(invisible())
+}
 
 test_that("bhmtrains basic pivot total", {
 
@@ -33,8 +45,6 @@ test_that("bhmtrains basic pivot total", {
 
 test_that("smoke tests:  bhmtrains basic pivot values", {
 
-  checkDigestAvailable()
-
   library(pivottabler)
   pt <- PivotTable$new()
   pt$addData(bhmtrains)
@@ -43,16 +53,15 @@ test_that("smoke tests:  bhmtrains basic pivot values", {
   pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
   pt$evaluatePivot()
   # pt$renderPivot()
-  # digest::digest(pt$cells$asMatrix(), algo="md5")
+  # cat(paste(as.vector(pt$cells$asMatrix()), sep=", ", collapse=", "))
+  res <- c(3079, 22865, 14487, 8594, 49025, 830, 63, 33792, NA, 34685, 3909, 22928, 48279, 8594, 83710)
 
-  expect_identical(digest::digest(pt$cells$asMatrix(), algo="md5"), "98734d1163b8eaf2de0903292effe2fc")
+  expect_equal(pt$cells$asMatrix(), matrix(res, nrow=5))
 })
 
 
 test_that("smoke tests:  bhmtrains basic pivot html", {
 
-  checkDigestAvailable()
-
   library(pivottabler)
   pt <- PivotTable$new()
   pt$addData(bhmtrains)
@@ -61,333 +70,126 @@ test_that("smoke tests:  bhmtrains basic pivot html", {
   pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
   pt$evaluatePivot()
   # pt$renderPivot()
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+  html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
 
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "69abeaf38dc735daeddeae4d94d3ed59")
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
 
-test_that("smoke tests:  basic layout tests:  empty pivot", {
-
-  checkDigestAvailable()
-
-  library(pivottabler)
-  pt <- PivotTable$new()
-  pt$evaluatePivot()
-  # pt$renderPivot()
-  # digest::digest(pt$getHtml(), algo="md5")
-
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "cc73c556d32becd5b2658c8cfa03ed52")
-})
-
-
-test_that("basic layout tests:  empty pivot plus data", {
-
-  checkDigestAvailable()
-
-  library(pivottabler)
-  pt <- PivotTable$new()
-  pt$addData(bhmtrains)
-  pt$evaluatePivot()
-  # pt$renderPivot()
-  # digest::digest(pt$getHtml(), algo="md5")
-
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "cc73c556d32becd5b2658c8cfa03ed52")
-})
-
-
-test_that("basic layout tests:  just a total", {
-
-  checkDigestAvailable()
-
-  library(pivottabler)
-  pt <- PivotTable$new()
-  pt$addData(bhmtrains)
-  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-  pt$evaluatePivot()
-  # pt$renderPivot()
-  # sum(pt$cells$asMatrix())
-  # digest::digest(pt$getHtml(), algo="md5")
-
-  expect_equal(sum(pt$cells$asMatrix()), 83710)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "c50ee91df312ff77cfa7220aef5dcd97")
-})
-
-
-test_that("basic layout tests:  two measures", {
-
-  checkDigestAvailable()
-
-  library(pivottabler)
-  pt <- PivotTable$new()
-  pt$addData(bhmtrains)
-  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-  pt$defineCalculation(calculationName="MaxSchedSpeed", summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
-  pt$evaluatePivot()
-  # pt$renderPivot()
-  # sum(pt$cells$asMatrix())
-  # digest::digest(pt$getHtml(), algo="md5")
-
-  expect_equal(sum(pt$cells$asMatrix()), 83835)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "f519336add21aeeef3b764e228a53cfe")
-})
-
-
-test_that("basic layout tests:  rows only", {
-
-  checkDigestAvailable()
-
-  library(pivottabler)
-  pt <- PivotTable$new()
-  pt$addData(bhmtrains)
-  pt$addRowDataGroups("TOC")
-  pt$evaluatePivot()
-  # pt$renderPivot()
-  # digest::digest(pt$getHtml(), algo="md5")
-
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "4535ececc842d2771f7246e86d70f2fb")
-})
-
-
-test_that("basic layout tests:  rows plus total", {
-
-  checkDigestAvailable()
-
-  library(pivottabler)
-  pt <- PivotTable$new()
-  pt$addData(bhmtrains)
-  pt$addRowDataGroups("TOC")
-  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-  pt$evaluatePivot()
-  # pt$renderPivot()
-  # sum(pt$cells$asMatrix())
-  # digest::digest(pt$getHtml(), algo="md5")
-
-  expect_equal(sum(pt$cells$asMatrix()), 167420)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "ffb1fbc40f2638a360e0a97d00fc42fa")
-})
-
-
-test_that("basic layout tests:  rows plus two measures", {
-
-  checkDigestAvailable()
-
-  library(pivottabler)
-  pt <- PivotTable$new()
-  pt$addData(bhmtrains)
-  pt$addRowDataGroups("TOC")
-  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-  pt$defineCalculation(calculationName="MaxSchedSpeed", summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
-  pt$evaluatePivot()
-  # pt$renderPivot()
-  # sum(pt$cells$asMatrix())
-  # digest::digest(pt$getHtml(), algo="md5")
-
-  expect_equal(sum(pt$cells$asMatrix()), 167995)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "db60e2cf41541eae3f3ee72611e1e211")
-})
-
-
-test_that("basic layout tests:  columns only", {
-
-  checkDigestAvailable()
-
-  library(pivottabler)
-  pt <- PivotTable$new()
-  pt$addData(bhmtrains)
-  pt$addColumnDataGroups("TOC")
-  pt$evaluatePivot()
-  # pt$renderPivot()
-  # digest::digest(pt$getHtml(), algo="md5")
-
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "f520ed3e8bb111f39ed33694a1cbfbdf")
-})
-
-
-test_that("basic layout tests:  columns plus total", {
-
-  checkDigestAvailable()
-
-  library(pivottabler)
-  pt <- PivotTable$new()
-  pt$addData(bhmtrains)
-  pt$addColumnDataGroups("TOC")
-  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-  pt$evaluatePivot()
-  # pt$renderPivot()
-  # sum(pt$cells$asMatrix())
-  # digest::digest(pt$getHtml(), algo="md5")
-
-  expect_equal(sum(pt$cells$asMatrix()), 167420)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "34eafe5ded056555d4ec42c0e678715a")
-})
-
-
-test_that("basic layout tests:  columns plus two totals", {
-
-  checkDigestAvailable()
-
-  library(pivottabler)
-  pt <- PivotTable$new()
-  pt$addData(bhmtrains)
-  pt$addColumnDataGroups("TOC")
-  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-  pt$defineCalculation(calculationName="MaxSchedSpeed", summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
-  pt$evaluatePivot()
-  # pt$renderPivot()
-  # sum(pt$cells$asMatrix())
-  # digest::digest(pt$getHtml(), algo="md5")
-
-  expect_equal(sum(pt$cells$asMatrix()), 167995)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "f798002d4005ca4b572b85ea44df1f5f")
-})
-
-
-test_that("basic layout tests:  rows and columns only", {
-
-  checkDigestAvailable()
+test_that("smoke tests:  bhmtrains basic pivot values two levels", {
 
   library(pivottabler)
   pt <- PivotTable$new()
   pt$addData(bhmtrains)
   pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
   pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
   pt$evaluatePivot()
   # pt$renderPivot()
-  # digest::digest(pt$getHtml(), algo="md5")
+  # cat(paste(as.vector(pt$cells$asMatrix()), sep=", ", collapse=", "))
+  res <- c(3079, 22133, 5638, 2137, 32987, NA, NA, 8849, 6457, 15306, NA, 732, NA, NA, 732, 3079, 22865, 14487, 8594, 49025, 830, 63, 5591, NA, 6484, NA, NA, 28201, NA, 28201, 830, 63, 33792, NA, 34685, 3909, 22928, 48279, 8594, 83710)
 
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "dfaf7ca61e381f99ec0e05810b245b8b")
+  expect_equal(pt$cells$asMatrix(), matrix(res, nrow=5))
 })
 
 
-test_that("basic layout tests:  rows, columns and calculation", {
-
-  checkDigestAvailable()
+test_that("smoke tests:  bhmtrains basic pivot html two levels", {
 
   library(pivottabler)
   pt <- PivotTable$new()
   pt$addData(bhmtrains)
   pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
   pt$addRowDataGroups("TOC")
   pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # prepStr(as.character(pt$getHtml()))
+  html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("smoke tests:  bhmtrains basic pivot values two levels expanded", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType", expandExistingTotals=TRUE)
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # cat(paste(as.vector(pt$cells$asMatrix()), sep=", ", collapse=", "))
+  res <- c(3079, 22133, 5638, 2137, 32987, NA, NA, 8849, 6457, 15306, NA, 732, NA, NA, 732, 3079, 22865, 14487, 8594, 49025, 830, 63, 5591, NA, 6484, NA, NA, 28201, NA, 28201, 830, 63, 33792, NA, 34685, 3909, 22196, 11229, 2137, 39471, NA, NA, 37050, 6457, 43507, NA, 732, NA, NA, 732, 3909, 22928, 48279, 8594, 83710)
+
+  expect_equal(pt$cells$asMatrix(), matrix(res, nrow=5))
+})
+
+
+test_that("smoke tests:  bhmtrains basic pivot html two levels expanded", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType", expandExistingTotals=TRUE)
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # prepStr(as.character(pt$getHtml()))
+  html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22196</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">11229</td>\n    <td class=\"Cell\">37050</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">39471</td>\n    <td class=\"Cell\">43507</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("smoke tests:  calculation filters", {
+
+  library(dplyr)
+  library(lubridate)
+  library(pivottabler)
+
+  # get the date of each train and whether that date is a weekday or weekend
+  trains <- bhmtrains %>%
+    mutate(GbttDateTime=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
+           DayNumber=wday(GbttDateTime),
+           WeekdayOrWeekend=ifelse(DayNumber %in% c(1,7), "Weekend", "Weekday"))
+
+  # render the pivot table
+  pt <- PivotTable$new()
+  pt$addData(trains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addRowDataGroups("TOC")
+  weekendFilter <- PivotFilters$new(pt, variableName="WeekdayOrWeekend", values="Weekend")
+  pt$defineCalculation(calculationName="WeekendTrains", summariseExpression="n()",
+                       filters=weekendFilter, visible=FALSE)
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()", visible=FALSE)
+  pt$defineCalculation(calculationName="WeekendTrainsPercentage",
+                       type="calculation", basedOn=c("WeekendTrains", "TotalTrains"),
+                       format="%.1f %%",
+                       calculationExpression="values$WeekendTrains/values$TotalTrains*100")
   pt$evaluatePivot()
   # pt$renderPivot()
   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
+  # cat(paste(as.vector(pt$cells$asMatrix()), sep=", ", collapse=", "))
+  # prepStr(as.character(pt$getHtml()))
+  res <- c(26.6320233842157, 23.7480865952329, 18.7892593359564, 24.4240167558762, 22.5823559408465, 17.710843373494, NA, 22.8693181818182, NA, 22.7043390514632, 24.7377845996419, 23.6828332170272, 21.6450216450216, 24.4240167558762, 22.6328992951858)
+  html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">26.6 %</td>\n    <td class=\"Cell\">17.7 %</td>\n    <td class=\"Cell\">24.7 %</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">23.7 %</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">23.7 %</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">18.8 %</td>\n    <td class=\"Cell\">22.9 %</td>\n    <td class=\"Cell\">21.6 %</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">24.4 %</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">24.4 %</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">22.6 %</td>\n    <td class=\"Cell\">22.7 %</td>\n    <td class=\"Cell\">22.6 %</td>\n  </tr>\n</table>"
 
-  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 334840)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "69abeaf38dc735daeddeae4d94d3ed59")
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 296.5828)
+  expect_equal(pt$cells$asMatrix(), matrix(res, nrow=5))
+  expect_identical(as.character(pt$getHtml()), html)
+
 })
 
 
-test_that("basic layout tests:  rows, columns and two calculations", {
-
-  checkDigestAvailable()
-
-  library(pivottabler)
-  pt <- PivotTable$new()
-  pt$addData(bhmtrains)
-  pt$addColumnDataGroups("TrainCategory")
-  pt$addRowDataGroups("TOC")
-  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-  pt$defineCalculation(calculationName="MaxSchedSpeed", summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
-  pt$evaluatePivot()
-  # pt$renderPivot()
-  # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
-
-  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 336380)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "06780240f4afc3784525836829f65a66")
-})
-
-
-test_that("basic layout tests:  columns plus total on row", {
-
-  checkDigestAvailable()
-
-  library(pivottabler)
-  pt <- PivotTable$new()
-  pt$addData(bhmtrains)
-  pt$addColumnDataGroups("TOC")
-  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-  pt$addRowCalculationGroups()
-  pt$evaluatePivot()
-  # pt$renderPivot()
-  # sum(pt$cells$asMatrix())
-  # digest::digest(pt$getHtml(), algo="md5")
-
-  expect_equal(sum(pt$cells$asMatrix()), 167420)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "41f1c652d393e2910aea62716c8244ea")
-})
-
-
-test_that("basic layout tests:  columns plus two totals on rows", {
-
-  checkDigestAvailable()
-
-  library(pivottabler)
-  pt <- PivotTable$new()
-  pt$addData(bhmtrains)
-  pt$addColumnDataGroups("TOC")
-  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-  pt$defineCalculation(calculationName="MaxSchedSpeed", summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
-  pt$addRowCalculationGroups()
-  pt$evaluatePivot()
-  # pt$renderPivot()
-  # sum(pt$cells$asMatrix())
-  # digest::digest(pt$getHtml(), algo="md5")
-
-  expect_equal(sum(pt$cells$asMatrix()), 167995)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "1531ba5f10e9f075b55cb18b037f3cfd")
-})
-
-
-test_that("basic layout tests:  rows, columns and calculation on rows", {
-
-  checkDigestAvailable()
-
-  library(pivottabler)
-  pt <- PivotTable$new()
-  pt$addData(bhmtrains)
-  pt$addColumnDataGroups("TrainCategory")
-  pt$addRowDataGroups("TOC")
-  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-  pt$addRowCalculationGroups()
-  pt$evaluatePivot()
-  # pt$renderPivot()
-  # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
-
-  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 334840)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "69abeaf38dc735daeddeae4d94d3ed59")
-})
-
-
-test_that("basic layout tests:  rows, columns and two calculations on rows", {
-
-  checkDigestAvailable()
-
-  library(pivottabler)
-  pt <- PivotTable$new()
-  pt$addData(bhmtrains)
-  pt$addColumnDataGroups("TrainCategory")
-  pt$addRowDataGroups("TOC")
-  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-  pt$defineCalculation(calculationName="MaxSchedSpeed", summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
-  pt$addRowCalculationGroups()
-  pt$evaluatePivot()
-  # pt$renderPivot()
-  # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
-
-  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 336380)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "e82ee929b0e423df8b48adc926a264d8")
-})
-
-
-test_that("data groups tests:  dplyr ignoring parent groups", {
-
-  checkDigestAvailable()
+test_that("smoke tests:  ignoring parent groups", {
 
   library(pivottabler)
   pt <- PivotTable$new()
@@ -399,16 +201,336 @@ test_that("data groups tests:  dplyr ignoring parent groups", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "39fd4b80e8be158ae9a888dcbbddc43e")
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("basic layout tests:  empty pivot", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # prepStr(as.character(pt$getHtml()))
+  html <- "<table class=\"Table\">\n  <tr>\n    <td class=\"Cell\" style=\"text-align: center; padding: 6px\">(no data)</td>\n  </tr>\n</table>"
+
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("basic layout tests:  empty pivot plus data", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # prepStr(as.character(pt$getHtml()))
+  html <- "<table class=\"Table\">\n  <tr>\n    <td class=\"Cell\" style=\"text-align: center; padding: 6px\">(no data)</td>\n  </tr>\n</table>"
+
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("basic layout tests:  just a total", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix())
+  # prepStr(as.character(pt$getHtml()))
+  html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"0\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">TotalTrains</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\">&nbsp;</th>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix()), 83710)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("basic layout tests:  two measures", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$defineCalculation(calculationName="MaxSchedSpeed", summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix())
+  # prepStr(as.character(pt$getHtml()))
+  html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"0\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">TotalTrains</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">MaxSchedSpeed</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\">&nbsp;</th>\n    <td class=\"Cell\">83710</td>\n    <td class=\"Cell\">125</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix()), 83835)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("basic layout tests:  rows only", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addRowDataGroups("TOC")
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # prepStr(as.character(pt$getHtml()))
+  html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"0\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\"></td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\"></td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\"></td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\"></td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\"></td>\n  </tr>\n</table>"
+
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("basic layout tests:  rows plus total", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix())
+  # prepStr(as.character(pt$getHtml()))
+  html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">TotalTrains</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix()), 167420)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("basic layout tests:  rows plus two measures", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$defineCalculation(calculationName="MaxSchedSpeed", summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix())
+  # prepStr(as.character(pt$getHtml()))
+  html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">TotalTrains</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">MaxSchedSpeed</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3909</td>\n    <td class=\"Cell\">90</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22928</td>\n    <td class=\"Cell\">125</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">48279</td>\n    <td class=\"Cell\">110</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\">125</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">83710</td>\n    <td class=\"Cell\">125</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix()), 167995)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("basic layout tests:  columns only", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TOC")
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"0\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Arriva Trains Wales</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">CrossCountry</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">London Midland</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Virgin Trains</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\">&nbsp;</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n  </tr>\n</table>"
+
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("basic layout tests:  columns plus total", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix())
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"0\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Arriva Trains Wales</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">CrossCountry</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">London Midland</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Virgin Trains</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\">&nbsp;</th>\n    <td class=\"Cell\">3909</td>\n    <td class=\"Cell\">22928</td>\n    <td class=\"Cell\">48279</td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix()), 167420)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("basic layout tests:  columns plus two totals", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$defineCalculation(calculationName="MaxSchedSpeed", summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix())
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"0\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"2\">Arriva Trains Wales</th>\n    <th class=\"ColumnHeader\" colspan=\"2\">CrossCountry</th>\n    <th class=\"ColumnHeader\" colspan=\"2\">London Midland</th>\n    <th class=\"ColumnHeader\" colspan=\"2\">Virgin Trains</th>\n    <th class=\"ColumnHeader\" colspan=\"2\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">TotalTrains</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">MaxSchedSpeed</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">TotalTrains</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">MaxSchedSpeed</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">TotalTrains</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">MaxSchedSpeed</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">TotalTrains</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">MaxSchedSpeed</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">TotalTrains</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">MaxSchedSpeed</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\">&nbsp;</th>\n    <td class=\"Cell\">3909</td>\n    <td class=\"Cell\">90</td>\n    <td class=\"Cell\">22928</td>\n    <td class=\"Cell\">125</td>\n    <td class=\"Cell\">48279</td>\n    <td class=\"Cell\">110</td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\">125</td>\n    <td class=\"Cell\">83710</td>\n    <td class=\"Cell\">125</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix()), 167995)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("basic layout tests:  rows and columns only", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addRowDataGroups("TOC")
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n  </tr>\n</table>"
+
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("basic layout tests:  rows, columns and calculation", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 334840)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("basic layout tests:  rows, columns and two calculations", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$defineCalculation(calculationName="MaxSchedSpeed", summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"2\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"2\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"2\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">TotalTrains</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">MaxSchedSpeed</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">TotalTrains</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">MaxSchedSpeed</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">TotalTrains</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">MaxSchedSpeed</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">90</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">90</td>\n    <td class=\"Cell\">3909</td>\n    <td class=\"Cell\">90</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">125</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">100</td>\n    <td class=\"Cell\">22928</td>\n    <td class=\"Cell\">125</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">110</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">100</td>\n    <td class=\"Cell\">48279</td>\n    <td class=\"Cell\">110</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\">125</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\">125</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">125</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">100</td>\n    <td class=\"Cell\">83710</td>\n    <td class=\"Cell\">125</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 336380)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("basic layout tests:  columns plus total on row", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$addRowCalculationGroups()
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix())
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Arriva Trains Wales</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">CrossCountry</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">London Midland</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Virgin Trains</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">TotalTrains</th>\n    <td class=\"Cell\">3909</td>\n    <td class=\"Cell\">22928</td>\n    <td class=\"Cell\">48279</td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix()), 167420)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("basic layout tests:  columns plus two totals on rows", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$defineCalculation(calculationName="MaxSchedSpeed", summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
+  pt$addRowCalculationGroups()
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix())
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Arriva Trains Wales</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">CrossCountry</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">London Midland</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Virgin Trains</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">TotalTrains</th>\n    <td class=\"Cell\">3909</td>\n    <td class=\"Cell\">22928</td>\n    <td class=\"Cell\">48279</td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">MaxSchedSpeed</th>\n    <td class=\"Cell\">90</td>\n    <td class=\"Cell\">125</td>\n    <td class=\"Cell\">110</td>\n    <td class=\"Cell\">125</td>\n    <td class=\"Cell\">125</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix()), 167995)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("basic layout tests:  rows, columns and calculation on rows", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$addRowCalculationGroups()
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 334840)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("basic layout tests:  rows, columns and two calculations on rows", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$defineCalculation(calculationName="MaxSchedSpeed", summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
+  pt$addRowCalculationGroups()
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"2\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\">Arriva Trains Wales</th>\n    <th class=\"RowHeader\" rowspan=\"1\">TotalTrains</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">MaxSchedSpeed</th>\n    <td class=\"Cell\">90</td>\n    <td class=\"Cell\">90</td>\n    <td class=\"Cell\">90</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\">CrossCountry</th>\n    <th class=\"RowHeader\" rowspan=\"1\">TotalTrains</th>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">MaxSchedSpeed</th>\n    <td class=\"Cell\">125</td>\n    <td class=\"Cell\">100</td>\n    <td class=\"Cell\">125</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\">London Midland</th>\n    <th class=\"RowHeader\" rowspan=\"1\">TotalTrains</th>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">MaxSchedSpeed</th>\n    <td class=\"Cell\">110</td>\n    <td class=\"Cell\">100</td>\n    <td class=\"Cell\">110</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\">Virgin Trains</th>\n    <th class=\"RowHeader\" rowspan=\"1\">TotalTrains</th>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">MaxSchedSpeed</th>\n    <td class=\"Cell\">125</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">125</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\">Total</th>\n    <th class=\"RowHeader\" rowspan=\"1\">TotalTrains</th>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">MaxSchedSpeed</th>\n    <td class=\"Cell\">125</td>\n    <td class=\"Cell\">100</td>\n    <td class=\"Cell\">125</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 336380)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("data groups tests:  dplyr ignoring parent groups", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType", onlyCombinationsThatExist=FALSE)
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
 
 test_that("data groups tests:  adding data groups explicitly", {
-
-  checkDigestAvailable()
 
   library(pivottabler)
   pt <- PivotTable$new()
@@ -420,16 +542,15 @@ test_that("data groups tests:  adding data groups explicitly", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 500796)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "e4738a1ff93776a3b5011442234947fd")
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
 
 test_that("data groups tests:  adding data groups that combine values", {
-
-  checkDigestAvailable()
 
   library(pivottabler)
   pt <- PivotTable$new()
@@ -442,44 +563,40 @@ test_that("data groups tests:  adding data groups that combine values", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Other</th>\n    <td class=\"Cell\">5216</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">11673</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">12503</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "5520c3f4363267de0e416e2d0f54f509")
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
-# fails testing on win builder - format codes %B %Y probably mean different things on different machines
-# test_that("data groups tests:  formatting data groups", {
-#
-#   checkDigestAvailable()
-#
-#   library(dplyr)
-#   library(lubridate)
-#   trains <- mutate(bhmtrains,
-#      GbttDate=as.POSIXct(ifelse(is.na(GbttArrival), GbttDeparture, GbttArrival),
-#                          origin = "1970-01-01"),
-#      GbttMonth=make_date(year=year(GbttDate), month=month(GbttDate), day=1))
-#
-#   library(pivottabler)
-#   pt <- PivotTable$new()
-#   pt$addData(trains)
-#   pt$addColumnDataGroups("GbttMonth", dataFormat=list(format="%B %Y"))
-#   pt$addColumnDataGroups("PowerType")
-#   pt$addRowDataGroups("TOC")
-#   pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-#   pt$evaluatePivot()
-#   # pt$renderPivot()
-#   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-#   # digest::digest(pt$getHtml(), algo="md5")
-#
-#   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
-#   expect_identical(digest::digest(pt$getHtml(), algo="md5"), "2bbed6d4f402fcb465d7b3569aa14e46")
-# })
+test_that("data groups tests:  formatting data groups", {
+
+  library(dplyr)
+  library(lubridate)
+  trains <- mutate(bhmtrains,
+     GbttDate=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
+     GbttMonth=make_date(year=year(GbttDate), month=month(GbttDate), day=1))
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(trains)
+  pt$addColumnDataGroups("GbttMonth", dataFormat=list(format="%B %Y"))
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(as.character(pt$getHtml()))
+  html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">December 2016</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">January 2017</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">February 2017</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">1291</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">1291</td>\n    <td class=\"Cell\">1402</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">1402</td>\n    <td class=\"Cell\">1216</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">1216</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">7314</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">236</td>\n    <td class=\"Cell\">7550</td>\n    <td class=\"Cell\">7777</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">256</td>\n    <td class=\"Cell\">8033</td>\n    <td class=\"Cell\">7105</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">240</td>\n    <td class=\"Cell\">7345</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">3635</td>\n    <td class=\"Cell\">11967</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">15602</td>\n    <td class=\"Cell\">3967</td>\n    <td class=\"Cell\">13062</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">17029</td>\n    <td class=\"Cell\">3627</td>\n    <td class=\"Cell\">12021</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">15648</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">740</td>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">2877</td>\n    <td class=\"Cell\">728</td>\n    <td class=\"Cell\">2276</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3004</td>\n    <td class=\"Cell\">669</td>\n    <td class=\"Cell\">2044</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">2713</td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">12980</td>\n    <td class=\"Cell\">14104</td>\n    <td class=\"Cell\">236</td>\n    <td class=\"Cell\">27320</td>\n    <td class=\"Cell\">13874</td>\n    <td class=\"Cell\">15338</td>\n    <td class=\"Cell\">256</td>\n    <td class=\"Cell\">29468</td>\n    <td class=\"Cell\">12617</td>\n    <td class=\"Cell\">14065</td>\n    <td class=\"Cell\">240</td>\n    <td class=\"Cell\">26922</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_identical(as.character(pt$getHtml()), html)
+})
 
 
 test_that("data groups tests:  sort by group into descending order", {
-
-  checkDigestAvailable()
 
   library(pivottabler)
   pt <- PivotTable$new()
@@ -491,16 +608,15 @@ test_that("data groups tests:  sort by group into descending order", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "2c5eef1aca9347004d48e73b2010f63d")
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
 
 test_that("data groups tests:  numerical sort by group into descending order", {
-
-  checkDigestAvailable()
 
   a <- c(7,4,6,1,8,3,2,9,5,10,12,11,0)
   b <- c(1,5,4,2,3,2,4,3,1,5,2,1,4)
@@ -516,16 +632,15 @@ test_that("data groups tests:  numerical sort by group into descending order", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">0</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">1</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">2</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">3</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">4</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">5</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">6</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">7</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">8</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">9</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">10</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">11</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">12</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">5</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">9</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">15</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">24</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">4</th>\n    <td class=\"Cell\">4</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">6</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">10</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">20</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">3</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">11</td>\n    <td class=\"Cell\">12</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">23</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">2</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">5</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14</td>\n    <td class=\"Cell\">22</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">1</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">6</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">12</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">26</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">4</td>\n    <td class=\"Cell\">3</td>\n    <td class=\"Cell\">6</td>\n    <td class=\"Cell\">5</td>\n    <td class=\"Cell\">9</td>\n    <td class=\"Cell\">6</td>\n    <td class=\"Cell\">10</td>\n    <td class=\"Cell\">8</td>\n    <td class=\"Cell\">11</td>\n    <td class=\"Cell\">12</td>\n    <td class=\"Cell\">15</td>\n    <td class=\"Cell\">12</td>\n    <td class=\"Cell\">14</td>\n    <td class=\"Cell\">115</td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 460)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "c68ba30efb84bb22036d5384dfa14a34")
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
 
 test_that("data groups tests:  sort by value into descending order", {
-
-  checkDigestAvailable()
 
   library(pivottabler)
   pt <- PivotTable$new()
@@ -538,16 +653,15 @@ test_that("data groups tests:  sort by value into descending order", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "82516909a522ba233e179e98bcce4448")
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
 
 test_that("data groups tests:  sort by level 2 value into descending order", {
-
-  checkDigestAvailable()
 
   library(pivottabler)
   pt <- PivotTable$new()
@@ -560,16 +674,15 @@ test_that("data groups tests:  sort by level 2 value into descending order", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "484cab0595571b25af22912ea9ea69ec")
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
 
 test_that("calculation tests:  calculate dply summarise", {
-
-  checkDigestAvailable()
 
   library(pivottabler)
   library(dplyr)
@@ -601,17 +714,16 @@ test_that("calculation tests:  calculate dply summarise", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sprintf("%.6f", sum(pt$cells$asMatrix()))
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total Trains</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Min Arr. Delay</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Max Arr. Delay</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Mean Arr. Delay</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Median Arr. Delay</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Delay IQR</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Delay Std. Dev.</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3909</td>\n    <td class=\"Cell\">0</td>\n    <td class=\"Cell\">49</td>\n    <td class=\"Cell\">2.3</td>\n    <td class=\"Cell\">1</td>\n    <td class=\"Cell\">3</td>\n    <td class=\"Cell\">4.3</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22928</td>\n    <td class=\"Cell\">0</td>\n    <td class=\"Cell\">273</td>\n    <td class=\"Cell\">3.5</td>\n    <td class=\"Cell\">2</td>\n    <td class=\"Cell\">4</td>\n    <td class=\"Cell\">8.1</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">48279</td>\n    <td class=\"Cell\">0</td>\n    <td class=\"Cell\">177</td>\n    <td class=\"Cell\">2.3</td>\n    <td class=\"Cell\">1</td>\n    <td class=\"Cell\">3</td>\n    <td class=\"Cell\">4.2</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\">0</td>\n    <td class=\"Cell\">181</td>\n    <td class=\"Cell\">3.0</td>\n    <td class=\"Cell\">0</td>\n    <td class=\"Cell\">3</td>\n    <td class=\"Cell\">8.4</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">All TOCs</th>\n    <td class=\"Cell\">83710</td>\n    <td class=\"Cell\">0</td>\n    <td class=\"Cell\">273</td>\n    <td class=\"Cell\">2.7</td>\n    <td class=\"Cell\">1</td>\n    <td class=\"Cell\">3</td>\n    <td class=\"Cell\">6.1</td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix()), 168438.858522)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "9f62fc2410dab693c723dd256d763f15")
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
 
 
 test_that("calculation tests:  calculate on rows dply summarise", {
-
-  checkDigestAvailable()
 
   library(pivottabler)
   library(dplyr)
@@ -644,17 +756,16 @@ test_that("calculation tests:  calculate on rows dply summarise", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sprintf("%.6f", sum(pt$cells$asMatrix()))
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Arriva Trains Wales</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">CrossCountry</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">London Midland</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Virgin Trains</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">All TOCs</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total Trains</th>\n    <td class=\"Cell\">3909</td>\n    <td class=\"Cell\">22928</td>\n    <td class=\"Cell\">48279</td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Min Arr. Delay</th>\n    <td class=\"Cell\">0</td>\n    <td class=\"Cell\">0</td>\n    <td class=\"Cell\">0</td>\n    <td class=\"Cell\">0</td>\n    <td class=\"Cell\">0</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Max Arr. Delay</th>\n    <td class=\"Cell\">49</td>\n    <td class=\"Cell\">273</td>\n    <td class=\"Cell\">177</td>\n    <td class=\"Cell\">181</td>\n    <td class=\"Cell\">273</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Mean Arr. Delay</th>\n    <td class=\"Cell\">2.3</td>\n    <td class=\"Cell\">3.5</td>\n    <td class=\"Cell\">2.3</td>\n    <td class=\"Cell\">3.0</td>\n    <td class=\"Cell\">2.7</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Median Arr. Delay</th>\n    <td class=\"Cell\">1</td>\n    <td class=\"Cell\">2</td>\n    <td class=\"Cell\">1</td>\n    <td class=\"Cell\">0</td>\n    <td class=\"Cell\">1</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Delay IQR</th>\n    <td class=\"Cell\">3</td>\n    <td class=\"Cell\">4</td>\n    <td class=\"Cell\">3</td>\n    <td class=\"Cell\">3</td>\n    <td class=\"Cell\">3</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Delay Std. Dev.</th>\n    <td class=\"Cell\">4.3</td>\n    <td class=\"Cell\">8.1</td>\n    <td class=\"Cell\">4.2</td>\n    <td class=\"Cell\">8.4</td>\n    <td class=\"Cell\">6.1</td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix()), 168438.858522)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "cd501b5bea3fb0b596837e0a87987640")
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
 
 
 test_that("calculation tests:  deriving values from other calculations", {
-
-  checkDigestAvailable()
 
   library(pivottabler)
   library(dplyr)
@@ -681,17 +792,16 @@ test_that("calculation tests:  deriving values from other calculations", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sprintf("%.6f", sum(pt$cells$asMatrix()))
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Trains Arr. 5+ Mins Late</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total Trains</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">% Trains Arr. 5+ Mins Late</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">372</td>\n    <td class=\"Cell\">3909</td>\n    <td class=\"Cell\">9.5 %</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">2780</td>\n    <td class=\"Cell\">22928</td>\n    <td class=\"Cell\">12.1 %</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">3561</td>\n    <td class=\"Cell\">48279</td>\n    <td class=\"Cell\">7.4 %</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">770</td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\">9.0 %</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">All TOCs</th>\n    <td class=\"Cell\">7483</td>\n    <td class=\"Cell\">83710</td>\n    <td class=\"Cell\">8.9 %</td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix()), 182432.916225)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "56a286b5d6aa564261accf8660ddd843")
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
 
 
 test_that("calculation tests:  showing values only", {
-
-  checkDigestAvailable()
 
   library(pivottabler)
   library(dplyr)
@@ -711,17 +821,16 @@ test_that("calculation tests:  showing values only", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Ordinary Passenger</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">33792</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 83710)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "fcda3bab7f63063453591d141c274c62")
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
 
 
 test_that("calculation tests:  showing values plus totals", {
-
-  checkDigestAvailable()
 
   library(pivottabler)
   library(dplyr)
@@ -743,16 +852,17 @@ test_that("calculation tests:  showing values plus totals", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 334840)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "69abeaf38dc735daeddeae4d94d3ed59")
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
 
 # Failed testing on win builder (R 3.4.0 alpha) - guess: something to do with NA matching or NA sorting
   # 2. Failure: specific tests:  checking NA matching (@testGeneral.R#772) ---------
-  # digest::digest(pt$getHtml(), algo = "md5") not identical to "4de9b5984fc79813e347de07177f6d58".
+  # digest::digest(as.character(pt$getHtml()), algo = "md5") not identical to "4de9b5984fc79813e347de07177f6d58".
   # 1/1 mismatches
   # x[1]: "b60fb6d08a52644b7e535c105a444579"
   # y[1]: "4de9b5984fc79813e347de07177f6d58"
@@ -771,17 +881,15 @@ test_that("calculation tests:  showing values plus totals", {
 #   pt$evaluatePivot()
 #   # pt$renderPivot()
 #   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-#   # digest::digest(pt$getHtml(), algo="md5")
+#   # prepStr(as.character(pt$getHtml()))
 #
 #   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 669680)
-#   expect_identical(digest::digest(pt$getHtml(), algo="md5"), "4de9b5984fc79813e347de07177f6d58")
+#   expect_identical(as.character(pt$getHtml()), html), "4de9b5984fc79813e347de07177f6d58")
 # })
 
 
 
 test_that("specific tests:  visual totals", {
-
-  checkDigestAvailable()
 
   library(pivottabler)
   pt <- PivotTable$new()
@@ -794,17 +902,16 @@ test_that("specific tests:  visual totals", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"3\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"4\">Arriva Trains Wales</th>\n    <th class=\"RowHeader\" rowspan=\"3\">DMU</th>\n    <th class=\"RowHeader\" rowspan=\"1\">90</th>\n    <td class=\"Cell\">2989</td>\n    <td class=\"Cell\">2989</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">100</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">2989</td>\n    <td class=\"Cell\">2989</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <th class=\"RowHeader\" rowspan=\"1\"></th>\n    <td class=\"Cell\">2989</td>\n    <td class=\"Cell\">2989</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"4\">CrossCountry</th>\n    <th class=\"RowHeader\" rowspan=\"3\">DMU</th>\n    <th class=\"RowHeader\" rowspan=\"1\">90</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">100</th>\n    <td class=\"Cell\">10961</td>\n    <td class=\"Cell\">10961</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">10961</td>\n    <td class=\"Cell\">10961</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <th class=\"RowHeader\" rowspan=\"1\"></th>\n    <td class=\"Cell\">10961</td>\n    <td class=\"Cell\">10961</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"4\">London Midland</th>\n    <th class=\"RowHeader\" rowspan=\"3\">DMU</th>\n    <th class=\"RowHeader\" rowspan=\"1\">90</th>\n    <td class=\"Cell\">2340</td>\n    <td class=\"Cell\">2340</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">100</th>\n    <td class=\"Cell\">2450</td>\n    <td class=\"Cell\">2450</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">4790</td>\n    <td class=\"Cell\">4790</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <th class=\"RowHeader\" rowspan=\"1\"></th>\n    <td class=\"Cell\">4790</td>\n    <td class=\"Cell\">4790</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <th class=\"RowHeader\" rowspan=\"1\"></th>\n    <th class=\"RowHeader\" rowspan=\"1\"></th>\n    <td class=\"Cell\">18740</td>\n    <td class=\"Cell\">18740</td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 149920)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "fecc86f450c27978d80b6234bde45c33")
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
 
 
 test_that("theming tests:  basic test", {
-
-  checkDigestAvailable()
 
   # define the colours
   orangeColors <- list(
@@ -827,19 +934,19 @@ test_that("theming tests:  basic test", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
-  # digest::digest(pt$getCss(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+  # prepStr(as.character(pt$getCss()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"ColumnHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Total\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Total\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Total\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Total\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Total\">49025</td>\n    <td class=\"Total\">34685</td>\n    <td class=\"Total\">83710</td>\n  </tr>\n</table>"
+	css <- ".Table {border-collapse: collapse; border: 2px solid rgb(198, 89, 17); }\r\n.ColumnHeader {font: 0.75em Garamond, arial; padding: 2px; border: 1px solid rgb(198, 89, 17); vertical-align: middle; text-align: center; font-weight: bold; color: rgb(255, 255, 255); background-color: rgb(237, 125, 49); }\r\n.RowHeader {font: 0.75em Garamond, arial; padding: 2px 8px 2px 2px; border: 1px solid rgb(198, 89, 17); vertical-align: middle; text-align: left; font-weight: bold; color: rgb(255, 255, 255); background-color: rgb(237, 125, 49); }\r\n.Cell {font: 0.75em Garamond, arial; padding: 2px 2px 2px 8px; border: 1px solid rgb(198, 89, 17); text-align: right; color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); }\r\n.Total {font: 0.75em Garamond, arial; padding: 2px 2px 2px 8px; border: 1px solid rgb(198, 89, 17); text-align: right; color: rgb(0, 0, 0); background-color: rgb(248, 198, 165); }\r\n"
 
   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 334840)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "01a7b4884d7eb49eb83afe7c9d1819d5")
-  expect_identical(digest::digest(pt$getCss(), algo="md5"), "929497023d21358b044ce4fc084e31cd")
+  expect_identical(as.character(pt$getHtml()), html)
+  expect_identical(pt$getCss(), css)
 })
 
 
 
 test_that("empty data group test 1", {
-
-  checkDigestAvailable()
 
   library(pivottabler)
   pt <- PivotTable$new()
@@ -850,17 +957,16 @@ test_that("empty data group test 1", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Freight</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 167420)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "bf15028c080c7cb7bef8b30b9b46049a")
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
 
 
 test_that("empty data group test 2", {
-
-  checkDigestAvailable()
 
   library(pivottabler)
   pt <- PivotTable$new()
@@ -871,18 +977,17 @@ test_that("empty data group test 2", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Freight</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 0)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "dd134181eb368210c4b3d958d8a7e166")
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
 
 
 test_that("empty data group test 3", {
 
-  checkDigestAvailable()
-
   library(pivottabler)
   pt <- PivotTable$new()
   pt$addData(bhmtrains)
@@ -892,18 +997,17 @@ test_that("empty data group test 3", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Freight</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 236790)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "47f847ac274dd2fa51b856314c6387d5")
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
 
 
 test_that("empty data group test 4", {
 
-  checkDigestAvailable()
-
   library(pivottabler)
   pt <- PivotTable$new()
   pt$addData(bhmtrains)
@@ -913,17 +1017,16 @@ test_that("empty data group test 4", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Freight</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">33792</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">34685</td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 138740)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "4f5ece1b5f35befc62b15391f09c94f2")
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
 
 
 test_that("empty data group test 5", {
-
-  checkDigestAvailable()
 
   library(pivottabler)
   pt <- PivotTable$new()
@@ -935,17 +1038,16 @@ test_that("empty data group test 5", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Freight</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 306160)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "44983d5292c294cabe5004a1d3e18433")
+  expect_identical(as.character(pt$getHtml()), html)
 })
 
 
 
 test_that("empty data group test 6", {
-
-  checkDigestAvailable()
 
   library(pivottabler)
   pt <- PivotTable$new()
@@ -957,8 +1059,929 @@ test_that("empty data group test 6", {
   pt$evaluatePivot()
   # pt$renderPivot()
   # sum(pt$cells$asMatrix(), na.rm=TRUE)
-  # digest::digest(pt$getHtml(), algo="md5")
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Freight</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">33792</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">34685</td>\n  </tr>\n</table>"
 
   expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 208110)
-  expect_identical(digest::digest(pt$getHtml(), algo="md5"), "46c99dd69354dde35faf7283548df2be")
+  expect_identical(as.character(pt$getHtml()), html)
 })
+
+
+test_that("export tests:  as Matrix (without row headings)", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  # pt$asMatrix(includeHeaders=FALSE, rawValue=TRUE)
+  # sum(pt$asMatrix(includeHeaders=FALSE, rawValue=TRUE), na.rm=TRUE)
+  # mean(pt$asMatrix(includeHeaders=FALSE, rawValue=TRUE), na.rm=TRUE)
+  # min(pt$asMatrix(includeHeaders=FALSE, rawValue=TRUE), na.rm=TRUE)
+  # max(pt$asMatrix(includeHeaders=FALSE, rawValue=TRUE), na.rm=TRUE)
+  # prepStr(paste(as.character(pt$asMatrix(includeHeaders=FALSE, rawValue=TRUE)), sep=" ", collapse=" "))
+	text <- "3079 22133 5638 2137 32987 NA NA 8849 6457 15306 NA 732 NA NA 732 3079 22865 14487 8594 49025 830 63 5591 NA 6484 NA NA 28201 NA 28201 830 63 33792 NA 34685 3909 22928 48279 8594 83710"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_equal(mean(pt$cells$asMatrix(), na.rm=TRUE), 16742)
+  expect_equal(min(pt$cells$asMatrix(), na.rm=TRUE), 63)
+  expect_equal(max(pt$cells$asMatrix(), na.rm=TRUE), 83710)
+  expect_identical(paste(as.character(pt$asMatrix(includeHeaders=FALSE, rawValue=TRUE)), sep=" ", collapse=" "), text)
+})
+
+
+test_that("export tests:  as Matrix (with row headings)", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  # prepStr(paste(as.character(pt$asMatrix(includeHeaders=TRUE)), sep=" ", collapse=" "))
+  text <- "  Arriva Trains Wales CrossCountry London Midland Virgin Trains Total Express Passenger DMU 3079 22133 5638 2137 32987  EMU   8849 6457 15306  HST  732   732  Total 3079 22865 14487 8594 49025 Ordinary Passenger DMU 830 63 5591  6484  EMU   28201  28201  Total 830 63 33792  34685 Total  3909 22928 48279 8594 83710"
+
+  expect_identical(paste(as.character(pt$asMatrix(includeHeaders=TRUE)), sep=" ", collapse=" "), text)
+})
+
+
+test_that("export tests:  as Data Frame", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+
+  # sum(pt$asDataFrame(), na.rm=TRUE)
+  # prepStr(paste(as.character(pt$asDataFrame()), sep=" ", collapse=" "))
+	text <- "c(3079, 22133, 5638, 2137, 32987) c(NA, NA, 8849, 6457, 15306) c(NA, 732, NA, NA, 732) c(3079, 22865, 14487, 8594, 49025) c(830, 63, 5591, NA, 6484) c(NA, NA, 28201, NA, 28201) c(830, 63, 33792, NA, 34685) c(3909, 22928, 48279, 8594, 83710)"
+
+  expect_equal(sum(pt$asDataFrame(), na.rm=TRUE), 502260)
+  expect_identical(paste(as.character(pt$asDataFrame()), sep=" ", collapse=" "), text)
+})
+
+
+test_that("export tests:  as Tidy Data Frame", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+
+  # sum(pt$asTidyDataFrame()$rawValue, na.rm=TRUE)
+  # prepStr(paste(as.character(pt$asTidyDataFrame()), sep=" ", collapse=" "))
+	text <- "c(1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5) c(1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8) c(FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE) c(1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4) c(1, 1, 1, 1, 2, 2, 2, 3, 1, 1, 1, 1, 2, 2, 2, 3, 1, 1, 1, 1, 2, 2, 2, 3, 1, 1, 1, 1, 2, 2, 2, 3, 1, 1, 1, 1, 2, 2, 2, 3) c(2, 3, 4, 5, 2, 3, 5, 1, 2, 3, 4, 5, 2, 3, 5, 1, 2, 3, 4, 5, 2, 3, 5, 1, 2, 3, 4, 5, 2, 3, 5, 1, 2, 3, 4, 5, 2, 3, 5, 1) c(1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4) c(1, 1, 1, 1, 3, 3, 3, 2, 1, 1, 1, 1, 3, 3, 3, 2, 1, 1, 1, 1, 3, 3, 3, 2, 1, 1, 1, 1, 3, 3, 3, 2, 1, 1, 1, 1, 3, 3, 3, 2) c(1, 2, 3, 4, 1, 2, 4, 4, 1, 2, 3, 4, 1, 2, 4, 4, 1, 2, 3, 4, 1, 2, 4, 4, 1, 2, 3, 4, 1, 2, 4, 4, 1, 2, 3, 4, 1, 2, 4, 4) c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1) c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1) c(3079, NA, NA, 3079, 830, NA, 830, 3909, 22133, NA, 732, 22865, 63, NA, 63, 22928, 5638, 8849, NA, 14487, 5591, 28201, 33792, 48279, 2137, 6457, NA, 8594, NA, NA, NA, 8594, 32987, 15306, 732, 49025, 6484, 28201, 34685, 83710) c(3079, NA, NA, 3079, 830, NA, 830, 3909, 22133, NA, 732, 22865, 63, NA, 63, 22928, 5638, 8849, NA, 14487, 5591, 28201, 33792, 48279, 2137, 6457, NA, 8594, NA, NA, NA, 8594, 32987, 15306, 732, 49025, 6484, 28201, 34685, 83710)"
+
+  expect_equal(sum(pt$asTidyDataFrame()$rawValue, na.rm=TRUE), 502260)
+  expect_identical(paste(as.character(pt$asTidyDataFrame()), sep=" ", collapse=" "), text)
+})
+
+
+test_that("latex tests:  basic latex table with spans", {
+
+  C1 <- c("n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e")
+  R1 <- c("p", "p", "p", "p", "p", "p", "p", "p", "p", "q", "q", "q", "q", "q", "q", "q", "q", "q", "p", "p", "p", "p", "p", "p", "p", "p", "p", "q", "q", "q", "q", "q", "q", "q", "q", "q", "p", "p", "p", "p", "p", "p", "p", "p", "p", "q", "q", "q", "q", "q", "q", "q", "q", "q")
+  C2 <- c("a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c")
+  R2 <- c("x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z")
+  V <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+  df <- data.frame(R0="R", R1, R2, C0="C", C1, C2, V)
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(df)
+  pt$addColumnDataGroups("C1", fromData=FALSE, explicitListOfValues=list("n", "m", "e"), addTotal=FALSE)
+  pt$addColumnDataGroups("C2", addTotal=FALSE)
+  pt$addRowDataGroups("R1", addTotal=FALSE)
+  pt$addRowDataGroups("R2", addTotal=FALSE)
+  pt$defineCalculation(calculationName="V", summariseExpression="sum(V)")
+  pt$evaluatePivot()
+  ltx <- pt$getLatex(caption="My Table", label="mytable")
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|l|rrr|rrr|rrr|}\n    \\hline\n    \\multicolumn{2}{|c|}{} & \\multicolumn{3}{|c|}{n} & \\multicolumn{3}{|c|}{m} & \\multicolumn{3}{|c|}{e}\\\\\n    \\cline{3-11}\n    \\multicolumn{2}{|c|}{} & a & b & c & a & b & c & a & b & c\\\\\n    \\hline\n    \\multirow{3}{*}{p} & x  & 1 & 2 & 3 & 1 & 2 & 3 & 1 & 2 & 3\\\\\n    & y  & 4 & 5 & 6 & 4 & 5 & 6 & 4 & 5 & 6\\\\\n    & z  & 7 & 8 & 9 & 7 & 8 & 9 & 7 & 8 & 9\\\\\n    \\cline{1-11}\n    \\multirow{3}{*}{q} & x  & 1 & 2 & 3 & 1 & 2 & 3 & 1 & 2 & 3\\\\\n    & y  & 4 & 5 & 6 & 4 & 5 & 6 & 4 & 5 & 6\\\\\n    & z  & 7 & 8 & 9 & 7 & 8 & 9 & 7 & 8 & 9\\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 270)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  no data", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  ltx <- pt$getLatex(caption="My Table", label="mytable")
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|}\n    \\hline\n    (no data)\\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 0)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  just rows", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addRowDataGroups("TOC")
+  ltx <- pt$getLatex(caption="My Table", label="mytable")
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|r|}\n    \\hline\n    & \\\\\n    \\hline\n    Arriva Trains Wales  & \\\\\n    CrossCountry  & \\\\\n    London Midland  & \\\\\n    Virgin Trains  & \\\\\n    Total  & \\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 0)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  just columns", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  ltx <- pt$getLatex(caption="My Table", label="mytable")
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|rrr|}\n    \\hline\n    & Express Passenger & Ordinary Passenger & Total\\\\\n    \\hline\n     &  &  & \\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 0)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  rows and columns", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addRowDataGroups("TOC")
+  ltx <- pt$getLatex(caption="My Table", label="mytable")
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|rrr|}\n    \\hline\n    & Express Passenger & Ordinary Passenger & Total\\\\\n    \\hline\n    Arriva Trains Wales  &  &  & \\\\\n    CrossCountry  &  &  & \\\\\n    London Midland  &  &  & \\\\\n    Virgin Trains  &  &  & \\\\\n    Total  &  &  & \\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 0)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  rows, columns and a measure", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  ltx <- pt$getLatex(caption="My Table", label="mytable")
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|rrr|}\n    \\hline\n    & Express Passenger & Ordinary Passenger & Total\\\\\n    \\hline\n    Arriva Trains Wales  & 3079 & 830 & 3909\\\\\n    CrossCountry  & 22865 & 63 & 22928\\\\\n    London Midland  & 14487 & 33792 & 48279\\\\\n    Virgin Trains  & 8594 &  & 8594\\\\\n    Total  & 49025 & 34685 & 83710\\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 334840)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  styling headers", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  ltx <- pt$getLatex(caption="My Table", label="mytable", boldHeadings=TRUE, italicHeadings=TRUE)
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|rrr|}\n    \\hline\n    & \\textbf{\\textit{Express Passenger}} & \\textbf{\\textit{Ordinary Passenger}} & \\textbf{\\textit{Total}}\\\\\n    \\hline\n    \\textbf{\\textit{Arriva Trains Wales}}  & 3079 & 830 & 3909\\\\\n    \\textbf{\\textit{CrossCountry}}  & 22865 & 63 & 22928\\\\\n    \\textbf{\\textit{London Midland}}  & 14487 & 33792 & 48279\\\\\n    \\textbf{\\textit{Virgin Trains}}  & 8594 &  & 8594\\\\\n    \\textbf{\\textit{Total}}  & 49025 & 34685 & 83710\\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 334840)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  rows, columns and two measures (on cols)", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$defineCalculation(calculationName="MaxSchedSpeed", summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
+  ltx <- pt$getLatex(caption="My Table", label="mytable")
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|rr|rr|rr|}\n    \\hline\n    & \\multicolumn{2}{|c|}{Express Passenger} & \\multicolumn{2}{|c|}{Ordinary Passenger} & \\multicolumn{2}{|c|}{Total}\\\\\n    \\cline{2-7}\n    & TotalTrains & MaxSchedSpeed & TotalTrains & MaxSchedSpeed & TotalTrains & MaxSchedSpeed\\\\\n    \\hline\n    Arriva Trains Wales  & 3079 & 90 & 830 & 90 & 3909 & 90\\\\\n    CrossCountry  & 22865 & 125 & 63 & 100 & 22928 & 125\\\\\n    London Midland  & 14487 & 110 & 33792 & 100 & 48279 & 110\\\\\n    Virgin Trains  & 8594 & 125 &  &  & 8594 & 125\\\\\n    Total  & 49025 & 125 & 34685 & 100 & 83710 & 125\\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 336380)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  rows, columns and two measures (on rows)", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$defineCalculation(calculationName="MaxSchedSpeed", summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
+  pt$addRowCalculationGroups()
+  ltx <- pt$getLatex(caption="My Table", label="mytable")
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|l|rrr|}\n    \\hline\n    \\multicolumn{2}{|c|}{} & Express Passenger & Ordinary Passenger & Total\\\\\n    \\hline\n    \\multirow{2}{*}{Arriva Trains Wales} & TotalTrains  & 3079 & 830 & 3909\\\\\n    & MaxSchedSpeed  & 90 & 90 & 90\\\\\n    \\cline{1-5}\n    \\multirow{2}{*}{CrossCountry} & TotalTrains  & 22865 & 63 & 22928\\\\\n    & MaxSchedSpeed  & 125 & 100 & 125\\\\\n    \\cline{1-5}\n    \\multirow{2}{*}{London Midland} & TotalTrains  & 14487 & 33792 & 48279\\\\\n    & MaxSchedSpeed  & 110 & 100 & 110\\\\\n    \\cline{1-5}\n    \\multirow{2}{*}{Virgin Trains} & TotalTrains  & 8594 &  & 8594\\\\\n    & MaxSchedSpeed  & 125 &  & 125\\\\\n    \\cline{1-5}\n    \\multirow{2}{*}{Total} & TotalTrains  & 49025 & 34685 & 83710\\\\\n    & MaxSchedSpeed  & 125 & 100 & 125\\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 336380)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  just a total (on columns)", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  ltx <- pt$getLatex(caption="My Table", label="mytable")
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|r|}\n    \\hline\n    & TotalTrains\\\\\n    \\hline\n     & 83710\\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 83710)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  two totals (on columns)", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$defineCalculation(calculationName="TotalTrains1", summariseExpression="n()")
+  pt$defineCalculation(calculationName="TotalTrains2", summariseExpression="n()")
+  ltx <- pt$getLatex(caption="My Table", label="mytable")
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|rr|}\n    \\hline\n    & TotalTrains1 & TotalTrains2\\\\\n    \\hline\n     & 83710 & 83710\\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 167420)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  multiple levels on columns (but no rows)", {
+
+  C1 <- c("n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e")
+  R1 <- c("p", "p", "p", "p", "p", "p", "p", "p", "p", "q", "q", "q", "q", "q", "q", "q", "q", "q", "p", "p", "p", "p", "p", "p", "p", "p", "p", "q", "q", "q", "q", "q", "q", "q", "q", "q", "p", "p", "p", "p", "p", "p", "p", "p", "p", "q", "q", "q", "q", "q", "q", "q", "q", "q")
+  C2 <- c("a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c")
+  R2 <- c("x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z")
+  V <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+  df <- data.frame(R0="R", R1, R2, C0="C", C1, C2, V)
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(df)
+  pt$addColumnDataGroups("C0", addTotal=FALSE)
+  pt$addColumnDataGroups("C1", fromData=FALSE, explicitListOfValues=list("n", "m", "e"), addTotal=FALSE)
+  pt$addColumnDataGroups("C2", addTotal=FALSE)
+  pt$defineCalculation(calculationName="V", summariseExpression="sum(V)")
+  ltx <- pt$getLatex(caption="My Table", label="mytable")
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|rrr|rrr|rrr|}\n    \\hline\n    & \\multicolumn{9}{|c|}{C}\\\\\n    \\cline{2-10}\n    & \\multicolumn{3}{|c|}{n} & \\multicolumn{3}{|c|}{m} & \\multicolumn{3}{|c|}{e}\\\\\n    \\cline{2-10}\n    & a & b & c & a & b & c & a & b & c\\\\\n    \\hline\n     & 24 & 30 & 36 & 24 & 30 & 36 & 24 & 30 & 36\\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 270)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  multiple levels on columns (but no rows) with the calc on rows", {
+
+  C1 <- c("n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e")
+  R1 <- c("p", "p", "p", "p", "p", "p", "p", "p", "p", "q", "q", "q", "q", "q", "q", "q", "q", "q", "p", "p", "p", "p", "p", "p", "p", "p", "p", "q", "q", "q", "q", "q", "q", "q", "q", "q", "p", "p", "p", "p", "p", "p", "p", "p", "p", "q", "q", "q", "q", "q", "q", "q", "q", "q")
+  C2 <- c("a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c")
+  R2 <- c("x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z")
+  V <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+  df <- data.frame(R0="R", R1, R2, C0="C", C1, C2, V)
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(df)
+  pt$addColumnDataGroups("C0", addTotal=FALSE)
+  pt$addColumnDataGroups("C1", fromData=FALSE, explicitListOfValues=list("n", "m", "e"), addTotal=FALSE)
+  pt$addColumnDataGroups("C2", addTotal=FALSE)
+  pt$defineCalculation(calculationName="V", summariseExpression="sum(V)")
+  pt$addRowCalculationGroups()
+  ltx <- pt$getLatex(caption="My Table", label="mytable")
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|rrr|rrr|rrr|}\n    \\hline\n    & \\multicolumn{9}{|c|}{C}\\\\\n    \\cline{2-10}\n    & \\multicolumn{3}{|c|}{n} & \\multicolumn{3}{|c|}{m} & \\multicolumn{3}{|c|}{e}\\\\\n    \\cline{2-10}\n    & a & b & c & a & b & c & a & b & c\\\\\n    \\hline\n    V  & 24 & 30 & 36 & 24 & 30 & 36 & 24 & 30 & 36\\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 270)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  just a total (on rows)", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$addRowCalculationGroups()
+  ltx <- pt$getLatex(caption="My Table", label="mytable")
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|r|}\n    \\hline\n    & \\\\\n    \\hline\n    TotalTrains  & 83710\\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 83710)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  two totals (on rows)", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$defineCalculation(calculationName="TotalTrains1", summariseExpression="n()")
+  pt$defineCalculation(calculationName="TotalTrains2", summariseExpression="n()")
+  pt$addRowCalculationGroups()
+  ltx <- pt$getLatex(caption="My Table", label="mytable")
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|r|}\n    \\hline\n    & \\\\\n    \\hline\n    TotalTrains1  & 83710\\\\\n    TotalTrains2  & 83710\\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 167420)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  multiple levels on rows (but no columns)", {
+
+  C1 <- c("n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e")
+  R1 <- c("p", "p", "p", "p", "p", "p", "p", "p", "p", "q", "q", "q", "q", "q", "q", "q", "q", "q", "p", "p", "p", "p", "p", "p", "p", "p", "p", "q", "q", "q", "q", "q", "q", "q", "q", "q", "p", "p", "p", "p", "p", "p", "p", "p", "p", "q", "q", "q", "q", "q", "q", "q", "q", "q")
+  C2 <- c("a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c")
+  R2 <- c("x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z")
+  V <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+  df <- data.frame(R0="R", R1, R2, C0="C", C1, C2, V)
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(df)
+  pt$addRowDataGroups("R0", addTotal=FALSE)
+  pt$addRowDataGroups("R1", addTotal=FALSE)
+  pt$addRowDataGroups("R2", addTotal=FALSE)
+  pt$defineCalculation(calculationName="V", summariseExpression="sum(V)")
+  pt$addRowCalculationGroups()
+  ltx <- pt$getLatex(caption="My Table", label="mytable")
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|l|l|r|}\n    \\hline\n    \\multicolumn{3}{|c|}{} & \\\\\n    \\hline\n    \\multirow{6}{*}{R} & \\multirow{3}{*}{p} & x  & 18\\\\\n    & & y  & 45\\\\\n    & & z  & 72\\\\\n    \\cline{2-4}\n    & \\multirow{3}{*}{q} & x  & 18\\\\\n    & & y  & 45\\\\\n    & & z  & 72\\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 270)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  multiple levels on rows (but no columns) with the calculation on columns", {
+
+  C1 <- c("n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "n", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "m", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e", "e")
+  R1 <- c("p", "p", "p", "p", "p", "p", "p", "p", "p", "q", "q", "q", "q", "q", "q", "q", "q", "q", "p", "p", "p", "p", "p", "p", "p", "p", "p", "q", "q", "q", "q", "q", "q", "q", "q", "q", "p", "p", "p", "p", "p", "p", "p", "p", "p", "q", "q", "q", "q", "q", "q", "q", "q", "q")
+  C2 <- c("a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c", "a", "b", "c")
+  R2 <- c("x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z", "x", "x", "x", "y", "y", "y", "z", "z", "z")
+  V <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+  df <- data.frame(R0="R", R1, R2, C0="C", C1, C2, V)
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(df)
+  pt$addRowDataGroups("R0", addTotal=FALSE)
+  pt$addRowDataGroups("R1", addTotal=FALSE)
+  pt$addRowDataGroups("R2", addTotal=FALSE)
+  pt$defineCalculation(calculationName="V", summariseExpression="sum(V)")
+  ltx <- pt$getLatex(caption="My Table", label="mytable")
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|l|l|r|}\n    \\hline\n    \\multicolumn{3}{|c|}{} & V\\\\\n    \\hline\n    \\multirow{6}{*}{R} & \\multirow{3}{*}{p} & x  & 18\\\\\n    & & y  & 45\\\\\n    & & z  & 72\\\\\n    \\cline{2-4}\n    & \\multirow{3}{*}{q} & x  & 18\\\\\n    & & y  & 45\\\\\n    & & z  & 72\\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 270)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  rows/cols split 1", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  ltx <- pt$getLatex(caption="My Table", label="mytable", fromRow=2, toRow=4)
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|rrr|}\n    \\hline\n    & Express Passenger & Ordinary Passenger & Total\\\\\n    \\hline\n    CrossCountry  & 22865 & 63 & 22928\\\\\n    London Midland  & 14487 & 33792 & 48279\\\\\n    Virgin Trains  & 8594 &  & 8594\\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 334840)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  rows/cols split 2", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  ltx <- pt$getLatex(caption="My Table", label="mytable", fromColumn=2, toColumn=3)
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|rr|}\n    \\hline\n    & Ordinary Passenger & Total\\\\\n    \\hline\n    Arriva Trains Wales  & 830 & 3909\\\\\n    CrossCountry  & 63 & 22928\\\\\n    London Midland  & 33792 & 48279\\\\\n    Virgin Trains  &  & 8594\\\\\n    Total  & 34685 & 83710\\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 334840)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("latex tests:  rows/cols split 3", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  ltx <- pt$getLatex(caption="My Table", label="mytable", fromRow=3, toRow=5, fromColumn=1, toColumn=2)
+
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # prepStr(ltx)
+	ltx2 <- "\\begin{table}[h!]\n  \\centering\n  \\caption{My Table}\n  \\label{tab:mytable}\n  \\begin{tabular}{|l|rr|}\n    \\hline\n    & Express Passenger & Ordinary Passenger\\\\\n    \\hline\n    London Midland  & 14487 & 33792\\\\\n    Virgin Trains  & 8594 & \\\\\n    Total  & 49025 & 34685\\\\\n    \\hline\n  \\end{tabular}\n\\end{table}"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 334840)
+  expect_identical(ltx, ltx2)
+})
+
+
+test_that("find groups tests:  simple:  variableNames", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFFF00"))
+  groups <- pt$findColumnDataGroups(variableNames="TrainCategory")
+  groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # length(groups)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #FFFF00; \" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #FFFF00; \" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #FFFF00; \" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_equal(length(groups), 3)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("find groups tests:  simple:  variableValues", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFFF00"))
+  groups <- pt$findColumnDataGroups(variableValues=list("PowerType"=c("DMU", "HST")))
+  groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # length(groups)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" style=\"background-color: #FFFF00; \" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #FFFF00; \" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #FFFF00; \" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_equal(length(groups), 3)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("find groups tests:  simple:  exclude totals", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFFF00"))
+  groups <- pt$findColumnDataGroups(variableNames="TrainCategory", totals="exclude")
+  groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # length(groups)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #FFFF00; \" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #FFFF00; \" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_equal(length(groups), 2)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("find groups tests:  simple:  only totals", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFFF00"))
+  groups <- pt$findColumnDataGroups(variableNames="TrainCategory", totals="only")
+  groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # length(groups)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #FFFF00; \" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_equal(length(groups), 1)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("find groups tests:  simple:  includeDescendantGroups", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFFF00"))
+  groups <- pt$findColumnDataGroups(
+    variableValues=list("TrainCategory"="Ordinary Passenger"),
+    includeDescendantGroup=TRUE)
+  groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # length(groups)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #FFFF00; \" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #FFFF00; \" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #FFFF00; \" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #FFFF00; \" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_equal(length(groups), 4)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("find groups tests:  combinations:  variableNames", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#00FFFF"))
+  groups <- pt$findColumnDataGroups(matchMode="combinations",
+                                    variableNames=c("TrainCategory", "PowerType"))
+  groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # length(groups)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" style=\"background-color: #00FFFF; \" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #00FFFF; \" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #00FFFF; \" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #00FFFF; \" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #00FFFF; \" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #00FFFF; \" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #00FFFF; \" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #00FFFF; \" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_equal(length(groups), 8)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("find groups tests:  combinations:  variableValues", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#00FFFF"))
+  groups <- pt$findColumnDataGroups(matchMode="combinations",
+                                    variableValues=list("TrainCategory"="Express Passenger", "PowerType"=c("DMU", "HST")))
+  groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # length(groups)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" style=\"background-color: #00FFFF; \" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #00FFFF; \" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_equal(length(groups), 2)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("find groups tests:  combinations:  specific sub total", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#00FFFF"))
+  groups <- pt$findColumnDataGroups(matchMode="combinations",
+                                    variableValues=list("TrainCategory"="Express Passenger", "PowerType"="**"))
+  groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+  pt$evaluatePivot()
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # length(groups)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" style=\"background-color: #00FFFF; \" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_equal(length(groups), 1)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("get cells tests:  whole rows", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#00FF00"))
+  cells <- pt$getCells(rowNumbers=c(1, 3))
+  cellCount <- lapply(cells, function(cell) {cell$style <- highlight})
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # length(cells)
+  # sum(unlist(lapply(cells, function(x) { return(x$rawValue) })), na.rm=TRUE)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">3079</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \"></td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \"></td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">3079</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">830</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \"></td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">830</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">5638</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">8849</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \"></td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">14487</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">5591</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">28201</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">33792</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_equal(length(cells), 16)
+  expect_equal(sum(unlist(lapply(cells, function(x) { return(x$rawValue) })), na.rm=TRUE), 156564)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("get cells tests:  whole columns", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#00FF00"))
+  cells <- pt$getCells(columnNumbers=2)
+  cellCount <- lapply(cells, function(cell) {cell$style <- highlight})
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # length(cells)
+  # sum(unlist(lapply(cells, function(x) { return(x$rawValue) })), na.rm=TRUE)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_equal(length(cells), 5)
+  expect_equal(sum(unlist(lapply(cells, function(x) { return(x$rawValue) })), na.rm=TRUE), 30612)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("get cells tests:  rows, columns and cells", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#00FF00"))
+  cells <- pt$getCells(rowNumbers=c(2, NA, 5), columnNumbers=c(NA, 4, 7))
+  cellCount <- lapply(cells, function(cell) {cell$style <- highlight})
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # length(cells)
+  # sum(unlist(lapply(cells, function(x) { return(x$rawValue) })), na.rm=TRUE)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">22133</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \"></td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">732</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">22865</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">63</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \"></td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">63</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\" style=\"background-color: #00FF00; \">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_equal(length(cells), 14)
+  expect_equal(sum(unlist(lapply(cells, function(x) { return(x$rawValue) })), na.rm=TRUE), 201519)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("find cells tests:  variableValues 1", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FF00FF"))
+  cells <- pt$findCells(variableValues=list("PowerType"=c("DMU", "HST")))
+  cellCount <- lapply(cells, function(cell) {cell$style <- highlight})
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # length(cells)
+  # sum(unlist(lapply(cells, function(x) { return(x$rawValue) })), na.rm=TRUE)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_equal(length(cells), 15)
+  expect_equal(sum(unlist(lapply(cells, function(x) { return(x$rawValue) })), na.rm=TRUE), 80406)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("find cells tests:  variableValues 2", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FF00FF"))
+  cells <- pt$findCells(variableValues=list("PowerType"=c("DMU", "HST"), "TOC"="London Midland"))
+  cellCount <- lapply(cells, function(cell) {cell$style <- highlight})
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # length(cells)
+  # sum(unlist(lapply(cells, function(x) { return(x$rawValue) })), na.rm=TRUE)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_equal(length(cells), 3)
+  expect_equal(sum(unlist(lapply(cells, function(x) { return(x$rawValue) })), na.rm=TRUE), 11229)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("find cells tests:  totals", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FF00FF"))
+  cells <- pt$findCells(variableValues=list("PowerType"="**"))
+  cellCount <- lapply(cells, function(cell) {cell$style <- highlight})
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # length(cells)
+  # sum(unlist(lapply(cells, function(x) { return(x$rawValue) })), na.rm=TRUE)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">830</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">63</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">33792</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \"></td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">34685</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_equal(length(cells), 15)
+  expect_equal(sum(unlist(lapply(cells, function(x) { return(x$rawValue) })), na.rm=TRUE), 334840)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("find cells tests:  grand total", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FF00FF"))
+  cells <- pt$findCells(variableValues=list("TrainCategory"="**", "PowerType"="**", "TOC"="**"))
+  cellCount <- lapply(cells, function(cell) {cell$style <- highlight})
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # length(cells)
+  # sum(unlist(lapply(cells, function(x) { return(x$rawValue) })), na.rm=TRUE)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">33792</td>\n    <td class=\"Cell\">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\">34685</td>\n    <td class=\"Cell\" style=\"background-color: #FF00FF; \">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_equal(length(cells), 1)
+  expect_equal(sum(unlist(lapply(cells, function(x) { return(x$rawValue) })), na.rm=TRUE), 83710)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+
+test_that("find cells tests:  conditional formatting", {
+
+  library(pivottabler)
+  pt <- PivotTable$new()
+  pt$addData(bhmtrains)
+  pt$addColumnDataGroups("TrainCategory")
+  pt$addColumnDataGroups("PowerType")
+  pt$addRowDataGroups("TOC")
+  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+  pt$evaluatePivot()
+  redStyle <- PivotStyle$new(pt, "redStyle", list("background-color"="#FFC7CE", "color"="#9C0006"))
+  cells <- pt$findCells(minValue=30000, maxValue=50000, includeNull=FALSE, includeNA=FALSE)
+  cellCount <- lapply(cells, function(cell) {cell$style <- redStyle})
+  # pt$renderPivot()
+  # sum(pt$cells$asMatrix(), na.rm=TRUE)
+  # length(cells)
+  # sum(unlist(lapply(cells, function(x) { return(x$rawValue) })), na.rm=TRUE)
+  # prepStr(as.character(pt$getHtml()))
+	html <- "<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"2\" colspan=\"1\">&nbsp;</th>\n    <th class=\"ColumnHeader\" colspan=\"4\">Express Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"3\">Ordinary Passenger</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n  </tr>\n  <tr>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">HST</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">DMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">EMU</th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total</th>\n    <th class=\"ColumnHeader\" colspan=\"1\"></th>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Arriva Trains Wales</th>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">3079</td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">830</td>\n    <td class=\"Cell\">3909</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">CrossCountry</th>\n    <td class=\"Cell\">22133</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\">22865</td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">63</td>\n    <td class=\"Cell\">22928</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">London Midland</th>\n    <td class=\"Cell\">5638</td>\n    <td class=\"Cell\">8849</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">14487</td>\n    <td class=\"Cell\">5591</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\" style=\"background-color: #FFC7CE; color: #9C0006; \">33792</td>\n    <td class=\"Cell\" style=\"background-color: #FFC7CE; color: #9C0006; \">48279</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Virgin Trains</th>\n    <td class=\"Cell\">2137</td>\n    <td class=\"Cell\">6457</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\"></td>\n    <td class=\"Cell\">8594</td>\n  </tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total</th>\n    <td class=\"Cell\" style=\"background-color: #FFC7CE; color: #9C0006; \">32987</td>\n    <td class=\"Cell\">15306</td>\n    <td class=\"Cell\">732</td>\n    <td class=\"Cell\" style=\"background-color: #FFC7CE; color: #9C0006; \">49025</td>\n    <td class=\"Cell\">6484</td>\n    <td class=\"Cell\">28201</td>\n    <td class=\"Cell\" style=\"background-color: #FFC7CE; color: #9C0006; \">34685</td>\n    <td class=\"Cell\">83710</td>\n  </tr>\n</table>"
+
+  expect_equal(sum(pt$cells$asMatrix(), na.rm=TRUE), 502260)
+  expect_equal(length(cells), 5)
+  expect_equal(sum(unlist(lapply(cells, function(x) { return(x$rawValue) })), na.rm=TRUE), 198768)
+  expect_identical(as.character(pt$getHtml()), html)
+})
+
+

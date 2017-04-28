@@ -17,7 +17,7 @@ vignette: >
     + Adding data groups explicitly
     + Adding data groups that combine values
     + More complex layouts of data groups
-* Formating data groups
+* Formatting data groups
 * Sorting data groups
 
 ## Data Group Terminology
@@ -58,11 +58,11 @@ The easiest way to add data groups to a pivot table is to simply generate data g
 
 #### Considering parent data groups
 
-By default, when adding additional levels to a pivot table after the first level (i.e. for level 2, 3, etc.), the filter criteria coming from parent data groups is considered.  For example, in the pivot table above, there are "Express Passenger" trains with a power type of "HST", but no "Ordinary Passenger" trains with a power type of "HST".  So while a "HST" data group exists under "Express Passenger", no"HST" data group exists underneath "Ordinary Passenger".
+By default, when adding additional levels to a pivot table after the first level (i.e. for level 2, 3, etc.), the filter criteria coming from parent data groups is considered.  For example, in the pivot table above, there are "Express Passenger" trains with a power type of "HST", but no "Ordinary Passenger" trains with a power type of "HST".  So while a "HST" data group exists under "Express Passenger", no "HST" data group exists underneath "Ordinary Passenger".
 
 #### Ignoring parent data groups
 
-Sometimes, a more uniform layout is preferred, i.e. in the above example, we would like "HST" to be present underneath "Ordinary Passenger" as well.  This can be accomplished by setting the argment `onlyCombinationsThatExist` to `FALSE`.
+Sometimes, a more uniform layout is preferred, i.e. in the above example, we would like "HST" to be present underneath "Ordinary Passenger" as well.  This can be accomplished by setting the argument `onlyCombinationsThatExist` to `FALSE`.
 
 ```{r, warning=FALSE}
 library(pivottabler)
@@ -92,7 +92,7 @@ pt$renderPivot()
 
 #### Visual Totals
 
-In the above example, some of the totals now do not appear to reconcile, e.g. "CrossCountry DMU" (22400) + "CrossCountry EMU" (0) does not equal "CrossCountry Total" (23141).  The difference is the "CrossCountry HST" (741) data group that has been omitted.   This may or may not be desirable, depending on how the pivot table is introduced, the title that is used, etc.
+In the above example, some of the totals now do not appear to reconcile, e.g. "CrossCountry DMU" (22133) + "CrossCountry EMU" (0) does not equal "CrossCountry Total" (22865).  The difference is the "CrossCountry HST" (732) data group that has been omitted.   This may or may not be desirable, depending on how the pivot table is introduced, the title that is used, etc.
 
 If it is desirable for the totals to reconcile, then visual totals can be enabled using the `visualTotals` argument:
 
@@ -106,6 +106,8 @@ pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$renderPivot()
 ```
+
+Note that finding total/non-total data groups/cells with the `findRowDataGroups()`, `findColumnDataGroups()` and `findCells()` functions won't work when visual totals are enabled.  See the [Finding and Formatting](findingandformatting.html) vignette for more details on these functions.
 
 ### Adding data groups that combine values
 
@@ -154,8 +156,7 @@ For example, plotting the total number of trains per month for each train operat
 library(dplyr)
 library(lubridate)
 trains <- mutate(bhmtrains, 
-   GbttDate=as.POSIXct(ifelse(is.na(GbttArrival), GbttDeparture, GbttArrival), 
-                       origin = "1970-01-01"),
+   GbttDate=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
    GbttMonth=make_date(year=year(GbttDate), month=month(GbttDate), day=1))
 
 library(pivottabler)
@@ -176,8 +177,7 @@ In the example above, the month headings are not explicitly formatted.  The exam
 library(dplyr)
 library(lubridate)
 trains <- mutate(bhmtrains, 
-   GbttDate=as.POSIXct(ifelse(is.na(GbttArrival), GbttDeparture, GbttArrival), 
-                       origin = "1970-01-01"),
+   GbttDate=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
    GbttMonth=make_date(year=year(GbttDate), month=month(GbttDate), day=1))
 
 library(pivottabler)
@@ -204,8 +204,7 @@ An example of using a custom R function to accomplish the same formatting is:
 library(dplyr)
 library(lubridate)
 trains <- mutate(bhmtrains, 
-   GbttDate=as.POSIXct(ifelse(is.na(GbttArrival), GbttDeparture, GbttArrival), 
-                       origin = "1970-01-01"),
+   GbttDate=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
    GbttMonth=make_date(year=year(GbttDate), month=month(GbttDate), day=1))
 
 # define a custom formatting function
@@ -277,7 +276,7 @@ The pivot is sorted using the totals for each data group.  In the pivot table ab
 
 Since the pivot table above only contains one calculation, it was not necessary to specify the name of the calculation when sorting the row groups.  If a pivot table contains more than one calculation, and there is a wish to sort by a calculation other than the first calculation that was defined, then the calculation can be specified by using the `calculationName` argument when calling either `sortColumnDataGroups` or `sortRowDataGroups`.
 
-When sorting the headings at the second, third, etc level, the sort does not break the structure coming from the parent data groups, i.e. a separate sort is performed within each parent group, e.g.
+When sorting the headings at the second, third, etc. level, the sort does not break the structure coming from the parent data groups, i.e. a separate sort is performed within each parent group, e.g.
 
 ```{r, warning=FALSE}
 library(pivottabler)
@@ -319,13 +318,11 @@ The full set of vignettes is:
 1. [Introduction](introduction.html)
 2. [Data Groups](datagroups.html)
 3. [Calculations](calculations.html)
-4. [Styling](styling.html)
-5. [Shiny](shiny.html)
-
-<!--
-5. [Cell Context](cellcontext.html)
-6. [Custom Layouts](customlayouts.html)
-7. [Retrieving Data](retrievingdata.html)
-8. [Manipulating Individual Cells](cellmanipulation.html) 
--->
+4. [Outputs](outputs.html)
+5. [Latex Output](latexoutput.html)
+6. [Styling](styling.html)
+7. [Finding and Formatting](findingandformatting.html)
+8. [Cell Context](cellcontext.html)
+9. [Irregular Layout](irregularlayout.html)
+10. [Shiny](shiny.html)
 	

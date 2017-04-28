@@ -66,8 +66,7 @@ pt$renderPivot()
 library(dplyr)
 library(lubridate)
 trains <- mutate(bhmtrains, 
-   GbttDate=as.POSIXct(ifelse(is.na(GbttArrival), GbttDeparture, GbttArrival), 
-                       origin = "1970-01-01"),
+   GbttDate=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
    GbttMonth=make_date(year=year(GbttDate), month=month(GbttDate), day=1))
 
 library(pivottabler)
@@ -85,8 +84,7 @@ pt$renderPivot()
 library(dplyr)
 library(lubridate)
 trains <- mutate(bhmtrains, 
-   GbttDate=as.POSIXct(ifelse(is.na(GbttArrival), GbttDeparture, GbttArrival), 
-                       origin = "1970-01-01"),
+   GbttDate=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
    GbttMonth=make_date(year=year(GbttDate), month=month(GbttDate), day=1))
 
 library(pivottabler)
@@ -103,8 +101,7 @@ pt$renderPivot()
 library(dplyr)
 library(lubridate)
 trains <- mutate(bhmtrains, 
-   GbttDate=as.POSIXct(ifelse(is.na(GbttArrival), GbttDeparture, GbttArrival), 
-                       origin = "1970-01-01"),
+   GbttDate=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
    GbttMonth=make_date(year=year(GbttDate), month=month(GbttDate), day=1))
 
 # define a custom formatting function

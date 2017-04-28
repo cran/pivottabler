@@ -1,6 +1,7 @@
 #' A class that defines a pivot table.
 #'
-#' The PivotTable class represents a pivot table and is the primary class for constructing and interacting with the pivot table.
+#' The PivotTable class represents a pivot table and is the primary class for
+#' constructing and interacting with the pivot table.
 #'
 #' @docType class
 #' @importFrom R6 R6Class
@@ -8,58 +9,163 @@
 #' @import htmltools
 #' @import jsonlite
 #' @export
-#' @keywords calculation
-#' @return Object of \code{\link{R6Class}} with properties and methods that define a pivot table.
+#' @return Object of \code{\link{R6Class}} with properties and methods that
+#'   define a pivot table.
 #' @format \code{\link{R6Class}} object.
 #' @examples
-#' # The package vignettes have many more examples of working with the PivotTable class.
+#' # The package vignettes have many more examples of working with the
+#' # PivotTable class.
 #' library(pivottabler)
 #' pt <- PivotTable$new()
 #' pt$addData(bhmtrains)
 #' pt$addColumnDataGroups("TrainCategory")
 #' pt$addRowDataGroups("TOC")
-#' pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+#' pt$defineCalculation(calculationName="TotalTrains",
+#' summariseExpression="n()")
 #' pt$renderPivot()
-#' @field data A PivotData object containing the data frames used to populate the pivot table.
-#' @field rowGroup The top PivotDataGroup in the parent-child hierarchy of row data groups.
-#' @field columnGroup The top PivotDataGroup in the parent-child hierarchy of column data groups.
-#' @field calculationGroups A PivotCalculationGroups object containing all of the pivot calculations in the pivot table.
-#' @field calculationsPosition "row" or "column" indicating where the calculation names will appear (only if multiple calculations are defined and visible in the pivot table).
-#' @field cells A PivotCells object containing all of the cells in the body of the pivot table.
+#' @field data A PivotData object containing the data frames used to populate
+#'   the pivot table.
+#' @field rowGroup The top PivotDataGroup in the parent-child hierarchy of row
+#'   data groups.
+#' @field columnGroup The top PivotDataGroup in the parent-child hierarchy of
+#'   column data groups.
+#' @field calculationGroups A PivotCalculationGroups object containing all of
+#'   the pivot calculations in the pivot table.
+#' @field calculationsPosition "row" or "column" indicating where the
+#'   calculation names will appear (only if multiple calculations are defined
+#'   and visible in the pivot table).
+#' @field cells A PivotCells object containing all of the cells in the body of
+#'   the pivot table.
 #' @field theme The name of the theme currently applied to the pivot table.
-#' @field styles A PivotStyles object containing the styles used to theme the pivot table.
-#' @field allowExternalStyles Enable support for external styles, when producing content for external systems.
+#' @field styles A PivotStyles object containing the styles used to theme the
+#'   pivot table.
+#' @field allowExternalStyles Enable support for external styles, when producing
+#'   content for external systems.
 
 #' @section Methods:
 #' \describe{
-#'   \item{Documentation}{For more complete explanations and examples please see the extensive vignettes supplied with this package.}
-#'   \item{\code{new(messages=FALSE, messageFile=NULL)}}{Create a new pivot table, including optionally enabling debug logging.}
+#'   \item{Documentation}{For more complete explanations and examples please see
+#'   the extensive vignettes supplied with this package.}
+#'   \item{\code{new(messages=FALSE, messageFile=NULL)}}{Create a new pivot
+#'   table, including optionally enabling debug logging.}
 #'
-#'   \item{\code{addData(df, dataName)}}{Add a data frame with the specified name to the pivot table.}
-#'   \item{\code{getTopColumnGroups()}}{Get the very top column PivotDataGroup that sits at the top of the parent-child hierarchy.}
-#'   \item{\code{getLeafColumnGroups()}}{Get the PivotDataGroups at the bottom of the column heading parent-child hierarchy.}
-#'   \item{\code{addColumnDataGroups(variableName, atLevel, fromData=TRUE, dataName, dataSortOrder="asc", dataFormat, onlyCombinationsThatExist=TRUE, explicitListOfValues, calculationGroupName, expandExistingTotals=FALSE, addTotal=TRUE, visualTotals=FALSE, totalPosition="after", totalCaption="Total")}}{Generate new column heading data groups based on the distinct values in a data frame or using explicitly specified data values.}
-#'   \item{\code{normaliseColumnGroups() }}{Normalise the column heading data group hierachy so that all branches have the same number of levels - accomplished by adding empty child data groups where needed.}
-#'   \item{\code{sortColumnDataGroups(levelNumber=1, orderBy="calculation", sortOrder="desc", calculationGroupName="default", calculationName)}}{Sort the column heading data groups either by the data group data value, caption or based on calculation result values.}
-#'   \item{\code{getTopRowGroups()}}{Get the left-most row PivotDataGroup that sits at the top of the parent-child hierarchy.}
-#'   \item{\code{getLeafRowGroups()}}{Get the PivotDataGroups at the bottom of the row heading parent-child hierarchy.}
-#'   \item{\code{addRowDataGroups(variableName, atLevel, fromData=TRUE, dataName, dataSortOrder="asc", dataFormat, onlyCombinationsThatExist=TRUE, explicitListOfValues, calculationGroupName, expandExistingTotals=FALSE, addTotal=TRUE, visualTotals=FALSE, totalPosition="after", totalCaption="Total")}}{Generate new row heading data groups based on the distinct values in a data frame or using explicitly specified data values.}
-#'   \item{\code{normaliseRowGroups()}}{Normalise the row heading data group hierachy so that all branches have the same number of levels - accomplished by adding empty child data groups where needed.}
-#'   \item{\code{sortRowDataGroups(levelNumber=1, orderBy="calculation", sortOrder="desc", calculationGroupName="default", calculationName)}}{Sort the row heading data groups either by the data group data value, caption or based on calculation result values.}
-#'   \item{\code{addCalculationGroup(calculationGroupName)}}{Create a new calculation group (rarely needed since the default group is sufficient for almost all scenarios).}
-#'   \item{\code{defineCalculation(calculationGroupName="default", calculationName, caption, visible=TRUE, displayOrder, filters, format, dataName, type="summary", valueName, summariseExpression, calculationExpression, calculationFunction, basedOn, noDataValue, noDataCaption)}}{Define a new calculation.  See the PivotCalculation class for details.}
-#'   \item{\code{addColumnCalculationGroups(calculationGroupName="default", atLevel)}}{Add calculation names on columns (if more than one calculation is defined and visible, then the calculation names will appear as column headings).}
-#'   \item{\code{addRowCalculationGroups(calculationGroupName="default", atLevel)}}{Add calculation names on rows (if more than one calculation is defined and visible, then the calculation names will appear as row headings).}
-#'   \item{\code{addStyle(styleName, declarations)}}{Define a new PivotStyle and add it to the PivotStyles collection.}
-#'   \item{\code{createInlineStyle(baseStyleName, declarations)}}{Create a PivotStyle object that can be used to style individual cell in the pivot table.}
-#'   \item{\code{generateCellStructure()}}{Generate the empty pivot table cells (after the row/column headings have been defined).}
-#'   \item{\code{resetCells()}}{Clear the cells of the pivot table (should be done automatically after structural changes have been made to the pivot table).}
-#'   \item{\code{evaluateCells()}}{Calculate the values of the cells in the body of the pivot table.}
-#'   \item{\code{evaluatePivot()}}{A wrapper for calling normaliseColumnGroups(), normaliseRowGroups(), generateCellStructure() and evaluateCells() in sequence.}
-#'   \item{\code{getCss(styleNamePrefix)}}{Get the CSS declarations for the entire pivot table.}
-#'   \item{\code{getHtml(styleNamePrefix, includeHeaderValues=FALSE, includeRCFilters=FALSE, includeCalculationFilters=FALSE, includeCalculationNames=FALSE, includeRawValue=FALSE)}}{Get the HTML representation of the pivot table.}
-#'   \item{\code{saveHtml(filePath, fullPageHTML=TRUE, styleNamePrefix, includeHeaderValues=FALSE, includeRCFilters=FALSE, includeCalculationFilters=FALSE, includeCalculationNames=FALSE, includeRawValue=FALSE)}}{Save the HTML representation of the pivot table to a file.}
-#'   \item{\code{renderPivot(width, height, styleNamePrefix, includeHeaderValues=FALSE, includeRCFilters=FALSE, includeCalculationFilters=FALSE, includeCalculationNames=FALSE, includeRawValue=FALSE)}}{Render the pivot table as a htmlwidget.}
+#'   \item{\code{addData(df, dataName)}}{Add a data frame with the specified
+#'   name to the pivot table.}
+#'   \item{\code{getTopColumnGroups()}}{Get the very top column PivotDataGroup
+#'   that sits at the top of the parent-child hierarchy.}
+#'   \item{\code{getLeafColumnGroups()}}{Get the PivotDataGroups at the bottom
+#'   of the column heading parent-child hierarchy.}
+#'   \item{\code{addColumnDataGroups(variableName, atLevel, fromData=TRUE,
+#'   dataName, dataSortOrder="asc", dataFormat, onlyCombinationsThatExist=TRUE,
+#'   explicitListOfValues, calculationGroupName, expandExistingTotals=FALSE,
+#'   addTotal=TRUE, visualTotals=FALSE, totalPosition="after",
+#'   totalCaption="Total")}}{Generate new column heading data groups based on
+#'   the distinct values in a data frame or using explicitly specified data
+#'   values.}
+#'   \item{\code{normaliseColumnGroups() }}{Normalise the column heading data
+#'   group hierachy so that all branches have the same number of levels -
+#'   accomplished by adding empty child data groups where needed.}
+#'   \item{\code{sortColumnDataGroups(levelNumber=1, orderBy="calculation",
+#'   sortOrder="desc", calculationGroupName="default", calculationName)}}{Sort
+#'   the column heading data groups either by the data group data value, caption
+#'   or based on calculation result values.}
+#'   \item{\code{getTopRowGroups()}}{Get the left-most row PivotDataGroup that
+#'   sits at the top of the parent-child hierarchy.}
+#'   \item{\code{getLeafRowGroups()}}{Get the PivotDataGroups at the bottom of
+#'   the row heading parent-child hierarchy.}
+#'   \item{\code{addRowDataGroups(variableName, atLevel, fromData=TRUE,
+#'   dataName, dataSortOrder="asc", dataFormat, onlyCombinationsThatExist=TRUE,
+#'   explicitListOfValues, calculationGroupName, expandExistingTotals=FALSE,
+#'   addTotal=TRUE, visualTotals=FALSE, totalPosition="after",
+#'   totalCaption="Total")}}{Generate new row heading data groups based on the
+#'   distinct values in a data frame or using explicitly specified data values.}
+#'   \item{\code{normaliseRowGroups()}}{Normalise the row heading data group
+#'   hierachy so that all branches have the same number of levels - accomplished
+#'   by adding empty child data groups where needed.}
+#'   \item{\code{sortRowDataGroups(levelNumber=1, orderBy="calculation",
+#'   sortOrder="desc", calculationGroupName="default", calculationName)}}{Sort
+#'   the row heading data groups either by the data group data value, caption or
+#'   based on calculation result values.}
+#'   \item{\code{addCalculationGroup(calculationGroupName)}}{Create a new
+#'   calculation group (rarely needed since the default group is sufficient for
+#'   almost all scenarios).}
+#'   \item{\code{defineCalculation(calculationGroupName="default",
+#'   calculationName, caption, visible=TRUE, displayOrder, filters, format,
+#'   dataName, type="summary", valueName, summariseExpression,
+#'   calculationExpression, calculationFunction, basedOn, noDataValue,
+#'   noDataCaption)}}{Define a new calculation.  See the PivotCalculation class
+#'   for details.}
+#'   \item{\code{addColumnCalculationGroups(calculationGroupName="default",
+#'   atLevel)}}{Add calculation names on columns (if more than one calculation
+#'   is defined and visible, then the calculation names will appear as column
+#'   headings).}
+#'   \item{\code{addRowCalculationGroups(calculationGroupName="default",
+#'   atLevel)}}{Add calculation names on rows (if more than one calculation is
+#'   defined and visible, then the calculation names will appear as row
+#'   headings).}
+#'   \item{\code{addStyle(styleName, declarations)}}{Define a new PivotStyle and
+#'   add it to the PivotStyles collection.}
+#'   \item{\code{createInlineStyle(baseStyleName, declarations)}}{Create a
+#'   PivotStyle object that can be used to style individual cell in the pivot
+#'   table.}
+#'   \item{\code{generateCellStructure()}}{Generate the empty pivot table cells
+#'   (after the row/column headings have been defined).}
+#'   \item{\code{resetCells()}}{Clear the cells of the pivot table (should be
+#'   done automatically after structural changes have been made to the pivot
+#'   table).}
+#'   \item{\code{evaluateCells()}}{Calculate the values of the cells in the body
+#'   of the pivot table.}
+#'   \item{\code{evaluatePivot()}}{A wrapper for calling
+#'   normaliseColumnGroups(), normaliseRowGroups(), generateCellStructure() and
+#'   evaluateCells() in sequence.}
+#'   \item{\code{findRowDataGroups(matchMode="simple", variableNames=NULL,
+#'   variableValues=NULL, totals="include", calculationNames=NULL,
+#'   includeDescendantGroups=FALSE)}}{Find row data groups matching the
+#'   specified criteria.}
+#'   \item{\code{findColumnDataGroups(matchMode="simple", variableNames=NULL,
+#'   variableValues=NULL, totals="include", calculationNames=NULL,
+#'   includeDescendantGroups=FALSE)}}{Find column data groups matching the
+#'   specified criteria.}
+#'   \item{\code{getCells = function(rowNumbers=NULL,
+#'   columnNumbers=NULL)}}{Retrieve cells by a combination of row and/or column
+#'   numbers.}
+#'   \item{\code{findCells(variableNames=NULL, variableValues=NULL,
+#'   totals="include", calculationNames=NULL, minValue=NULL, maxValue=NULL,
+#'   exactValues=NULL, includeNull=TRUE, includeNA=TRUE)}}{Find cells in the
+#'   body of the pivot table matching the specified criteria.}
+#'   \item{\code{asMatrix(includeHeaders=TRUE, repeatHeaders=FALSE,
+#'   rawValue=FALSE)}}{Gets the pivot table as a matrix, with or without
+#'   headings.}
+#'   \item{\code{asDataFrame(separator=" ")}}{Gets the pivot table as a data
+#'   frame, combining multiple levels of headings with the specified separator.}
+#'   \item{\code{asTidyDataFrame(includeGroupCaptions=TRUE,
+#'   includeGroupValues=TRUE, separator=" ")}}{Gets the pivot table as a tidy
+#'   data frame, where each cell in the body of the pivot table becomes one row
+#'   in the data frame.}
+#'   \item{\code{getCss(styleNamePrefix)}}{Get the CSS declarations for the
+#'   entire pivot table.}
+#'   \item{\code{getHtml(styleNamePrefix, includeHeaderValues=FALSE,
+#'   includeRCFilters=FALSE, includeCalculationFilters=FALSE,
+#'   includeCalculationNames=FALSE, includeRawValue=FALSE,
+#'   includeTotalInfo=FALSE)}}{Get the HTML representation of the pivot table,
+#'   specifying the CSS style name prefix to use and whether additional debug
+#'   information should be included in the pivot table.}
+#'   \item{\code{saveHtml(filePath, fullPageHTML=TRUE, styleNamePrefix,
+#'   includeHeaderValues=FALSE, includeRCFilters=FALSE,
+#'   includeCalculationFilters=FALSE, includeCalculationNames=FALSE,
+#'   includeRawValue=FALSE, includeTotalInfo=FALSE)}}{Save the HTML
+#'   representation of the pivot table to a file.}
+#'   \item{\code{renderPivot(width, height, styleNamePrefix,
+#'   includeHeaderValues=FALSE, includeRCFilters=FALSE,
+#'   includeCalculationFilters=FALSE, includeCalculationNames=FALSE,
+#'   includeRawValue=FALSE, includeTotalInfo=FALSE)}}{Render the pivot table as
+#'   a htmlwidget.}
+#'   \item{\code{getLatex(caption=NULL, label=NULL, fromRow=NULL, toRow=NULL,
+#'   fromColumn=NULL, toColumn=NULL, boldHeadings=FALSE,
+#'   italicHeadings=FALSE)}}{Get the Latex representation of the pivot table,
+#'   specifying the caption to appear above the table, the label to use when
+#'   referring to the table elsewhere in the document and how headings should be
+#'   styled.}
 #'   \item{\code{asList()}}{Get a list representation of the pivot table.}
 #'   \item{\code{asJSON()}}{Get a JSON representation of the pivot table.}
 #'   \item{\code{viewJSON()}}{View the JSON representation of the pivot table.}
@@ -77,11 +183,13 @@ PivotTable <- R6::R6Class("PivotTable",
       self$message("PivotTable$new", "Creating new Pivot Table...")
       private$p_data <- PivotData$new(parentPivot=self)
       private$p_styles <- getTheme(parentPivot=self, themeName="default")
-      private$p_rowGroup <- PivotDataGroup$new(parentPivot=self, parentGroup=NULL, rowOrColumn="row")
-      private$p_columnGroup <- PivotDataGroup$new(parentPivot=self, parentGroup=NULL, rowOrColumn="column")
+      private$p_rowGroup <- PivotDataGroup$new(parentPivot=self, parentGroup=NULL, rowOrColumn="row", isLevelTotal=TRUE)
+      private$p_columnGroup <- PivotDataGroup$new(parentPivot=self, parentGroup=NULL, rowOrColumn="column", isLevelTotal=TRUE)
       private$p_calculationsPosition <- NULL
       private$p_calculationGroups <- PivotCalculationGroups$new(parentPivot=self)
-      private$p_renderer <- PivotHtmlRenderer$new(parentPivot=self)
+      private$p_cells <- PivotCells$new(self)
+      private$p_htmlRenderer <- PivotHtmlRenderer$new(parentPivot=self)
+      private$p_latexRenderer <- PivotLatexRenderer$new(parentPivot=self)
       self$message("PivotTable$new", "Created new Pivot Table.")
       return(invisible())
     },
@@ -338,7 +446,7 @@ PivotTable <- R6::R6Class("PivotTable",
     generateCellStructure = function() {
       self$message("PivotTable$generateCellStructure", "Generating cell structure...")
       # clear any existing PivotCells
-      private$p_cells <- NULL
+      private$p_cells$reset()
       # clear rowColumn numbers on both axes
       rowGrps <- private$p_rowGroup$getDescendantGroups(descendants=NULL, includeCurrentGroup=TRUE)
       for(i in 1:length(rowGrps)) {
@@ -431,7 +539,7 @@ PivotTable <- R6::R6Class("PivotTable",
       if(!(calculationsPosition %in% c("row", "column")))
         stop("PivotTable$generateCellStructure(): calculationsPosition must be either row or column", call. = FALSE)
       # create and size the new PivotCells
-      private$p_cells <- PivotCells$new(self, rowGroups=rowGrps, columnGroups=columnGrps)
+      private$p_cells$setGroups(rowGroups=rowGrps, columnGroups=columnGrps)
       if(rowCount>0) {
         for(r in 1:rowCount) {
           if(columnCount>0) {
@@ -475,8 +583,9 @@ PivotTable <- R6::R6Class("PivotTable",
     resetCells = function() {
       self$message("PivotTable$resetCells", "Resetting cells...")
       if(private$p_evaluated==TRUE){
-        p_cells <- NULL
+        private$p_cells$reset()
         private$p_evaluated <- FALSE
+        private$p_latexRenderer$resetVisibleRange()
       }
       self$message("PivotTable$resetCells", "Reset cells.")
       return(invisible())
@@ -506,6 +615,304 @@ PivotTable <- R6::R6Class("PivotTable",
       self$message("PivotTable$evaluatePivot", "Evaluated pivot table.")
       return(invisible())
     },
+    findRowDataGroups = function(matchMode="simple", variableNames=NULL, variableValues=NULL,
+                                 totals="include", calculationNames=NULL, includeDescendantGroups=FALSE) {
+      checkArgument("PivotTable", "findRowDataGroups", matchMode, missing(matchMode), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("simple", "combinations"))
+      checkArgument("PivotTable", "findRowDataGroups", variableNames, missing(variableNames), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+      checkArgument("PivotTable", "findRowDataGroups", variableValues, missing(variableValues), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", listElementsMustBeAtomic=TRUE)
+      checkArgument("PivotTable", "findRowDataGroups", totals, missing(totals), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("include", "exclude", "only"))
+      checkArgument("PivotTable", "findRowDataGroups", calculationNames, missing(calculationNames), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+      checkArgument("PivotTable", "findRowDataGroups", includeDescendantGroups, missing(includeDescendantGroups), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+      self$message("PivotTable$findRowDataGroups", "Finding row data groups...")
+      grps <- private$p_rowGroup$findDataGroups(matchMode=matchMode, variableNames=variableNames, variableValues=variableValues,
+                                                totals=totals, calculationNames=calculationNames, includeDescendantGroups=includeDescendantGroups)
+      self$message("PivotTable$findRowDataGroups", "Found row data groups.")
+      return(invisible(grps))
+    },
+    findColumnDataGroups = function(matchMode="simple", variableNames=NULL, variableValues=NULL,
+                                    totals="include", calculationNames=NULL, includeDescendantGroups=FALSE) {
+      checkArgument("PivotTable", "findColumnDataGroups", matchMode, missing(matchMode), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("simple", "combinations"))
+      checkArgument("PivotTable", "findColumnDataGroups", variableNames, missing(variableNames), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+      checkArgument("PivotTable", "findColumnDataGroups", variableValues, missing(variableValues), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", listElementsMustBeAtomic=TRUE)
+      checkArgument("PivotTable", "findColumnDataGroups", totals, missing(totals), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("include", "exclude", "only"))
+      checkArgument("PivotTable", "findColumnDataGroups", calculationNames, missing(calculationNames), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+      checkArgument("PivotTable", "findColumnDataGroups", includeDescendantGroups, missing(includeDescendantGroups), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+      self$message("PivotTable$findColumnDataGroups", "Finding column data groups...")
+      grps <- private$p_columnGroup$findDataGroups(matchMode=matchMode, variableNames=variableNames, variableValues=variableValues,
+                                                   totals=totals, calculationNames=calculationNames, includeDescendantGroups=includeDescendantGroups)
+      self$message("PivotTable$findColumnDataGroups", "Found column data groups.")
+      return(invisible(grps))
+    },
+    getCells = function(rowNumbers=NULL, columnNumbers=NULL) {
+      checkArgument("PivotTable", "getCells", rowNumbers, missing(rowNumbers), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+      checkArgument("PivotTable", "getCells", columnNumbers, missing(columnNumbers), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+      self$message("PivotTable$getCells", "Getting cells...")
+      if(!private$p_evaluated) stop("PivotTable$getCells():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
+      if(is.null(private$p_cells)) stop("PivotTable$getCells():  No cells exist to retrieve.", call. = FALSE)
+      cells <- private$p_cells$getCells(rowNumbers=rowNumbers, columnNumber=columnNumbers)
+      self$message("PivotTable$getCells", "Got cells.")
+      return(invisible(cells))
+    },
+    findCells = function(variableNames=NULL, variableValues=NULL, totals="include", calculationNames=NULL,
+                         minValue=NULL, maxValue=NULL, exactValues=NULL, includeNull=TRUE, includeNA=TRUE) {
+      checkArgument("PivotTable", "findCells", variableNames, missing(variableNames), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+      checkArgument("PivotTable", "findCells", variableValues, missing(variableValues), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", listElementsMustBeAtomic=TRUE)
+      checkArgument("PivotTable", "findCells", totals, missing(totals), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("include", "exclude", "only"))
+      checkArgument("PivotTable", "findCells", calculationNames, missing(calculationNames), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+      checkArgument("PivotTable", "findCells", minValue, missing(minValue), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+      checkArgument("PivotTable", "findCells", maxValue, missing(maxValue), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+      checkArgument("PivotTable", "findCells", exactValues, missing(exactValues), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", listElementsMustBeAtomic=TRUE)
+      checkArgument("PivotTable", "findCells", includeNull, missing(includeNull), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+      checkArgument("PivotTable", "findCells", includeNA, missing(includeNA), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+      self$message("PivotTable$findCells", "Finding cells...")
+      if(!private$p_evaluated) stop("PivotTable$findCells():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
+      if(is.null(private$p_cells)) stop("PivotTable$findCells():  No cells exist to retrieve.", call. = FALSE)
+      cells <- private$p_cells$findCells(variableNames=variableNames, variableValues=variableValues, totals=totals, calculationNames=calculationNames,
+                                         minValue=minValue, maxValue=maxValue, exactValues=exactValues, includeNull=includeNull, includeNA=includeNA)
+      self$message("PivotTable$findCells", "Found cells.")
+      return(invisible(cells))
+    },
+    asMatrix = function(includeHeaders=TRUE, repeatHeaders=FALSE, rawValue=FALSE) {
+      checkArgument("PivotTable", "asMatrix", includeHeaders, missing(includeHeaders), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+      checkArgument("PivotTable", "asMatrix", rawValue, missing(rawValue), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+      self$message("PivotTable$asMatrix", "Getting pivot table as a matrix...",
+                    list(includeHeaders=includeHeaders, repeatHeaders=repeatHeaders, rawValue=rawValue))
+      if(!private$p_evaluated) stop("PivotTable$asMatrix():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
+      if(is.null(private$p_cells)) stop("PivotTable$asMatrix():  No cells exist to retrieve.", call. = FALSE)
+      if(includeHeaders==FALSE) {
+        return(private$p_cells$asMatrix(rawValue=rawValue))
+      }
+      if(repeatHeaders==FALSE) {
+        private$clearIsRenderedFlags()
+      }
+      # size the matrix
+      rowHeaderLevelCount <- private$p_rowGroup$getLevelCount()
+      columnHeaderLevelCount <- private$p_columnGroup$getLevelCount()
+      rowCount <- private$p_cells$rowCount
+      columnCount <- private$p_cells$columnCount
+      m <- matrix(data=NA, nrow=columnHeaderLevelCount+rowCount, ncol=rowHeaderLevelCount+columnCount)
+      # set the root cells
+      for(r in 1:columnHeaderLevelCount) {
+        for(c in 1:rowHeaderLevelCount) {
+          m[r, c] <- ""
+        }
+      }
+      # set the column headers
+      colHeaderLeafGroups <- private$p_columnGroup$getLeafGroups()
+      for(c in 1:length(colHeaderLeafGroups)) {
+        leafGroup <- colHeaderLeafGroups[[c]]
+        grps <- leafGroup$getAncestorGroups(includeCurrentGroup=TRUE)
+        for(r in (length(grps)-1):1) {
+          grp <- grps[[length(grps) - r]]
+          if((repeatHeaders==FALSE) && (grp$isRendered==TRUE)) {
+            m[r, c + rowHeaderLevelCount] <- ""
+            next
+          }
+          m[r, c + rowHeaderLevelCount] <- grp$caption
+          grp$isRendered <- TRUE
+        }
+      }
+      # set the row headers
+      rowHeaderLeafGroups <- private$p_rowGroup$getLeafGroups()
+      for(r in 1:length(rowHeaderLeafGroups)) {
+        leafGroup <- rowHeaderLeafGroups[[r]]
+        grps <- leafGroup$getAncestorGroups(includeCurrentGroup=TRUE)
+        for(c in (length(grps)-1):1) {
+          grp <- grps[[length(grps) - c]]
+          if((repeatHeaders==FALSE) && (grp$isRendered==TRUE)) {
+            m[r + columnHeaderLevelCount, c] <- ""
+            next
+          }
+          m[r + columnHeaderLevelCount, c] <- grp$caption
+          grp$isRendered <- TRUE
+        }
+      }
+      # set the cell values
+      for(r in 1:rowCount) {
+        for(c in 1:columnCount) {
+          cell <- private$p_cells$getCell(r, c)
+          if(rawValue==TRUE) {
+            v <- cell$rawValue
+            if(!(("integer" %in% class(v))||("numeric" %in% class(v)))) v <- NA
+          }
+          else v <- cell$formattedValue
+          if(is.null(v)) m[columnHeaderLevelCount + r, rowHeaderLevelCount + c] <- ""
+          else if(is.na(v)) m[columnHeaderLevelCount + r, rowHeaderLevelCount + c] <- ""
+          else m[columnHeaderLevelCount + r, rowHeaderLevelCount + c] <- v
+        }
+      }
+      self$message("PivotTable$asMatrix", "Got pivot table as a matrix.")
+      return(m)
+    },
+    asDataFrame = function(separator=" ") {
+      checkArgument("PivotTable", "asDataFrame", separator, missing(separator), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character")
+      self$message("PivotTable$asDataFrame", "Getting pivot table as a data frame...", list(separator=separator))
+      if(!private$p_evaluated) stop("PivotTable$asDataFrame():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
+      if(is.null(private$p_cells)) stop("PivotTable$asDataFrame():  No cells exist to retrieve.", call. = FALSE)
+      # sizing
+      rowHeaderLevelCount <- private$p_rowGroup$getLevelCount()
+      columnHeaderLevelCount <- private$p_columnGroup$getLevelCount()
+      rowCount <- private$p_cells$rowCount
+      columnCount <- private$p_cells$columnCount
+      rowHeaders <- list()
+      columnHeaders <- list()
+      # set the column headers
+      colHeaderLeafGroups <- private$p_columnGroup$getLeafGroups()
+      for(c in 1:length(colHeaderLeafGroups)) {
+        leafGroup <- colHeaderLeafGroups[[c]]
+        grps <- leafGroup$getAncestorGroups(includeCurrentGroup=TRUE)
+        headerValue <- ""
+        for(r in (length(grps)-1):1) {
+          grp <- grps[[r]]
+          if(nchar(headerValue) == 0) headerValue <- grp$caption
+          else headerValue <- paste0(headerValue, separator, grp$caption)
+        }
+        columnHeaders[[length(columnHeaders) + 1]] <- headerValue
+      }
+      # set the row headers
+      rowHeaderLeafGroups <- private$p_rowGroup$getLeafGroups()
+      for(r in 1:length(rowHeaderLeafGroups)) {
+        leafGroup <- rowHeaderLeafGroups[[r]]
+        grps <- leafGroup$getAncestorGroups(includeCurrentGroup=TRUE)
+        headerValue <- ""
+        for(c in (length(grps)-1):1) {
+          grp <- grps[[c]]
+          if(nchar(headerValue) == 0) headerValue <- grp$caption
+          else headerValue <- paste0(headerValue, separator, grp$caption)
+        }
+        rowHeaders[[length(rowHeaders) + 1]] <- headerValue
+      }
+      # get the value vectors to form the data frame
+      dfColumns <- list()
+      for(c in 1:columnCount) {
+        columnValues <- NA
+        for(r in 1:rowCount) {
+          cell <- private$p_cells$getCell(r, c)
+          v <- cell$rawValue
+          if(!(("integer" %in% class(v))||("numeric" %in% class(v)))) v <- NA
+          if(is.null(v)) v <- NA
+          columnValues[r] <- v
+        }
+        dfColumns[[c]] <- columnValues
+      }
+      df <- as.data.frame(dfColumns)
+      colnames(df) <- columnHeaders
+      rownames(df) <- rowHeaders
+      self$message("PivotTable$asDataFrame", "Got pivot table as a data frame.")
+      return(df)
+    },
+    asTidyDataFrame = function(includeGroupCaptions=TRUE, includeGroupValues=TRUE, separator=" ") {
+      checkArgument("PivotTable", "asTidyDataFrame", includeGroupCaptions, missing(includeGroupCaptions), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+      checkArgument("PivotTable", "asTidyDataFrame", includeGroupValues, missing(includeGroupValues), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+      checkArgument("PivotTable", "asTidyDataFrame", separator, missing(separator), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character")
+      self$message("PivotTable$asTidyDataFrame", "Getting pivot table as a tidy data frame...",
+                   list(includeGroupCaptions=includeGroupCaptions, includeGroupValues=includeGroupValues, separator=separator))
+      if(!private$p_evaluated) stop("PivotTable$asDataFrame():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
+      if(is.null(private$p_cells)) stop("PivotTable$asDataFrame():  No cells exist to retrieve.", call. = FALSE)
+      df <- list()
+      vals <- list()
+      # basic information
+      df$rowNumber[1] <- NA
+      df$columnNumber[1] <- NA
+      df$isTotal[1] <- NA
+      vals$calculationName[1] <- NA
+      vals$calculationGroupName[1] <- NA
+      vals$rawValue[1] <- NA
+      vals$formattedValue[1] <- NA
+      # other standard information
+      if(includeGroupCaptions==TRUE) {
+        # add in the level headings
+        rowLevelCount <- private$p_rowGroup$getLevelCount()
+        for(r in 1:rowLevelCount) {
+          df[[paste0("RowLevel", sprintf("%02d", r))]][1] <- NA
+        }
+        columnLevelCount <- private$p_columnGroup$getLevelCount()
+        for(c in 1:columnLevelCount) {
+          df[[paste0("ColumnLevel", sprintf("%02d", c))]][1] <- NA
+        }
+      }
+      # iterate the cells
+      cellNumber <- 0
+      if(private$p_cells$rowCount > 0) {
+        for(r in 1:private$p_cells$rowCount) {
+          if(private$p_cells$columnCount > 0) {
+            for(c in 1:private$p_cells$columnCount) {
+              # get the cell
+              cell <- private$p_cells$getCell(r, c)
+              if(is.null(cell)) next
+              cellNumber <- cellNumber + 1
+              # basic info
+              df$rowNumber[cellNumber] <- r
+              df$columnNumber[cellNumber] <- c
+              df$isTotal[cellNumber] <- cell$isTotal
+              vals$calculationName[cellNumber] <- cell$calculationName
+              vals$calculationGroupName[cellNumber] <- cell$calculationGroupName
+              if(!is.null(cell$rawValue)) {
+                if(length(cell$rawValue)>0) {
+                  if(!is.na(cell$rawValue)) vals$rawValue[cellNumber] <- cell$rawValue
+                }
+              }
+              if(!is.null(cell$formattedValue)) {
+                if(length(cell$formattedValue)>0) {
+                  if(!is.na(cell$formattedValue)) vals$formattedValue[cellNumber] <- cell$formattedValue
+                }
+              }
+              # captions
+              if(includeGroupCaptions==TRUE) {
+                # row heading captions
+                rg <- cell$rowLeafGroup
+                while(!is.null(rg)) {
+                  levelNumber <- rg$getLevelNumber()
+                  if(levelNumber==0) break
+                  df[[paste0("RowLevel", sprintf("%02d", levelNumber))]][cellNumber] <- rg$caption
+                  rg <- rg$parentGroup
+                }
+                # column heading captions
+                cg <- cell$columnLeafGroup
+                while(!is.null(cg)) {
+                  levelNumber <- cg$getLevelNumber()
+                  if(levelNumber==0) break
+                  df[[paste0("ColumnLevel", sprintf("%02d", levelNumber))]][cellNumber] <- cg$caption
+                  cg <- cg$parentGroup
+                }
+              }
+              # filter values
+              if(includeGroupValues==TRUE) {
+                filters <- cell$rowColFilters
+                if(!is.null(filters)) {
+                  if(filters$count>0) {
+                    for(i in 1:filters$count) {
+                      filter <- filters$filters[[i]]
+                      if(is.null(filter)) next
+                      values <- filter$values
+                      if(is.null(values)) values <- NA
+                      if(length(values>1)) values <- paste(values, sep=separator, collapse=separator)
+                      df[[filter$variableName]][cellNumber] <- values
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      if(cellNumber==0) return(invisible())
+      # append the values to the end of the data frame
+      df$calculationName <- vals$calculationName
+      df$calculationGroupName <- vals$calculationGroupName
+      df$rawValue <- vals$rawValue
+      df$formattedValue <- vals$formattedValue
+      # check all of the to-be columns are of the same length and adjust if not
+      maxLength <- 0
+      for(i in 1:length(df)) {
+        maxLength <- max(maxLength, length(df[[i]]))
+      }
+      for(i in 1:length(df)) {
+        if(length(df[[i]]) < maxLength) df[[i]][maxLength] <- NA
+      }
+      self$message("PivotTable$asTidyDataFrame", "Got pivot table as a tidy data frame.")
+      return(invisible(as.data.frame(df)))
+    },
     getCss = function(styleNamePrefix=NULL) {
       checkArgument("PivotTable", "getCss", styleNamePrefix, missing(styleNamePrefix), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
       self$message("PivotTable$getCss", "Getting Styles...")
@@ -521,24 +928,27 @@ PivotTable <- R6::R6Class("PivotTable",
       return(invisible(styles))
     },
     getHtml = function(styleNamePrefix=NULL, includeHeaderValues=FALSE, includeRCFilters=FALSE, includeCalculationFilters=FALSE,
-                       includeCalculationNames=FALSE, includeRawValue=FALSE) {
+                       includeCalculationNames=FALSE, includeRawValue=FALSE, includeTotalInfo=FALSE) {
       checkArgument("PivotTable", "getHtml", styleNamePrefix, missing(styleNamePrefix), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
       checkArgument("PivotTable", "getHtml", includeHeaderValues, missing(includeHeaderValues), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       checkArgument("PivotTable", "getHtml", includeRCFilters, missing(includeRCFilters), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       checkArgument("PivotTable", "getHtml", includeCalculationFilters, missing(includeCalculationFilters), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       checkArgument("PivotTable", "getHtml", includeCalculationNames, missing(includeCalculationNames), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       checkArgument("PivotTable", "getHtml", includeRawValue, missing(includeRawValue), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+      checkArgument("PivotTable", "getHtml", includeTotalInfo, missing(includeTotalInfo), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       self$message("PivotTable$getHtml", "Getting HTML...")
       if(!private$p_evaluated) stop("PivotTable$getHtml():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
       if(is.null(private$p_cells)) stop("PivotTable$getHtml():  No cells exist to render.", call. = FALSE)
-      htmlTable <- private$p_renderer$getTableHtml(styleNamePrefix=styleNamePrefix, includeHeaderValues=includeHeaderValues,
+      htmlTable <- private$p_htmlRenderer$getTableHtml(styleNamePrefix=styleNamePrefix, includeHeaderValues=includeHeaderValues,
                                                    includeRCFilters=includeRCFilters, includeCalculationFilters=includeCalculationFilters,
-                                                   includeCalculationNames=includeCalculationNames, includeRawValue=includeRawValue)
+                                                   includeCalculationNames=includeCalculationNames, includeRawValue=includeRawValue,
+                                                   includeTotalInfo=includeTotalInfo)
       self$message("PivotTable$getHtml", "Got HTML.")
       return(invisible(htmlTable))
     },
     saveHtml = function(filePath=NULL, fullPageHTML=TRUE, styleNamePrefix=NULL, includeHeaderValues=FALSE,
-                        includeRCFilters=FALSE, includeCalculationFilters=FALSE, includeCalculationNames=FALSE, includeRawValue=FALSE) {
+                        includeRCFilters=FALSE, includeCalculationFilters=FALSE, includeCalculationNames=FALSE, includeRawValue=FALSE,
+                        includeTotalInfo=FALSE) {
       checkArgument("PivotTable", "saveHtml", filePath, missing(filePath), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
       checkArgument("PivotTable", "saveHtml", fullPageHTML, missing(fullPageHTML), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       checkArgument("PivotTable", "saveHtml", styleNamePrefix, missing(styleNamePrefix), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
@@ -547,16 +957,15 @@ PivotTable <- R6::R6Class("PivotTable",
       checkArgument("PivotTable", "saveHtml", includeCalculationFilters, missing(includeCalculationFilters), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       checkArgument("PivotTable", "saveHtml", includeCalculationNames, missing(includeCalculationNames), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       checkArgument("PivotTable", "saveHtml", includeRawValue, missing(includeRawValue), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
-      self$message("PivotTable$saveHtml", "Saving HTML...", list(filePath=filePath, fullPageHTML=fullPageHTML, styleNamePrefix=styleNamePrefix,
-                                                                 includeHeaderValues=includeHeaderValues,
-                                                                 includeRCFilters=includeRCFilters, includeCalculationFilters=includeCalculationFilters,
-                                                                 includeCalculationNames=includeCalculationNames, includeRawValue=includeRawValue))
+      checkArgument("PivotTable", "saveHtml", includeTotalInfo, missing(includeTotalInfo), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+      self$message("PivotTable$saveHtml", "Saving HTML...", list(filePath=filePath, fullPageHTML=fullPageHTML))
       if(!private$p_evaluated) stop("PivotTable$getHtml():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
       # todo: enable rendering before cells are calculated so the structure of the pivot can be checked as it is being developed
       if(is.null(private$p_cells)) stop("PivotTable$saveHtml():  No cells exist to render.", call. = FALSE)
-      htmlTable <- private$p_renderer$getTableHtml(styleNamePrefix=styleNamePrefix, includeHeaderValues=includeHeaderValues,
+      htmlTable <- private$p_htmlRenderer$getTableHtml(styleNamePrefix=styleNamePrefix, includeHeaderValues=includeHeaderValues,
                                                    includeRCFilters=includeRCFilters, includeCalculationFilters=includeCalculationFilters,
-                                                   includeCalculationNames=includeCalculationNames, includeRawValue=includeRawValue)
+                                                   includeCalculationNames=includeCalculationNames, includeRawValue=includeRawValue,
+                                                   includeTotalInfo=includeTotalInfo)
       if (fullPageHTML==FALSE) {
         fileConn <- file(filePath)
         writeLines(as.character(htmlTable), fileConn)
@@ -582,7 +991,8 @@ PivotTable <- R6::R6Class("PivotTable",
       return(invisible())
     },
     renderPivot = function(width=NULL, height=NULL, styleNamePrefix=NULL, includeHeaderValues=FALSE,
-                           includeRCFilters=FALSE, includeCalculationFilters=FALSE, includeCalculationNames=FALSE, includeRawValue=FALSE) {
+                           includeRCFilters=FALSE, includeCalculationFilters=FALSE, includeCalculationNames=FALSE, includeRawValue=FALSE,
+                           includeTotalInfo=FALSE) {
       checkArgument("PivotTable", "renderPivot", width, missing(width), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
       checkArgument("PivotTable", "renderPivot", height, missing(height), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
       checkArgument("PivotTable", "renderPivot", styleNamePrefix, missing(styleNamePrefix), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
@@ -591,20 +1001,23 @@ PivotTable <- R6::R6Class("PivotTable",
       checkArgument("PivotTable", "renderPivot", includeCalculationFilters, missing(includeCalculationFilters), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       checkArgument("PivotTable", "renderPivot", includeCalculationNames, missing(includeCalculationNames), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       checkArgument("PivotTable", "renderPivot", includeRawValue, missing(includeRawValue), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+      checkArgument("PivotTable", "renderPivot", includeTotalInfo, missing(includeTotalInfo), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       self$message("PivotTable$renderPivot", "Rendering htmlwidget...", list(width=width, height=height, styleNamePrefix=styleNamePrefix,
                                                                              includeHeaderValues=includeHeaderValues,
                                                                              includeRCFilters=includeRCFilters, includeCalculationFilters=includeCalculationFilters,
-                                                                             includeCalculationNames=includeCalculationNames, includeRawValue=includeRawValue))
+                                                                             includeCalculationNames=includeCalculationNames, includeRawValue=includeRawValue,
+                                                                             includeTotalInfo=includeTotalInfo))
       if(!private$p_evaluated) self$evaluatePivot()
       if(!private$p_evaluated) stop("PivotTable$getHtml():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
       # pivottabler(self, width=width, height=height, includeRCFilters=includeRCFilters, includeCalculationFilters=includeCalculationFilters,
       #                 includeCalculationNames=includeCalculationNames, includeRawValue=includeRawValue)
       settings <- list() # may need this in the future
       widgetData <- list(
-        tableCss = pt$getCss(styleNamePrefix=styleNamePrefix),
-        tableHtml = as.character(pt$getHtml(styleNamePrefix=styleNamePrefix, includeHeaderValues=includeHeaderValues,
+        tableCss = self$getCss(styleNamePrefix=styleNamePrefix),
+        tableHtml = as.character(self$getHtml(styleNamePrefix=styleNamePrefix, includeHeaderValues=includeHeaderValues,
                                             includeRCFilters=includeRCFilters, includeCalculationFilters=includeCalculationFilters,
-                                            includeCalculationNames=includeCalculationNames, includeRawValue=includeRawValue)),
+                                            includeCalculationNames=includeCalculationNames, includeRawValue=includeRawValue,
+                                            includeTotalInfo=includeTotalInfo)),
         settings = settings
       )
       # viewer.fill=TRUE and browser.fill=TRUE sound like they would be good things, but they seem to prevent
@@ -617,6 +1030,27 @@ PivotTable <- R6::R6Class("PivotTable",
       w <- htmlwidgets::createWidget("pivottabler", widgetData, width=width, height=height, sizingPolicy=sp)
       self$message("PivotTable$renderPivot", "Rendered htmlwidget.")
       return(w)
+    },
+    getLatex = function(caption=NULL, label=NULL, fromRow=NULL, toRow=NULL, fromColumn=NULL, toColumn=NULL,
+                        boldHeadings=FALSE, italicHeadings=FALSE) {
+      checkArgument("PivotTable", "getLatex", caption, missing(caption), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+      checkArgument("PivotTable", "getLatex", label, missing(label), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+      checkArgument("PivotTable", "getLatex", fromRow, missing(fromRow), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+      checkArgument("PivotTable", "getLatex", toRow, missing(toRow), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+      checkArgument("PivotTable", "getLatex", fromColumn, missing(fromColumn), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+      checkArgument("PivotTable", "getLatex", toColumn, missing(toColumn), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+      checkArgument("PivotTable", "getLatex", boldHeadings, missing(boldHeadings), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
+      checkArgument("PivotTable", "getLatex", italicHeadings, missing(italicHeadings), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
+      self$message("PivotTable$getLatex", "Getting Latex...", list(caption=caption, label=label,
+                                                                   fromRow=fromRow, toRow=toRow, fromColumn=fromColumn, toColumn=toColumn,
+                                                                   boldHeadings=boldHeadings, italicHeadings=italicHeadings))
+      if(!private$p_evaluated) self$evaluatePivot()
+      if(!private$p_evaluated) stop("PivotTable$getLatex():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
+      if(is.null(private$p_cells)) stop("PivotTable$getLatex():  No cells exist to render.", call. = FALSE)
+      private$p_latexRenderer$setVisibleRange(fromRow=fromRow, toRow=toRow, fromColumn=fromColumn, toColumn=toColumn)
+      ltx <- private$p_latexRenderer$getTableLatex(caption=caption, label=label, boldHeadings=boldHeadings, italicHeadings=italicHeadings)
+      self$message("PivotTable$getLatex", "Got Latex.")
+      return(ltx)
     },
     message = function(methodName, desc, detailList=NULL) {
       if(!private$p_messages) return()
@@ -650,7 +1084,7 @@ PivotTable <- R6::R6Class("PivotTable",
         calculationsPosition = private$p_calculationsPosition,
         calculationGroups = private$p_calculationGroups$asList()
       )
-      if(!is.null(private$p_cells)) lst["cells"] <- private$p_cells$asList()
+      if(!is.null(private$p_cells)) lst$cells <- private$p_cells$asList()
       self$message("PivotTable$asList", "Got list.")
       return(lst)
     },
@@ -684,7 +1118,9 @@ PivotTable <- R6::R6Class("PivotTable",
         }
       }
     },
-    cells = function(value) { return(invisible(private$p_cells ))},
+    cells = function(value) { return(invisible(private$p_cells)) },
+    rowCount = function(value) { return(invisible(private$p_cells$rowCount)) },
+    columnCount = function(value) { return(invisible(private$p_cells$columnCount)) },
     theme = function(value) {
       if(missing(value)) {
         if(is.null(private$p_styles)) return(invisible(NULL))
@@ -734,8 +1170,25 @@ PivotTable <- R6::R6Class("PivotTable",
     p_calculationGroups = NULL,
     p_evaluated = FALSE,
     p_cells = NULL,
-    p_renderer = NULL,
+    p_htmlRenderer = NULL,
+    p_latexRenderer = NULL,
     p_messages = FALSE,
-    p_messageFile = NULL
+    p_messageFile = NULL,
+    clearIsRenderedFlags = function() {
+      self$message("PivotTable$clearIsRenderedFlags", "Clearing isRendered flags...")
+      clearFlags <- function(dg) {
+        grp <- dg
+        while(!is.null(grp)) {
+          grp$isRendered <- FALSE
+          grp <- grp$parentGroup
+        }
+      }
+      rowGroups <- self$rowGroup$getDescendantGroups(includeCurrentGroup=TRUE)
+      lapply(rowGroups, clearFlags)
+      columnGroups <- self$columnGroup$getDescendantGroups(includeCurrentGroup=TRUE)
+      lapply(columnGroups, clearFlags)
+      self$message("PivotTable$clearIsRenderedFlags", "Cleared isRendered flags...")
+      return(invisible())
+    }
   )
 )
