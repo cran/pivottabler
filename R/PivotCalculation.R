@@ -30,8 +30,8 @@
 #'   "value".
 #' @field valueName For type="value", the name of the column containing the
 #'   value to display in the pivot table.
-#' @field summariseExpression For type="summary", the dplyr expression to use
-#'   with dplyr::summarise().
+#' @field summariseExpression For type="summary", either the dplyr expression to
+#'   use with dplyr::summarise() or a data.table calculation expression.
 #' @field calculationExpression For type="calculation", an expression to combine
 #'   aggregate values.
 #' @field calculationFunction For type="function", a reference to a custom R
@@ -60,35 +60,41 @@ PivotCalculation <- R6::R6Class("PivotCalculation",
                          filters=NULL, format=NULL, dataName=NULL, type="summary",
                          valueName=NULL, summariseExpression=NULL, calculationExpression=NULL, calculationFunction=NULL, basedOn=NULL,
                          noDataValue=NULL, noDataCaption=NULL) {
-     checkArgument("PivotCalculation", "initialize", parentPivot, missing(parentPivot), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotTable")
-     checkArgument("PivotCalculation", "initialize", calculationName, missing(calculationName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
-     checkArgument("PivotCalculation", "initialize", caption, missing(caption), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
-     checkArgument("PivotCalculation", "initialize", visible, missing(visible), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
-     checkArgument("PivotCalculation", "initialize", displayOrder, missing(displayOrder), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
-     checkArgument("PivotCalculation", "initialize", filters, missing(filters), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotFilters")
-     checkArgument("PivotCalculation", "initialize", format, missing(format), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("character","list","function"))
-     checkArgument("PivotCalculation", "initialize", dataName, missing(dataName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
-     checkArgument("PivotCalculation", "initialize", type, missing(type), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("value", "summary", "calculation", "function"))
-     checkArgument("PivotCalculation", "initialize", valueName, missing(valueName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
-     checkArgument("PivotCalculation", "initialize", summariseExpression, missing(summariseExpression), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
-     checkArgument("PivotCalculation", "initialize", calculationExpression, missing(calculationExpression), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
-     checkArgument("PivotCalculation", "initialize", calculationFunction, missing(calculationFunction), allowMissing=TRUE, allowNull=TRUE, allowedClasses="function")
-     checkArgument("PivotCalculation", "initialize", basedOn, missing(basedOn), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
-     checkArgument("PivotCalculation", "initialize", noDataValue, missing(noDataValue), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer","numeric"))
-     checkArgument("PivotCalculation", "initialize", noDataCaption, missing(noDataCaption), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+     if(parentPivot$argumentCheckMode > 0) {
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", parentPivot, missing(parentPivot), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotTable")
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", calculationName, missing(calculationName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", caption, missing(caption), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", visible, missing(visible), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", displayOrder, missing(displayOrder), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", filters, missing(filters), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotFilters")
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", format, missing(format), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("character","list","function"))
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", dataName, missing(dataName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", type, missing(type), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("value", "summary", "calculation", "function"))
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", valueName, missing(valueName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", summariseExpression, missing(summariseExpression), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", calculationExpression, missing(calculationExpression), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", calculationFunction, missing(calculationFunction), allowMissing=TRUE, allowNull=TRUE, allowedClasses="function")
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", basedOn, missing(basedOn), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", noDataValue, missing(noDataValue), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer","numeric"))
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", noDataCaption, missing(noDataCaption), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+     }
      private$p_parentPivot <- parentPivot
      fstr <- NULL
      if(!is.null(filters)) {
        if (!("PivotFilters" %in% class(filters))) stop("PivotCalculation$new(): filters must be of type PivotFilters", call. = FALSE)
        fstr <- filters$asString()
      }
-     private$p_parentPivot$message("PivotCalculation$new", "Creating new Pivot Calculation...",
-                                   list(calculationName=calculationName, caption=caption, visible=visible,
-                                   displayOrder=displayOrder, filters=fstr, format=format, dataName=dataName,
-                                   valueName=valueName, summariseExpression=summariseExpression,
-                                   calculationExpression=calculationExpression,
-                                   calculationFunctionIsNull=is.null(calculationFunction), basedOn=basedOn,
-                                   noDataValue=noDataValue, noDataCaption=noDataCaption))
+     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculation$new", "Creating new Pivot Calculation...",
+                                                                             list(calculationName=calculationName, caption=caption, visible=visible,
+                                                                             displayOrder=displayOrder, filters=fstr, format=format, dataName=dataName,
+                                                                             valueName=valueName, summariseExpression=summariseExpression,
+                                                                             calculationExpression=calculationExpression,
+                                                                             calculationFunctionIsNull=is.null(calculationFunction), basedOn=basedOn,
+                                                                             noDataValue=noDataValue, noDataCaption=noDataCaption))
+     if(grepl(" ", calculationName)==TRUE)
+       stop("PivotCalculation$new():  calculationName must not contain any space characters.", call. = FALSE)
+     if(make.names(calculationName)!=calculationName)
+       stop(paste0("PivotCalculation$new():  Please specify a valid name for calculation '", calculationName, "'\nA valid name consists of letters, numbers and the dot or underline characters and starts with a letter or the dot not followed by a number."), call. = FALSE)
      if(missing(caption)||is.null(caption)) caption <- calculationName
      if((!(missing(dataName)))&&(!is.null(dataName))) {
        if(!private$p_parentPivot$data$isKnownData(dataName))
@@ -134,7 +140,7 @@ PivotCalculation <- R6::R6Class("PivotCalculation",
      private$p_basedOn <- basedOn
      private$p_noDataValue <- noDataValue
      private$p_noDataCaption <- noDataCaption
-     private$p_parentPivot$message("PivotCalculation$new", "Created new Pivot Calculation")
+     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculation$new", "Created new Pivot Calculation")
    },
    asList = function() {
      lst <- list(

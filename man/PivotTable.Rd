@@ -19,6 +19,12 @@ constructing and interacting with the pivot table.
 \section{Fields}{
 
 \describe{
+\item{\code{argumentCheckMode}}{A number (0-4 meaning none, minimal, basic,
+balanced, full) indicating the argument checking level.}
+
+\item{\code{processingLibrary}}{A character value indicating the processing library
+being used (base, dplyr, data.table).}
+
 \item{\code{data}}{A PivotData object containing the data frames used to populate
 the pivot table.}
 
@@ -35,6 +41,12 @@ the pivot calculations in the pivot table.}
 calculation names will appear (only if multiple calculations are defined
 and visible in the pivot table).}
 
+\item{\code{evaluationMode}}{Either "sequential" or "batch" to specify how summary
+calculations (i.e. where type="summary") are evaluated.}
+
+\item{\code{batchInfo}}{Get a text summary of the batch calculations from the last
+evaluation of this pivot table.}
+
 \item{\code{cells}}{A PivotCells object containing all of the cells in the body of
 the pivot table.}
 
@@ -45,6 +57,12 @@ pivot table.}
 
 \item{\code{allowExternalStyles}}{Enable support for external styles, when producing
 content for external systems.}
+
+\item{\code{allTimings}}{The time taken for various activities related to
+constructing the pivot table.}
+
+\item{\code{significantTimings}}{The time taken for various activities related to
+constructing the pivot table, where the elapsed time > 0.1 seconds.}
 }}
 
 \section{Methods}{
@@ -52,8 +70,9 @@ content for external systems.}
 \describe{
   \item{Documentation}{For more complete explanations and examples please see
   the extensive vignettes supplied with this package.}
-  \item{\code{new(messages=FALSE, messageFile=NULL)}}{Create a new pivot
-  table, including optionally enabling debug logging.}
+  \item{\code{new(processingLibrary="auto", traceEnabled=FALSE,
+  traceFile=NULL, argumentCheckMode="auto")}}{Create a new pivot table,
+  including optionally enabling debug logging.}
 
   \item{\code{addData(df, dataName)}}{Add a data frame with the specified
   name to the pivot table.}
@@ -65,9 +84,9 @@ content for external systems.}
   dataName, dataSortOrder="asc", dataFormat, onlyCombinationsThatExist=TRUE,
   explicitListOfValues, calculationGroupName, expandExistingTotals=FALSE,
   addTotal=TRUE, visualTotals=FALSE, totalPosition="after",
-  totalCaption="Total")}}{Generate new column heading data groups based on
-  the distinct values in a data frame or using explicitly specified data
-  values.}
+  totalCaption="Total", preGroupData=TRUE)}}{Generate new column heading data
+  groups based on the distinct values in a data frame or using explicitly
+  specified data values.}
   \item{\code{normaliseColumnGroups() }}{Normalise the column heading data
   group hierachy so that all branches have the same number of levels -
   accomplished by adding empty child data groups where needed.}
@@ -83,8 +102,9 @@ content for external systems.}
   dataName, dataSortOrder="asc", dataFormat, onlyCombinationsThatExist=TRUE,
   explicitListOfValues, calculationGroupName, expandExistingTotals=FALSE,
   addTotal=TRUE, visualTotals=FALSE, totalPosition="after",
-  totalCaption="Total")}}{Generate new row heading data groups based on the
-  distinct values in a data frame or using explicitly specified data values.}
+  totalCaption="Total", preGroupData=TRUE)}}{Generate new row heading data
+  groups based on the distinct values in a data frame or using explicitly
+  specified data values.}
   \item{\code{normaliseRowGroups()}}{Normalise the row heading data group
   hierachy so that all branches have the same number of levels - accomplished
   by adding empty child data groups where needed.}
@@ -132,13 +152,15 @@ content for external systems.}
   variableValues=NULL, totals="include", calculationNames=NULL,
   includeDescendantGroups=FALSE)}}{Find column data groups matching the
   specified criteria.}
-  \item{\code{getCells = function(rowNumbers=NULL,
-  columnNumbers=NULL)}}{Retrieve cells by a combination of row and/or column
-  numbers.}
+  \item{\code{getCells(specifyCellsAsList=FALSE, rowNumbers=NULL,
+  columnNumbers=NULL, cellCoordinates=NULL)}}{Retrieve cells by a combination
+  of row and/or column numbers.}
   \item{\code{findCells(variableNames=NULL, variableValues=NULL,
   totals="include", calculationNames=NULL, minValue=NULL, maxValue=NULL,
   exactValues=NULL, includeNull=TRUE, includeNA=TRUE)}}{Find cells in the
   body of the pivot table matching the specified criteria.}
+  \item{\code{print(asCharacter=FALSE)}}{Either print the pivot table to the
+  console or retrieve it as a character value.}
   \item{\code{asMatrix(includeHeaders=TRUE, repeatHeaders=FALSE,
   rawValue=FALSE)}}{Gets the pivot table as a matrix, with or without
   headings.}
@@ -152,18 +174,21 @@ content for external systems.}
   entire pivot table.}
   \item{\code{getHtml(styleNamePrefix, includeHeaderValues=FALSE,
   includeRCFilters=FALSE, includeCalculationFilters=FALSE,
+  includeWorkingData=FALSE, includeEvaluationFilters=FALSE,
   includeCalculationNames=FALSE, includeRawValue=FALSE,
   includeTotalInfo=FALSE)}}{Get the HTML representation of the pivot table,
   specifying the CSS style name prefix to use and whether additional debug
   information should be included in the pivot table.}
   \item{\code{saveHtml(filePath, fullPageHTML=TRUE, styleNamePrefix,
   includeHeaderValues=FALSE, includeRCFilters=FALSE,
-  includeCalculationFilters=FALSE, includeCalculationNames=FALSE,
+  includeCalculationFilters=FALSE, includeWorkingData=FALSE,
+  includeEvaluationFilters=FALSE, includeCalculationNames=FALSE,
   includeRawValue=FALSE, includeTotalInfo=FALSE)}}{Save the HTML
   representation of the pivot table to a file.}
   \item{\code{renderPivot(width, height, styleNamePrefix,
   includeHeaderValues=FALSE, includeRCFilters=FALSE,
-  includeCalculationFilters=FALSE, includeCalculationNames=FALSE,
+  includeCalculationFilters=FALSE, includeWorkingData=FALSE,
+  includeEvaluationFilters=FALSE, includeCalculationNames=FALSE,
   includeRawValue=FALSE, includeTotalInfo=FALSE)}}{Render the pivot table as
   a htmlwidget.}
   \item{\code{getLatex(caption=NULL, label=NULL, fromRow=NULL, toRow=NULL,
@@ -172,6 +197,8 @@ content for external systems.}
   specifying the caption to appear above the table, the label to use when
   referring to the table elsewhere in the document and how headings should be
   styled.}
+  \item{\code{showBatchInfo()}}{Show a text summary of the batch calculations
+  from the last evaluation of this pivot table.}
   \item{\code{asList()}}{Get a list representation of the pivot table.}
   \item{\code{asJSON()}}{Get a JSON representation of the pivot table.}
   \item{\code{viewJSON()}}{View the JSON representation of the pivot table.}

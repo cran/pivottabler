@@ -37,14 +37,16 @@
 #'
 PivotLatexRenderer <- R6::R6Class("PivotLatexRenderer",
   public = list(
-    initialize = function(parentPivot) {
-      checkArgument("PivotLatexRenderer", "initialize", parentPivot, missing(parentPivot), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotTable")
+    initialize = function(parentPivot=NULL) {
+      if(parentPivot$argumentCheckMode > 0) {
+        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "initialize", parentPivot, missing(parentPivot), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotTable")
+      }
       private$p_parentPivot <- parentPivot
-      private$p_parentPivot$message("PivotLatexRenderer$new", "Creating new Latex Renderer...")
-      private$p_parentPivot$message("PivotLatexRenderer$new", "Created new Latex Renderer.")
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotLatexRenderer$new", "Creating new Latex Renderer...")
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotLatexRenderer$new", "Created new Latex Renderer.")
     },
     clearIsRenderedFlags = function() {
-      private$p_parentPivot$message("PivotLatexRenderer$clearIsRenderedFlags", "Clearing isRendered flags...")
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotLatexRenderer$clearIsRenderedFlags", "Clearing isRendered flags...")
       clearFlags <- function(dg) {
         dg$isRendered <- FALSE
       }
@@ -52,24 +54,26 @@ PivotLatexRenderer <- R6::R6Class("PivotLatexRenderer",
       lapply(rowGroups, clearFlags)
       columnGroups <- private$p_parentPivot$columnGroup$getDescendantGroups(includeCurrentGroup=TRUE)
       lapply(columnGroups, clearFlags)
-      private$p_parentPivot$message("PivotLatexRenderer$clearIsRenderedFlags", "Cleared isRendered flags...")
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotLatexRenderer$clearIsRenderedFlags", "Cleared isRendered flags...")
       return(invisible())
     },
     resetVisibleRange = function() {
-      private$p_parentPivot$message("PivotLatexRenderer$resetVisibleRange", "Resetting visible range...")
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotLatexRenderer$resetVisibleRange", "Resetting visible range...")
       private$p_fromRow <- NULL
       private$p_toRow <- NULL
       private$p_fromColumn <- NULL
       private$p_toColumn <- NULL
-      private$p_parentPivot$message("PivotLatexRenderer$resetVisibleRange", "Reset visible range.")
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotLatexRenderer$resetVisibleRange", "Reset visible range.")
       return(invisible())
     },
     setVisibleRange = function(fromRow=NULL, toRow=NULL, fromColumn=NULL, toColumn=NULL) {
-      checkArgument("PivotLatexRenderer", "setVisibleRange", fromRow, missing(fromRow), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"), minValue=1)
-      checkArgument("PivotLatexRenderer", "setVisibleRange", toRow, missing(toRow), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"), minValue=1)
-      checkArgument("PivotLatexRenderer", "setVisibleRange", fromColumn, missing(fromColumn), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"), minValue=1)
-      checkArgument("PivotLatexRenderer", "setVisibleRange", toColumn, missing(toColumn), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"), minValue=1)
-      private$p_parentPivot$message("PivotLatexRenderer$setVisibleRange", "Setting visible range...",
+      if(private$p_parentPivot$argumentCheckMode > 0) {
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "setVisibleRange", fromRow, missing(fromRow), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"), minValue=1)
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "setVisibleRange", toRow, missing(toRow), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"), minValue=1)
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "setVisibleRange", fromColumn, missing(fromColumn), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"), minValue=1)
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "setVisibleRange", toColumn, missing(toColumn), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"), minValue=1)
+      }
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotLatexRenderer$setVisibleRange", "Setting visible range...",
                                     list(fromRow=fromRow, toRow=toRow, fromColumn=fromColumn, toColumn=toColumn))
       # references
       topRowGroup <- private$p_parentPivot$rowGroup
@@ -85,27 +89,27 @@ PivotLatexRenderer <- R6::R6Class("PivotLatexRenderer",
       if(is.null(toColumn)) toColumn <- cells$columnCount
       # check the ranges
       if(toRow < fromRow) {
-        errorMsg <- paste0("PivotLatexRenderer$setVisibleRange(): fromRow (", fromRow, ") must be less than or equal to toRow (", toRow, ")")
+        errorMsg <- paste0("PivotLatexRenderer$setVisibleRange(): fromRow (", fromRow, ") must be less than or equal to toRow (", toRow, ")", call. = FALSE)
         stop(errorMsg, call. = FALSE)
       }
       if(toColumn < fromColumn) {
-        errorMsg <- paste0("PivotLatexRenderer$setVisibleRange(): fromColumn (", fromColumn, ") must be less than or equal to toColumn (", toColumn, ")")
+        errorMsg <- paste0("PivotLatexRenderer$setVisibleRange(): fromColumn (", fromColumn, ") must be less than or equal to toColumn (", toColumn, ")", call. = FALSE)
         stop(errorMsg, call. = FALSE)
       }
       if(fromRow > cells$rowCount) {
-        errorMsg <- paste0("PivotLatexRenderer$setVisibleRange(): fromRow (", fromRow, ") must be less than or equal to the number of rows (", cells$rowCount, ")")
+        errorMsg <- paste0("PivotLatexRenderer$setVisibleRange(): fromRow (", fromRow, ") must be less than or equal to the number of rows (", cells$rowCount, ")", call. = FALSE)
         stop(errorMsg, call. = FALSE)
       }
       if(toRow > cells$rowCount) {
-        errorMsg <- paste0("PivotLatexRenderer$setVisibleRange(): toRow (", toRow, ") must be less than or equal to the number of rows (", cells$rowCount, ")")
+        errorMsg <- paste0("PivotLatexRenderer$setVisibleRange(): toRow (", toRow, ") must be less than or equal to the number of rows (", cells$rowCount, ")", call. = FALSE)
         stop(errorMsg, call. = FALSE)
       }
       if(fromColumn > cells$columnCount) {
-        errorMsg <- paste0("PivotLatexRenderer$setVisibleRange(): fromColumn (", fromColumn, ") must be less than or equal to the number of columns (", cells$columnCount, ")")
+        errorMsg <- paste0("PivotLatexRenderer$setVisibleRange(): fromColumn (", fromColumn, ") must be less than or equal to the number of columns (", cells$columnCount, ")", call. = FALSE)
         stop(errorMsg, call. = FALSE)
       }
       if(toColumn > cells$columnCount) {
-        errorMsg <- paste0("PivotLatexRenderer$setVisibleRange(): toColumn (", toColumn, ") must be less than or equal to the number of columns (", cells$columnCount, ")")
+        errorMsg <- paste0("PivotLatexRenderer$setVisibleRange(): toColumn (", toColumn, ") must be less than or equal to the number of columns (", cells$columnCount, ")", call. = FALSE)
         stop(errorMsg, call. = FALSE)
       }
       # save the ranges
@@ -138,15 +142,17 @@ PivotLatexRenderer <- R6::R6Class("PivotLatexRenderer",
         }
       }
       private$p_rangesSet <- TRUE
-      private$p_parentPivot$message("PivotLatexRenderer$setVisibleRange", "Set visible range.")
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotLatexRenderer$setVisibleRange", "Set visible range.")
       return(invisible())
     },
     getTableLatex = function(caption=NULL, label=NULL, boldHeadings=FALSE, italicHeadings=FALSE) {
-      checkArgument("PivotLatexRenderer", "getTableLatex", caption, missing(caption), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
-      checkArgument("PivotLatexRenderer", "getTableLatex", label, missing(label), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
-      checkArgument("PivotLatexRenderer", "getTableLatex", boldHeadings, missing(boldHeadings), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
-      checkArgument("PivotLatexRenderer", "getTableLatex", italicHeadings, missing(italicHeadings), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
-      private$p_parentPivot$message("PivotLatexRenderer$getTableLatex", "Getting table Latex...")
+      if(private$p_parentPivot$argumentCheckMode > 0) {
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "getTableLatex", caption, missing(caption), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "getTableLatex", label, missing(label), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "getTableLatex", boldHeadings, missing(boldHeadings), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "getTableLatex", italicHeadings, missing(italicHeadings), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
+      }
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotLatexRenderer$getTableLatex", "Getting table Latex...")
       # reset rendered flags
       self$clearIsRenderedFlags()
       # get the dimensions of the various parts of the table...
@@ -193,11 +199,13 @@ PivotLatexRenderer <- R6::R6Class("PivotLatexRenderer",
      gsub('([#$%&~_\\^\\\\{}])', '\\\\\\1', str, perl = TRUE);
    },
    getTableLatex1Row = function(caption=NULL, label=NULL, boldHeadings=FALSE, italicHeadings=FALSE) {
-     checkArgument("PivotLatexRenderer", "getTableLatex1Row", caption, missing(caption), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
-     checkArgument("PivotLatexRenderer", "getTableLatex1Row", label, missing(label), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
-     checkArgument("PivotLatexRenderer", "getTableLatex1Row", boldHeadings, missing(boldHeadings), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
-     checkArgument("PivotLatexRenderer", "getTableLatex1Row", italicHeadings, missing(italicHeadings), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
-     private$p_parentPivot$message("PivotLatexRenderer$getTableLatex1Row", "Getting table Latex...")
+     if(private$p_parentPivot$argumentCheckMode > 0) {
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "getTableLatex1Row", caption, missing(caption), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "getTableLatex1Row", label, missing(label), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "getTableLatex1Row", boldHeadings, missing(boldHeadings), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "getTableLatex1Row", italicHeadings, missing(italicHeadings), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
+     }
+     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotLatexRenderer$getTableLatex1Row", "Getting table Latex...")
      # references
      topRowGroup <- private$p_parentPivot$rowGroup
      topColumnGroup <- private$p_parentPivot$columnGroup
@@ -304,16 +312,18 @@ PivotLatexRenderer <- R6::R6Class("PivotLatexRenderer",
      ltx[[length(ltx)+1]] <- "    \\hline"
      ltx[[length(ltx)+1]] <- "  \\end{tabular}"
      ltx[[length(ltx)+1]] <- "\\end{table}"
-     private$p_parentPivot$message("PivotLatexRenderer$getTableLatex1Row", "Got table Latex.")
+     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotLatexRenderer$getTableLatex1Row", "Got table Latex.")
      ltx <- paste(ltx, sep = '', collapse = '\n')
      return(invisible(ltx))
    },
    getTableLatex1Column = function(caption=NULL, label=NULL, boldHeadings=FALSE, italicHeadings=FALSE) {
-     checkArgument("PivotLatexRenderer", "getTableLatex1Column", caption, missing(caption), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
-     checkArgument("PivotLatexRenderer", "getTableLatex1Column", label, missing(label), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
-     checkArgument("PivotLatexRenderer", "getTableLatex1Column", boldHeadings, missing(boldHeadings), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
-     checkArgument("PivotLatexRenderer", "getTableLatex1Column", italicHeadings, missing(italicHeadings), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
-     private$p_parentPivot$message("PivotLatexRenderer$getTableLatex1Column", "Getting table Latex...")
+     if(private$p_parentPivot$argumentCheckMode > 0) {
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "getTableLatex1Column", caption, missing(caption), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "getTableLatex1Column", label, missing(label), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "getTableLatex1Column", boldHeadings, missing(boldHeadings), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "getTableLatex1Column", italicHeadings, missing(italicHeadings), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
+     }
+     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotLatexRenderer$getTableLatex1Column", "Getting table Latex...")
      # references
      topRowGroup <- private$p_parentPivot$rowGroup
      topColumnGroup <- private$p_parentPivot$columnGroup
@@ -438,16 +448,18 @@ PivotLatexRenderer <- R6::R6Class("PivotLatexRenderer",
      ltx[[length(ltx)+1]] <- "    \\hline"
      ltx[[length(ltx)+1]] <- "  \\end{tabular}"
      ltx[[length(ltx)+1]] <- "\\end{table}"
-     private$p_parentPivot$message("PivotLatexRenderer$getTableLatex1Column", "Got table Latex.")
+     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotLatexRenderer$getTableLatex1Column", "Got table Latex.")
      ltx <- paste(ltx, sep = '', collapse = '\n')
      return(invisible(ltx))
    },
    getTableLatexNormal = function(caption=NULL, label=NULL, boldHeadings=FALSE, italicHeadings=FALSE) {
-     checkArgument("PivotLatexRenderer", "getTableLatexNormal", caption, missing(caption), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
-     checkArgument("PivotLatexRenderer", "getTableLatexNormal", label, missing(label), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
-     checkArgument("PivotLatexRenderer", "getTableLatexNormal", boldHeadings, missing(boldHeadings), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
-     checkArgument("PivotLatexRenderer", "getTableLatexNormal", italicHeadings, missing(italicHeadings), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
-     private$p_parentPivot$message("PivotLatexRenderer$getTableLatexNormal", "Getting table Latex...")
+     if(private$p_parentPivot$argumentCheckMode > 0) {
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "getTableLatexNormal", caption, missing(caption), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "getTableLatexNormal", label, missing(label), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "getTableLatexNormal", boldHeadings, missing(boldHeadings), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotLatexRenderer", "getTableLatexNormal", italicHeadings, missing(italicHeadings), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
+     }
+     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotLatexRenderer$getTableLatexNormal", "Getting table Latex...")
      # references
      topRowGroup <- private$p_parentPivot$rowGroup
      topColumnGroup <- private$p_parentPivot$columnGroup
@@ -596,7 +608,7 @@ PivotLatexRenderer <- R6::R6Class("PivotLatexRenderer",
      ltx[[length(ltx)+1]] <- "    \\hline"
      ltx[[length(ltx)+1]] <- "  \\end{tabular}"
      ltx[[length(ltx)+1]] <- "\\end{table}"
-     private$p_parentPivot$message("PivotLatexRenderer$getTableLatexNormal", "Got table Latex.")
+     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotLatexRenderer$getTableLatexNormal", "Got table Latex.")
      ltx <- paste(ltx, sep = '', collapse = '\n')
      return(invisible(ltx))
    }

@@ -6,6 +6,7 @@
 \usage{
 pivottabler(pt, width = NULL, height = NULL, styleNamePrefix = NULL,
   includeRCFilters = FALSE, includeCalculationFilters = FALSE,
+  includeWorkingData = FALSE, includeEvaluationFilters = FALSE,
   includeCalculationNames = FALSE, includeRawValue = FALSE)
 }
 \arguments{
@@ -21,6 +22,10 @@ pivottabler(pt, width = NULL, height = NULL, styleNamePrefix = NULL,
 \item{includeRCFilters}{Show/hide filter detail for debugging.}
 
 \item{includeCalculationFilters}{Show/hide filter detail for debugging.}
+
+\item{includeWorkingData}{Show/hide working data detail for debugging.}
+
+\item{includeEvaluationFilters}{Show/hide filter detail for debugging.}
 
 \item{includeCalculationNames}{Show/hide filter detail for debugging.}
 

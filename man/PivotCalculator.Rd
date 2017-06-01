@@ -20,6 +20,8 @@ calculating the value of a cell in a pivot table.
 
 \describe{
 \item{\code{parentPivot}}{Owning pivot table.}
+
+\item{\code{batchInfo}}{Get a summary of the batch calculations.}
 }}
 
 \section{Methods}{
@@ -38,6 +40,10 @@ calculating the value of a cell in a pivot table.
   \item{\code{getCalculation(calculationGroupName, calculationName)}}{Gets a
   calculation with the specified name and group from the calculation groups
   added to the pivot table.}
+  \item{\code{generateBatchesForCellEvaluation()}}{Examines the cells in the
+  pivot table to generate one or more batch calculations.}
+  \item{\code{evaluateBatches()}}{Evaluate batch calculations using the batch
+  calculator.}
   \item{\code{newFilter(variableName, values)}}{Creates a new PivotFilter
   object associated with the specified data frame column name and column
   values.}
@@ -58,28 +64,40 @@ calculating the value of a cell in a pivot table.
   \item{\code{formatValue(value, format)}}{Formats a numerical value using
   either an sprintf string, a list of arguments for the base::format()
   function or using a custom R function.}
-  \item{\code{getSingleValue(dataFrame, valueName)}}{Gets a single value from
-  a data frame.  Essentially the same as the getSummaryValue() function but
-  with no aggregation.}
-  \item{\code{getSummaryValue(dataFrame, summaryName,
-  summariseExpression)}}{Aggregates a data frame using the dplyr::summarise()
-  function to calculate and return an aggregate value.}
-  \item{\code{evaluateSingleValue(dataFrame, rowColFilters, calcFilters,
-  valueName, format, noDataValue, noDataCaption)}}{A wrapper for
-  getSingleValue() which performs filtering and handles edge cases.}
-  \item{\code{evaluateSummariseExpression(dataFrame, rowColFilters,
-  calcFilters, summaryName, summariseExpression, format, noDataValue,
-  noDataCaption)}}{A wrapper for getSummaryValue() which performs filtering
-  and handles edge cases.}
+  \item{\code{getFiltersForSingleValue = function(rowColFilters=NULL,
+  calcFilters=NULL)}}{Get the working filters for a single value
+  calculation.}
+  \item{\code{getFiltersForSummariseExpression = function(rowColFilters=NULL,
+  calcFilters=NULL)}}{Get the working filters for a summary calculation.}
+  \item{\code{getFiltersForCalculateFunction = function(rowColFilters=NULL,
+  calcFilters=NULL)}}{Get the working filters for a calculation based on
+  other calculations.}
+  \item{\code{getFiltersForNamedCalculation = function(calculationName=NULL,
+  calculationGroupName=NULL, rowColFilters=NULL, cell=NULL)}}{Get the working
+  filters for a custom calculation.}
+  \item{\code{setWorkingData = function(cell=NULL)}}{Set the working
+  filters for a cell.}
+  \item{\code{evaluateSingleValue(dataFrame, workingFilters, valueName,
+  format, noDataValue, noDataCaption)}}{Get a single value from a data
+  frame.}
+  \item{\code{evaluateSummariseExpression(dataName=NULL, dataFrame=NULL,
+  workingFilters=NULL, calculationName=NULL, calculationGroupName=NULL,
+  summaryName=NULL, summariseExpression=NULL, format=NULL, noDataValue=NULL,
+  noDataCaption=NULL)}}{Calculate a summary value, either using a batch or
+  sequential calculation.}
   \item{\code{evaluateCalculationExpression(values, calculationExpression,
   format, noDataValue, noDataCaption)}}{Evaluates an R expression in order to
   combine the results of other calculations.}
-  \item{\code{evaluateCalculateFunction(rowColFilters, calcFilters,
-  calculationFunction, format, baseValues, cell)}}{Invokes a user-provided
-  custom R function to aggregate data and perform calculations.}
-  \item{\code{evaluateNamedCalculation(calculationName, calculationGroupName,
-  rowColFilters, cell)}}{Invokes the relevant calculation function above
-  based upon the calculation type.}
+  \item{\code{evaluateCalculateFunction(workingFilters, calculationFunction,
+  format, baseValues, cell)}}{Invokes a user-provided custom R function to
+  aggregate data and perform calculations.}
+  \item{\code{evaluateNamedCalculationWD(calculationName,
+  calculationGroupName, workingData, cell)}}{Invokes the relevant
+  calculation function based upon the calculation type.}
+  \item{\code{evaluateNamedCalculation(calculationName,
+  calculationGroupName, rowColFilters)}}{Determines the working filters and
+  invokes the relevant calculation function based upon the calculation
+  type.}
   \item{\code{evaluateCell(cell)}}{Top-level calculation function responsible
   for calculating the value of a pivot table cell.}
 }

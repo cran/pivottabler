@@ -1,0 +1,869 @@
+---
+title: "07. Finding and Formatting"
+author: "Chris Bailiss"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{07. Finding and Formatting}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## In This Vignette
+
+* Finding and Formatting
+* Example Pivot Table
+* Finding Headings
+* Getting Cells by Row and/or Column Numbers 
+* Finding Cells
+* Conditional Formatting
+* Further Reading
+
+## Finding and Formatting
+
+This vignette explains how to find parts of a pivot table - either one or more data groups (i.e. row/column headings) or one or more cells in the body of the pivot table.
+
+This is often useful to retrieve either a specific value/values, or to change the appearance of specific headings/cells - similar to the conditional formatting capabilities of many off-the-shelf tools.
+
+## Example Pivot Table
+
+The following pivot table is used as the basis of the examples in the rest of this vignette:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$renderPivot()
+```
+
+## Finding Headings
+
+The `findRowDataGroups()` and `findColumnDataGroups()` functions are used to find data groups (i.e. row and/or column headings) that match specific criteria.  The functions return a list of data group objects.
+
+These functions can operate in two different ways, specified by the `matchMode` argument.
+
+`matchMode="simple"` is used when matching only one variable, e.g. TrainCategory="Express Passenger".
+
+`matchMode="combinations"` is used when matching for combinations of variables, e.g. TrainCategory="Express Passenger" and PowerType="DMU", which would return the "DMU" data group underneath "Express Passenger" (but not the "DMU" data group underneath "Ordinary Passenger").  Examples of each follow below.
+
+These functions also accept the following arguments:
+
+- `variableNames` - a character vector specifying the name/names of the variables to find - useful for finding all of the data groups for a specific variable.
+- `variableValues` - a list specifying the variable names and values to find.
+    + Specify one or more variables values to match that/those value(s) for the specified variable.
+    + Specify "**" as the variable value to match totals for the specified variable.
+    + Specify "!*" as the variable value to match non-totals for the specified variable.
+    + NB:  The totals/non-totals criteria above won't work when visual totals are used.  See the [Data Groups](v02-datagroups.html) vignette for more details on visual totals.
+- `totals` - a word that specifies how totals are matched (overrides the finer settings above) - must be one of:
+    + `include` to match total and non-total data groups.
+    + `exclude` to match only non-total data groups.
+    + `only` to match only total data groups.
+- `calculationNames` - a character vector specifying the name/names of the calculations to find.
+- `includeDescendantGroups` - a logical value specifying whether only the top-most matching data group for each row/column is returned, or whether the descendant groups are also included.
+
+Several examples follow below.  In each of the examples the data groups that have been found are highlighted in yellow by specifying a different style.
+
+The examples in this section use column data groups, but all are equally applicable to row data groups.
+
+### Examples:  `matchMode="simple"`
+
+"simple" match mode is the default.  The following examples illustrate how the "simple" matching mode works.
+
+#### variableNames
+
+Find all of the data groups for the "TrainCategory" variable:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFFF00"))
+groups <- pt$findColumnDataGroups(variableNames="TrainCategory")
+groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$renderPivot()
+```
+
+#### variableValues
+
+Find all of the data groups for the "PowerType" variable with the values "DMU" and "HST":
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFFF00"))
+groups <- pt$findColumnDataGroups(variableValues=list("PowerType"=c("DMU", "HST")))
+groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$renderPivot()
+```
+
+#### totals (exclude)
+
+Exclude totals:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFFF00"))
+groups <- pt$findColumnDataGroups(variableNames="TrainCategory", totals="exclude")
+groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$renderPivot()
+```
+
+### totals (only)
+
+Find only totals:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFFF00"))
+groups <- pt$findColumnDataGroups(variableNames="TrainCategory", totals="only")
+groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$renderPivot()
+```
+
+#### includeDescendantGroups
+
+Find all of the data groups for the "TrainCategory" variable with the value "Ordinary Passenger", including the descendant data groups:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFFF00"))
+groups <- pt$findColumnDataGroups(
+  variableValues=list("TrainCategory"="Ordinary Passenger"), 
+  includeDescendantGroup=TRUE)
+groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$renderPivot()
+```
+
+### Selecting a grand total data group
+
+To select the right-most/bottom total data group:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFFF00"))
+groups <- pt$findColumnDataGroups(
+  variableValues=list("TrainCategory"="**"), 
+  includeDescendantGroup=TRUE)
+groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$renderPivot()
+```
+
+### Examples:  `matchMode="combinations"`
+
+The following examples illustrate how the "combinations" matching mode works.  
+
+The key concept to understand here is that the filtering criteria (i.e. the variableName(s) and variableValues) set for a data group also apply to all descendant data groups.  For example, in the example pivot table above, the "DMU" under "Express Passenger" effectively means `WHERE ("TrainCategory"="Express Passenger") AND ("PowerType"="DMU")`.
+
+#### variableNames
+
+Find all of the data groups that have filter criteria specified for both the "TrainCategory" and "Power Type" variables:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#00FFFF"))
+groups <- pt$findColumnDataGroups(matchMode="combinations",
+                                  variableNames=c("TrainCategory", "PowerType"))
+groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$renderPivot()
+```
+
+In the example above, the first row of headings relates only to the "TrainCategory" variable.  The second row of headings relates both to the "PowerType" variable and the "TrainCategory" variable. 
+
+#### variableValues
+
+Find all of the data groups for the "PowerType" variable with the values "DMU" and "HST" for the "TrainCategory" of "Express Passenger":
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#00FFFF"))
+groups <- pt$findColumnDataGroups(matchMode="combinations",
+  variableValues=list("TrainCategory"="Express Passenger", "PowerType"=c("DMU", "HST")))
+groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$renderPivot()
+```
+
+In the above example, the highlighted "DMU" and "HST" data groups are subject to the "Express Passenger" filtering since they are underneath that data group.
+
+The "combinations" match mode effectively AND's the criteria together, i.e. the data groups must match both "TrainCategory"="Express Passenger" AND "PowerType"=("DMU" OR "HST").
+
+The "simple" match mode, by contrast, effectively OR's the criteria together, i.e. the data groups must match either "TrainCategory"="Express Passenger" OR "PowerType"=("DMU" OR "HST").  Changing the match mode back to simple (but otherwise leaving the previous example unchanged):
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFFF00"))
+groups <- pt$findColumnDataGroups(
+  variableValues=list("TrainCategory"="Express Passenger", "PowerType"=c("DMU", "HST")))
+groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$renderPivot()
+```
+
+Another example - finding all of the "PowerType" groups under "Express Passenger":
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#00FFFF"))
+groups <- pt$findColumnDataGroups(matchMode="combinations", variableNames="PowerType",
+  variableValues=list("TrainCategory"="Express Passenger"))
+groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$renderPivot()
+```
+
+### Selecting a specific sub-total
+
+To select the sub-total data group under "Express Passenger":
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#00FFFF"))
+groups <- pt$findColumnDataGroups(matchMode="combinations", 
+  variableValues=list("TrainCategory"="Express Passenger", "PowerType"="**"))
+groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$renderPivot()
+```
+
+## Getting Cells By Row and/or Column Numbers
+
+The `getCells()` function can be used to retrieve one or more cells by row/column number in the body of the pivot table.  The arguments can be specified in two different ways depending on the value of the `specifyCellsAsList` argument.
+
+For backward-compatibility reasons, the current default value of the `specifyCellsAsList` argument is `FALSE`.  This will be changed to `TRUE` in a future version of the pivottabler package.  For the moment, a message is displayed if `getCells()` is used without explicitly specifying the value of the `specifyCellsAsList` argument.
+
+The `getCells()` function returns a list of cell objects.
+
+### Getting cells when `specifyCellsAsList=TRUE`
+
+To get cells when `specifyCellsAsList=TRUE`:
+
+- Get one or more rows by specifying the row numbers as a vector as the `rowNumbers` argument and leaving the `columnNumbers` argument set to the default value of NULL, or
+- Get one or more columns by specifying the column numbers as a vector as the `columnNumbers` argument and leaving the `rowNumbers` argument set to the default value of NULL, or
+- Get one or more individual cells by specifying the `cellCoordinates` argument as a list of vectors of length 2, where each element in the list is the row and column number of one cell, e.g. `list(c(1, 2), c(3, 4))` specifies two cells, the first located at row 1, column 2 and the second located at row 3, column 4.
+
+Examples of the above are given below.  The retrieved cells are highlighted in orange by specifying a different style.
+
+#### Retrieving whole rows of cells when `specifyCellsAsList=TRUE`
+
+Retrieving the first and third rows:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$evaluatePivot()
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFCC66"))
+cells <- pt$getCells(specifyCellsAsList=TRUE, rowNumbers=c(1, 3))
+lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$renderPivot()
+```
+
+#### Retrieving whole columns of cells when `specifyCellsAsList=TRUE`
+
+Retrieving the second column:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$evaluatePivot()
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFCC66"))
+cells <- pt$getCells(specifyCellsAsList=TRUE, columnNumbers=2)
+lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$renderPivot()
+```
+
+#### Retrieving specific cells when `specifyCellsAsList=TRUE`
+
+Retrieving the raw/formatted values of the cell in the third column on the second row:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$evaluatePivot()
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFCC66"))
+cells <- pt$getCells(specifyCellsAsList=TRUE, cellCoordinates=list(c(2, 3)))
+lst <- lapply(cells, function(cell) {cell$style <- highlight})
+cat("The raw value of the cell is", cells[[1]]$rawValue, "and the formatted value is", cells[[1]]$formattedValue, ".")
+pt$renderPivot()
+```
+
+Retrieving multiple cells (2nd row-3rd column, 3rd row-4th column and 5th row-7th column):
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$evaluatePivot()
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFCC66"))
+cells <- pt$getCells(specifyCellsAsList=TRUE, cellCoordinates=list(c(2, 3), c(3, 4), c(5, 7)))
+lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$renderPivot()
+```
+
+#### Retrieving a mixture of rows, columns and cells when `specifyCellsAsList=TRUE`
+
+Retrieving the 2nd row, 4th column and 5th row-7th column cell:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$evaluatePivot()
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FFCC66"))
+cells <- pt$getCells(specifyCellsAsList=TRUE, rowNumbers=2, columnNumbers=4, cellCoordinates=list(c(5, 7)))
+lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$renderPivot()
+```
+
+### Getting cells when `specifyCellsAsList=FALSE`
+
+To get cells when `specifyCellsAsList=FALSE`:
+
+- Get one or more rows by specifying the row numbers as a vector as the `rowNumbers` argument and leaving the `columnNumbers` argument set to the default value of NULL, or
+- Get one or more columns by specifying the column numbers as a vector as the `columnNumbers` argument and leaving the `rowNumbers` argument set to the default value of NULL, or
+- Get one or more cells by specifying the row and column numbers as vectors for the `rowNumbers` and `columnNumbers` arguments, or
+- a mixture of the above, where for entire rows/columns the element in the other vector is set to `NA`, e.g. to retrieve whole rows, specify the row numbers as the `rowNumbers` but set the corresponding elements in the `columnNumbers` vector to `NA`.
+
+Examples of the above are given below.  The retrieved cells are highlighted in green by specifying a different style.
+
+#### Retrieving whole rows of cells when `specifyCellsAsList=FALSE`
+
+When retrieving just rows, the rowNumbers argument is specified the same irrespective of whether `specifyCellsAsList` is `TRUE` or `FALSE`.
+
+Retrieving the first and third rows:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$evaluatePivot()
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#00FF00"))
+cells <- pt$getCells(specifyCellsAsList=FALSE, rowNumbers=c(1, 3))
+lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$renderPivot()
+```
+
+#### Retrieving whole columns of cells when `specifyCellsAsList=FALSE`
+
+When retrieving just columns, the columnNumbers argument is specified the same irrespective of whether `specifyCellsAsList` is `TRUE` or `FALSE`.
+
+Retrieving the second column:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$evaluatePivot()
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#00FF00"))
+cells <- pt$getCells(specifyCellsAsList=FALSE, columnNumbers=2)
+lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$renderPivot()
+```
+
+#### Retrieving specific cells when `specifyCellsAsList=FALSE`
+
+When retrieving cells, the rowNumbers and columnNumbers arguments are specified differently depending on whether `specifyCellsAsList` is `TRUE` or `FALSE`.
+
+Retrieving the raw/formatted values of the cell in the third column on the second row:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$evaluatePivot()
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#00FF00"))
+cells <- pt$getCells(specifyCellsAsList=FALSE, rowNumbers=2, columnNumbers=3)
+lst <- lapply(cells, function(cell) {cell$style <- highlight})
+cat("The raw value of the cell is", cells[[1]]$rawValue, "and the formatted value is", cells[[1]]$formattedValue, ".")
+pt$renderPivot()
+```
+
+Retrieving multiple cells (2nd row-3rd column, 3rd row-4th column and 5th row-7th column):
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$evaluatePivot()
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#00FF00"))
+cells <- pt$getCells(specifyCellsAsList=FALSE, rowNumbers=c(2, 3, 5), columnNumbers=c(3, 4, 7))
+lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$renderPivot()
+```
+
+#### Retrieving a mixture of rows, columns and cells when `specifyCellsAsList=FALSE`
+
+When retrieving cells, the rowNumbers and columnNumbers arguments are specified differently depending on whether `specifyCellsAsList` is `TRUE` or `FALSE`.
+
+Retrieving the 2nd row, 4th column and 5th row-7th column cell:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$evaluatePivot()
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#00FF00"))
+cells <- pt$getCells(specifyCellsAsList=FALSE, rowNumbers=c(2, NA, 5), columnNumbers=c(NA, 4, 7))
+lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$renderPivot()
+```
+
+## Finding Cells
+
+The `findCells()` function is used to search for cells within the body of the pivot table matching one or more criteria.  The function returns a list of cell objects.  This function has the following parameters:
+
+- `variableNames` - a character vector specifying the name/names of the variables to find - useful for finding all of the data groups for a specific variable. 
+- `variableValues` - a list specifying the variable names and values to find.   
+    + Specify "**" as the variable value to match totals for the specified variable.
+    + Specify "!*" as the variable value to match non-totals for the specified variable.
+    + NB:  The totals/non-totals criteria above won't work when visual totals are used.  See the [Data Groups](v02-datagroups.html) vignette for more details on visual totals.
+- `totals` - a word that specifies how totals are matched (overrides the finer settings above) - must be one of:
+    + `include` to match total and non-total cells.
+    + `exclude` to match only non-total cells.
+    + `only` to match only total cells.
+- `calculationNames` - a character vector specifying the name/names of the calculations to find.
+- `minValue` - a numerical value specifying a minimum value threshold when matching cells.
+- `maxValue` - a numerical value specifying a maximum value threshold when matching cells.
+- `exactValues` - vector specifying a set of allowed values when matching cells.
+- `includeNA` - specify TRUE to include NA in the matched cells, FALSE to exclude NA values.
+
+If multiple variable names and values are specified, then `findCells()` searches for cells that match all of the criteria - i.e. the equivalent of the `combinations` match method described above.
+
+Several examples of the above are given below.
+
+### variableNames
+
+Finding cells that reference the "PowerType" variable:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$evaluatePivot()
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FF00FF"))
+cells <- pt$findCells(variableNames="PowerType")
+lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$renderPivot()
+```
+
+All of the cells above reference the "PowerType" variable.  For the `findCells()` function, the `variableNames` argument is only really used when a pivot table is constructed that has a custom layout.
+
+### variableValues
+
+Finding cells that reference the "DMU" and "HST" values for the "PowerType" variable:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$evaluatePivot()
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FF00FF"))
+cells <- pt$findCells(variableValues=list("PowerType"=c("DMU", "HST")))
+lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$renderPivot()
+```
+
+Finding cells that reference the "DMU" and "HST" values for the "PowerType" variable and reference the "London Midland" value for the "TOC" variable:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$evaluatePivot()
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FF00FF"))
+cells <- pt$findCells(variableValues=list("PowerType"=c("DMU", "HST"), "TOC"="London Midland"))
+lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$renderPivot()
+```
+
+### totals
+
+Finding only totals cells that reference the "PowerType" variable:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$evaluatePivot()
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FF00FF"))
+cells <- pt$findCells(variableNames="PowerType", totals="only")
+lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$renderPivot()
+```
+
+In the example, probably more total cells have been matched than expected. 
+
+To explicitly match only the total columns for the "PowerType" variable, specify two asterixes as the variable value:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$evaluatePivot()
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FF00FF"))
+cells <- pt$findCells(variableValues=list("PowerType"="**"))
+lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$renderPivot()
+```
+
+To explicitly match only the sub-total columns for the "PowerType" variable (i.e. excluding the far right TrainCategory total column), use the following:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$evaluatePivot()
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FF00FF"))
+cells <- pt$findCells(variableValues=list("TrainCategory"="!*", "PowerType"="**"))
+lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$renderPivot()
+```
+
+To find the grand total cell:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$evaluatePivot()
+highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#FF00FF"))
+cells <- pt$findCells(variableValues=list("TrainCategory"="**", "PowerType"="**", "TOC"="**"))
+lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$renderPivot()
+```
+
+## Conditional Formatting
+
+The `findCells()` and `getCells()` functions can be used to help conditionally format a pivot table.
+
+For example, to highlight in red those cells in the basic example pivot table that have a value between 30000 and 50000:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$evaluatePivot()
+redStyle <- PivotStyle$new(pt, "redStyle", list("background-color"="#FFC7CE", "color"="#9C0006"))
+cells <- pt$findCells(minValue=30000, maxValue=50000, includeNull=FALSE, includeNA=FALSE)
+lst <- lapply(cells, function(cell) {cell$style <- redStyle})
+pt$renderPivot()
+```
+
+Another example:  analysing the average arrival delay (in minutes) in the morning peak time, for the top 20 origin stations, broken down by the hour of the day (i.e. 5am, 6am, 7am, etc.), with the results formatted as follows:
+
+- Average arrival delay between 0 and 2 minutes - green,
+- Average arrival delay between 2 and 4 minutes - yellow,
+- Average arrival delay of 4 and above minutes - red.
+
+The `findCells()` function is used to find the cells matching the criteria above.  One of three custom styles (green, yellow or red) is then applied to the cells:
+
+```{r, warning=FALSE, message=FALSE}
+# calculate arrival delay information
+library(dplyr)
+library(lubridate)
+library(pivottabler)
+
+stations <- mutate(trainstations, CrsCodeChr=as.character(CrsCode))
+
+topOrigins <- bhmtrains %>%
+  mutate(OriginChr=as.character(Origin)) %>%
+  filter(Origin != "BHM") %>%
+  group_by(OriginChr) %>%
+  summarise(TotalTrains = n()) %>%
+  ungroup() %>%
+  top_n(20, TotalTrains)
+
+trains <- bhmtrains %>%
+  mutate(OriginChr=as.character(Origin), DestinationChr=as.character(Destination)) %>%
+  inner_join(topOrigins, by=c("OriginChr"="OriginChr")) %>%
+  inner_join(stations, by=c("OriginChr"="CrsCodeChr")) %>%
+  inner_join(stations, by=c("DestinationChr"="CrsCodeChr")) %>%
+  select(TOC, TrainCategory, PowerType, Origin=StationName.x, 
+         GbttArrival, ActualArrival, GbttDeparture, ActualDeparture) %>%
+  mutate(GbttDateTime=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
+         GbttHourOfDay=hour(GbttDateTime),
+         ArrivalDeltaMins=difftime(ActualArrival, GbttArrival, units="mins"),
+         ArrivalDelayMins=ifelse(ArrivalDeltaMins<0, 0, ArrivalDeltaMins)) %>%
+  filter(GbttHourOfDay %in% c(5, 6, 7, 8, 9, 10)) %>%
+  select(TOC, TrainCategory, PowerType, Origin, GbttHourOfDay, ArrivalDelayMins)
+
+# create the pivot table
+pt <- PivotTable$new()
+pt$addData(trains)
+pt$addColumnDataGroups("GbttHourOfDay")
+pt$addRowDataGroups("Origin")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()", visible=FALSE)
+pt$defineCalculation(calculationName="TotalDelayMins", 
+                     summariseExpression="sum(ArrivalDelayMins, na.rm=TRUE)", visible=FALSE)
+pt$defineCalculation(calculationName="AvgDelayMins", type="calculation", 
+                     basedOn=c("TotalDelayMins", "TotalTrains"),
+                     calculationExpression="values$TotalDelayMins/values$TotalTrains",
+                     format="%.1f")
+pt$evaluatePivot()
+
+# define three cell styles
+greenStyle <- PivotStyle$new(pt, "greenStyle", list("background-color"="#C6EFCE", "color"="#006100"))
+yellowStyle <- PivotStyle$new(pt, "yellowStyle", list("background-color"="#FFEB9C", "color"="#9C5700"))
+redStyle <- PivotStyle$new(pt, "redStyle", list("background-color"="#FFC7CE", "color"="#9C0006"))
+# apply the green style for an average arrival delay of between 0 and 2 minutes
+cells <- pt$findCells(minValue=0, maxValue=2, includeNull=FALSE, includeNA=FALSE)
+lst <- lapply(cells, function(cell) {cell$style <- greenStyle})
+# apply the yellow style for an average arrival delay of between 2 and 4 minutes
+cells <- pt$findCells(minValue=2, maxValue=4, includeNull=FALSE, includeNA=FALSE)
+lst <- lapply(cells, function(cell) {cell$style <- yellowStyle})
+# apply the red style for an average arrival delay of 4 minutes or greater
+cells <- pt$findCells(minValue=4, includeNull=FALSE, includeNA=FALSE)
+lst <- lapply(cells, function(cell) {cell$style <- redStyle})
+pt$renderPivot()
+```
+
+It is also possible to iterate through the cells to use a continuous colour scale as opposed to three separate styles.  In the example below (using exactly the same data and calculations as above), some helper functions are defined which calculate a colour in a continuous colour scale.  The colour scale used is roughly that described above (i.e. green to yellow to red):
+
+```{r, warning=FALSE, message=FALSE}
+# calculate arrival delay information
+library(dplyr)
+library(lubridate)
+library(pivottabler)
+
+stations <- mutate(trainstations, CrsCodeChr=as.character(CrsCode))
+
+topOrigins <- bhmtrains %>%
+  mutate(OriginChr=as.character(Origin)) %>%
+  filter(Origin != "BHM") %>%
+  group_by(OriginChr) %>%
+  summarise(TotalTrains = n()) %>%
+  ungroup() %>%
+  top_n(20, TotalTrains)
+
+trains <- bhmtrains %>%
+  mutate(OriginChr=as.character(Origin), DestinationChr=as.character(Destination)) %>%
+  inner_join(topOrigins, by=c("OriginChr"="OriginChr")) %>%
+  inner_join(stations, by=c("OriginChr"="CrsCodeChr")) %>%
+  inner_join(stations, by=c("DestinationChr"="CrsCodeChr")) %>%
+  select(TOC, TrainCategory, PowerType, Origin=StationName.x, 
+         GbttArrival, ActualArrival, GbttDeparture, ActualDeparture) %>%
+  mutate(GbttDateTime=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
+         GbttHourOfDay=hour(GbttDateTime),
+         ArrivalDeltaMins=difftime(ActualArrival, GbttArrival, units="mins"),
+         ArrivalDelayMins=ifelse(ArrivalDeltaMins<0, 0, ArrivalDeltaMins)) %>%
+  filter(GbttHourOfDay %in% c(5, 6, 7, 8, 9, 10)) %>%
+  select(TOC, TrainCategory, PowerType, Origin, GbttHourOfDay, ArrivalDelayMins)
+
+# create the pivot table
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(trains)
+pt$addColumnDataGroups("GbttHourOfDay")
+pt$addRowDataGroups("Origin")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()", visible=FALSE)
+pt$defineCalculation(calculationName="TotalDelayMins", 
+                     summariseExpression="sum(ArrivalDelayMins, na.rm=TRUE)", visible=FALSE)
+pt$defineCalculation(calculationName="AvgDelayMins", type="calculation", 
+                     basedOn=c("TotalDelayMins", "TotalTrains"),
+                     calculationExpression="values$TotalDelayMins/values$TotalTrains",
+                     format="%.1f")
+pt$evaluatePivot()
+
+# colour scale helper functions
+scaleNumber <- function(n1, n2, vMin, vMax, value) {
+  if(n1==n2) return(n1)
+  v <- value
+  if(v < vMin) v <- vMin
+  if(v > vMax) v <- vMax
+  if(n1<n2) {
+    return(n1+((v-vMin)/(vMax-vMin)*(n2-n1)))
+  }
+  else {
+    return(n1-((v-vMin)/(vMax-vMin)*(n1-n2)))
+  }
+}
+scale2Colours <- function(clr1, clr2, vMin, vMax, value) {
+  r <- round(scaleNumber(clr1$r, clr2$r, vMin, vMax, value))
+  g <- round(scaleNumber(clr1$g, clr2$g, vMin, vMax, value))
+  b <- round(scaleNumber(clr1$b, clr2$b, vMin, vMax, value))
+  return(paste0("#",format(as.hexmode(r), width=2), format(as.hexmode(g), width=2), format(as.hexmode(b), width=2)))
+}
+scale3Colours <- function(clr1, clr2, clr3, vMin, vMid, vMax, value) {
+  if(value <= vMid) return(scale2Colours(clr1, clr2, vMin, vMid, value))
+  else return(scale2Colours(clr2, clr3, vMid, vMax, value))
+}
+hexToClr <- function(hexclr) {
+  clr <- list()
+  clr$r <- strtoi(paste0("0x", substr(hexclr, 2, 3)))
+  clr$g <- strtoi(paste0("0x", substr(hexclr, 4, 5)))
+  clr$b <- strtoi(paste0("0x", substr(hexclr, 6, 7)))
+  return(clr)
+}
+
+# colour constants
+textClrGreen <- hexToClr("#006100")
+textClrYellow <- hexToClr("#9C5700")
+textClrRed <- hexToClr("#9C0006")
+backClrGreen <- hexToClr("#C6EFCE")
+backClrYellow <- hexToClr("#FFEB9C")
+backClrRed <- hexToClr("#FFC7CE")
+
+# specify some conditional formatting, calculating the appropriate text colour and back colour for each cell.
+cells <- pt$findCells(includeNull=FALSE, includeNA=FALSE)
+for(i in 1:length(cells)) {
+  cell <- cells[[i]]
+  value <- cell$rawValue
+  textClr <- scale3Colours(textClrGreen, textClrYellow, textClrRed, 0.5, 2, 4, value)
+  backClr <- scale3Colours(backClrGreen, backClrYellow, backClrRed, 0.5, 2, 4, value)
+  cell$style <- PivotStyle$new(pt, "", list("background-color"=backClr, "color"=textClr))
+}
+pt$renderPivot()
+```
+
+## Further Reading
+
+The full set of vignettes is:
+
+1. [Introduction](v01-introduction.html)
+2. [Data Groups](v02-datagroups.html)
+3. [Calculations](v03-calculations.html)
+4. [Outputs](v04-outputs.html)
+5. [Latex Output](v05-latexoutput.html)
+6. [Styling](v06-styling.html)
+7. [Finding and Formatting](v07-findingandformatting.html)
+8. [Cell Context](v08-cellcontext.html)
+9. [Irregular Layout](v09-irregularlayout.html)
+10. [Performance](v10-performance.html)
+11. [Shiny](v11-shiny.html)

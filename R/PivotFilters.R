@@ -6,6 +6,7 @@
 #'
 #' @docType class
 #' @importFrom R6 R6Class
+#' @importFrom data.table data.table is.data.table
 #' @import jsonlite
 #' @export
 #' @return Object of \code{\link{R6Class}} with properties and methods that
@@ -26,6 +27,14 @@
 #' Chocolate 100g")
 #' # filters now contains criteria for Year, Country and Product
 #' @field parentPivot Owning pivot table.
+#' @field count The number of PivotFilter objects in this PivotFilters object.
+#' @field filters The PivotFilter objects in this PivotFilters object.
+#' @field isALL If TRUE, this PivotFilters object matches all data.
+#' @field isNONE If TRUE, this PivotFilters object matches no data.
+#' @field filteredVariables A list of the variables that are filtered by this
+#'   PivotFilters object.
+#' @field filteredValues A list of the criteria values for each of the variables
+#'   filtered by this PivotFilters object.
 
 #' @section Methods:
 #' \describe{
@@ -44,12 +53,14 @@
 #'   \item{\code{setFilter(filter=NULL, action="replace")}}{Update the value of this
 #'   PivotFilters object with the specified PivotFilter object, either unioning,
 #'   intersecting or replacing the filter criteria.}
-#'   \item{\code{setFilterValues(variableName=NULL, values=NULL,
+#'   \item{\code{setFilterValues(variableName=NULL, type=NULL, values=NULL,
 #'   action="replace")}}{Update the value of this PivotFilters object with the
 #'   specified criteria, either unioning, intersecting or replacing the filter
 #'   criteria.}
 #'   \item{\code{addFilter()}}{Directly add a PivotFilter object to this
 #'   PivotFilters object.}
+#'   \item{\code{getFilteredDataFrame(dataFrame=NULL)}}{Filters the specified
+#'   data frame and returns the results as another data frame.}
 #'   \item{\code{getCopy()}}{Get a copy of this set of filters.}
 #'   \item{\code{asList()}}{Get a list representation of this PivotFilters
 #'   object.}
@@ -61,37 +72,38 @@
 
 PivotFilters <- R6::R6Class("PivotFilters",
   public = list(
-    initialize = function(parentPivot, variableName=NULL, values=NULL) {
-      checkArgument("PivotFilters", "initialize", parentPivot, missing(parentPivot), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotTable")
-      checkArgument("PivotFilters", "initialize", variableName, missing(variableName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
-      checkArgument("PivotFilters", "initialize", values, missing(values), allowMissing=TRUE, allowNull=TRUE, mustBeAtomic=TRUE)
+    initialize = function(parentPivot=NULL, variableName=NULL, type="ALL", values=NULL) {
+      if(parentPivot$argumentCheckMode > 0) {
+        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotFilters", "initialize", parentPivot, missing(parentPivot), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotTable")
+        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotFilters", "initialize", variableName, missing(variableName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotFilters", "initialize", type, missing(type), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("ALL", "VALUES", "NONE"))
+        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotFilters", "initialize", values, missing(values), allowMissing=TRUE, allowNull=TRUE, mustBeAtomic=TRUE)
+      }
       private$p_parentPivot <- parentPivot
-      private$p_parentPivot$message("PivotFilters$new", "Creating new Pivot Filters...", list(variableName=variableName, values=values))
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotFilters$new", "Creating new Pivot Filters...", list(variableName=variableName, values=values))
 
       private$p_filters <- list()
       if(!missing(variableName)&&!is.null(variableName)) {
-        self$setFilterValues(variableName, values, action="replace")
+        self$setFilterValues(variableName=variableName, type=type, values=values, action="replace")
       }
-      private$p_parentPivot$message("PivotFilters$new", "Created new Pivot Filters.")
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotFilters$new", "Created new Pivot Filters.")
     },
     getFilter = function(variableName=NULL) {
-      checkArgument("PivotFilters", "initialize", variableName, missing(variableName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
-      private$p_parentPivot$message("PivotFilters$getFilter", "Getting filter...", list(variableName=variableName))
-      if(length(private$p_filters)>0) {
-        for(i in 1:length(private$p_filters)) {
-          if(private$p_filters[[i]]$variableName==variableName) {
-            return(invisible(private$p_filters[[i]]))
-          }
-        }
+      if(private$p_parentPivot$argumentCheckMode > 0) {
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotFilters", "initialize", variableName, missing(variableName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
       }
-      private$p_parentPivot$message("PivotFilters$getFilter", "Got filter.")
-      return(invisible())
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotFilters$getFilter", "Getting filter...", list(variableName=variableName))
+      filter <- private$p_filters[[variableName]]
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotFilters$getFilter", "Got filter.")
+      return(invisible(filter))
     },
     isFilterMatch = function(matchMode="simple", variableNames=NULL, variableValues=NULL) {
-      checkArgument("PivotFilters", "isFilterMatch", matchMode, missing(matchMode), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("simple", "combinations"))
-      checkArgument("PivotFilters", "isFilterMatch", variableNames, missing(variableNames), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
-      checkArgument("PivotFilters", "isFilterMatch", variableValues, missing(variableValues), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", listElementsMustBeAtomic=TRUE)
-      private$p_parentPivot$message("PivotFilters$isFilterMatch", "Checking if is filter match...")
+      if(private$p_parentPivot$argumentCheckMode > 0) {
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotFilters", "isFilterMatch", matchMode, missing(matchMode), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("simple", "combinations"))
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotFilters", "isFilterMatch", variableNames, missing(variableNames), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotFilters", "isFilterMatch", variableValues, missing(variableValues), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", listElementsMustBeAtomic=TRUE)
+      }
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotFilters$isFilterMatch", "Checking if is filter match...")
       # Summary
       # variableNames can be a vector (i.e. more than one item specified)
       # variableValues can be a vector (i.e. more than one item specified)
@@ -124,24 +136,24 @@ PivotFilters <- R6::R6Class("PivotFilters",
             varValues <- variableValues[[i]]
             # special cases
             if("**" %in% varValues) {
-              # asterix means the filter should exist and the filter values should be null
+              # asterix means the filter should exist and should be of type ALL
               if(is.null(filter)) {
                 if(matchMode=="simple") next
                 return(invisible(FALSE))
               }
-              if(is.null(filter$values)) {
+              if(filter$type=="ALL") {
                 if(matchMode=="simple") return(invisible(TRUE))
                 else next
               }
               else return(invisible(FALSE))
             }
             if("!*" %in% varValues) {
-              # asterix means the filter should exist and  the filter values should not be null
+              # asterix means the filter should exist and the filter type should not be ALL
               if(is.null(filter)) {
                 if(matchMode=="simple") next
                 return(invisible(FALSE))
               }
-              if(is.null(filter$values)) {
+              if(filter$type=="ALL") {
                 if(matchMode=="simple") next
                 else return(invisible(FALSE))
               }
@@ -172,64 +184,175 @@ PivotFilters <- R6::R6Class("PivotFilters",
           }
         }
       }
-      private$p_parentPivot$message("PivotFilters$isFilterMatch", "Checked if is filter match.")
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotFilters$isFilterMatch", "Checked if is filter match.")
       if(matchMode=="simple") return(invisible(FALSE))
       else return(invisible(TRUE))
     },
     setFilters = function(filters=NULL, action="replace") {
-      checkArgument("PivotFilters", "setFilters", filters, missing(filters), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotFilters")
-      checkArgument("PivotFilters", "setFilters", action, missing(action), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("union", "intersect", "replace"))
-      private$p_parentPivot$message("PivotFilters$setFilters", "Setting filters...", list(action=action, filters=filters$asString()))
+      if(private$p_parentPivot$argumentCheckMode > 0) {
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotFilters", "setFilters", filters, missing(filters), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotFilters")
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotFilters", "setFilters", action, missing(action), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("and", "replace"))
+      }
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotFilters$setFilters", "Setting filters...", list(action=action, filters=filters$asString()))
       if(length(filters$filters)>0) {
         for(i in 1:length(filters$filters)) {
-          self$setFilter(filters$filters[[i]], action)
+          self$setFilter(filters$filters[[i]], action=action)
         }
       }
-      private$p_parentPivot$message("PivotFilters$setFilters", "Set filters.")
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotFilters$setFilters", "Set filters.")
       return(invisible())
     },
     setFilter = function(filter=NULL, action="replace") {
-      checkArgument("PivotFilters", "setFilter", filter, missing(filter), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotFilter")
-      checkArgument("PivotFilters", "setFilters", action, missing(action), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("union", "intersect", "replace"))
-      private$p_parentPivot$message("PivotFilters$setFilters", "Setting filter...", list(action=action, filter=filter$asString()))
-      self$setFilterValues(filter$variableName, filter$values, action)
-      private$p_parentPivot$message("PivotFilters$setFilter", "Set filter.")
+      if(private$p_parentPivot$argumentCheckMode > 0) {
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotFilters", "setFilters", filter, missing(filter), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotFilter")
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotFilters", "setFilters", action, missing(action), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("and", "replace"))
+      }
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotFilters$setFilters", "Setting filter...", list(action=action, filter=filter$asString()))
+      self$setFilterValues(variableName=filter$variableName, type=filter$type, values=filter$values, action=action)
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotFilters$setFilter", "Set filter.")
       return(invisible())
     },
-    setFilterValues = function(variableName=NULL, values=NULL, action="replace") {
-      checkArgument("PivotFilters", "setFilterValues", variableName, missing(variableName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
-      checkArgument("PivotFilters", "setFilterValues", values, missing(values), allowMissing=TRUE, allowNull=TRUE, mustBeAtomic=TRUE)
-      checkArgument("PivotFilters", "setFilterValues", action, missing(action), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("union", "intersect", "replace"))
-      private$p_parentPivot$message("PivotFilters$setFilterValues", "Setting filter values...",
-                                    list(action=action, variableName=variableName, values=values))
-      filter <- PivotFilter$new(private$p_parentPivot, variableName, values)
-      variablesNames <- names(private$p_filters)
-      if(action=="union") {
-        if(!(variableName %in% variablesNames)) { private$p_filters[[length(private$p_filters)+1]] <- filter }
-        else { private$p_filters[[variableName]]$union(filter) }
+    setFilterValues = function(variableName=NULL, type="ALL", values=NULL, action="replace") {
+      if(private$p_parentPivot$argumentCheckMode > 0) {
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotFilters", "setFilterValues", variableName, missing(variableName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotFilters", "setFilterValues", values, missing(values), allowMissing=TRUE, allowNull=TRUE, mustBeAtomic=TRUE)
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotFilters", "setFilterValues", type, missing(type), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("ALL", "VALUES", "NONE"))
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotFilters", "setFilterValues", action, missing(action), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("and", "replace"))
       }
-      else if(action=="intersect") {
-        if(!(variableName %in% variablesNames))
-          stop("PivotFilters$setFilterValues():  Cannot intersect as variable name does not exist in current filters.", call. = FALSE)
-        private$p_filters[[variableName]]$intersect(filter)
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotFilters$setFilterValues", "Setting filter values...",
+                                    list(action=action, variableName=variableName, type=type, values=values))
+      filter <- PivotFilter$new(private$p_parentPivot, variableName=variableName, type=type, values=values)
+      variablesNames <- names(private$p_filters)
+      if(action=="and") {
+        if(variableName %in% variablesNames) { private$p_filters[[variableName]]$and(filter) }
+        else { private$p_filters[[variableName]] <- filter }
       }
       else if(action=="replace") {
         private$p_filters[[variableName]] <- filter
       }
-      else {
-        stop(paste0("PivotFilters$setFilterValues():  action must be one of union, intersect, replace.  Unknown action: ", action), call. = FALSE)
-      }
-      private$p_parentPivot$message("PivotFilters$setFilterValues", "Set filter values.")
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotFilters$setFilterValues", "Set filter values.")
       return(invisible())
     },
     addFilter = function(filter=NULL) {
-      checkArgument("PivotFilters", "addFilter", filter, missing(filter), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotFilter")
-      private$p_parentPivot$message("PivotFilters$addFilter", "Adding filter...", list(filter=filter$asString()))
-
-      index <- length(private$p_filters) + 1
-      private$p_filters[[index]] <- filter
-      private$p_parentPivot$message("PivotFilters$addFilter", "Added filter.")
+      if(private$p_parentPivot$argumentCheckMode > 0) {
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotFilters", "addFilter", filter, missing(filter), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotFilter")
+      }
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotFilters$addFilter", "Adding filter...", list(filter=filter$asString()))
+      private$p_filters[[filter$variableName]] <- filter
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotFilters$addFilter", "Added filter.")
       return(invisible())
+    },
+    getFilteredDataFrame = function(dataFrame=NULL) {
+      if(private$p_parentPivot$argumentCheckMode > 0) {
+        checkArgument(private$p_parentPivot$argumentCheckMode, TRUE, "PivotFilters", "getFilteredDataFrame", dataFrame, missing(dataFrame), allowMissing=FALSE, allowNull=FALSE, allowedClasses="data.frame")
+      }
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotFilters$getFilteredDataFrame", "Getting filtered data frame...")
+      # use data
+      data <- dataFrame
+      # short circuiting where possible
+      if(self$isNONE) {
+        data <- data[0, ] # returns the structure but no data
+        if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotFilters$getFilteredDataFrame", "Got filtered data frame (NO DATA).")
+        return(invisible(data))
+      }
+      if(self$isALL) {
+        if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotFilters$getFilteredDataFrame", "Got filtered data frame (ALL DATA).")
+        return(invisible(data))
+      }
+      # check the filtering mode
+      filterMode <- private$p_parentPivot$processingLibrary
+      # if(filterMode=="base") {
+      #   # build a subsetting query
+      #   # todo: checking the escaping of the variable names and values below
+      #   # filterCmd is e.g. "data <- data[(", filters[1]$variableName, " %in% filters[1]$values) & (", filters[2]$variableName, " %in% filters[2]$values), ]"
+      #   if(length(private$p_filters) > 0)
+      #   {
+      #     filterCmd <- NULL
+      #     filterCount <- 0
+      #     for(j in 1:length(private$p_filters)) {
+      #       filter <- private$p_filters[[j]]
+      #       if(is.null(filter$variableName))
+      #         stop("PivotFilters$getFilteredDataFrame(): filter$variableName must not be null", call. = FALSE)
+      #       if(is.null(filter$values)) next
+      #       if(length(filter$values)==0) next
+      #       if(!is.null(filterCmd)) filterCmd <- paste0(filterCmd, " & ")
+      #       if(length(filter$values)>0) {
+      #         # %in% handles NA correctly for our use-case, i.e. NA %in% NA returns TRUE, not NA
+      #         filterCmd <- paste0(filterCmd, "(data$", filter$variableName, " %in% private$p_filters$values)")
+      #         filterCount <- filterCount + 1
+      #       }
+      #     }
+      #     if(filterCount > 0) {
+      #       filterCmd <- paste0("data <- data[", filterCmd, ", ]")
+      #       eval(parse(text=filterCmd))
+      #     }
+      #   }
+      # }
+      # else
+      if(filterMode=="dplyr") {
+        # build a dplyr query
+        # todo: checking the escaping of the variable names and values below
+        # filterCmd is e.g. "data <- filter(data, (", filters[1]$variableName, " %in% filters[1]$values) & (", filters[2]$variableName, " %in% filters[2]$values)"
+        if(length(private$p_filters) > 0)
+        {
+          filterCmd <- NULL
+          filterCount <- 0
+          for(j in 1:length(private$p_filters)) {
+            filter <- private$p_filters[[j]]
+            if(is.null(filter$variableName))
+              stop("PivotFilters$getFilteredDataFrame(): filter$variableName must not be null", call. = FALSE)
+            if(is.null(filter$values)) next
+            if(length(filter$values)==0) next
+            if(!is.null(filterCmd)) filterCmd <- paste0(filterCmd, " & ")
+            if(length(filter$values)>0) {
+              # %in% handles NA correctly for our use-case, i.e. NA %in% NA returns TRUE, not NA
+              filterCmd <- paste0(filterCmd, "(", filter$variableName, " %in% private$p_filters[[", j, "]]$values)")
+              filterCount <- filterCount + 1
+            }
+          }
+          if(filterCount > 0) {
+            filterCmd <- paste0("data <- dplyr::filter(data,", filterCmd, ")")
+            eval(parse(text=filterCmd))
+          }
+        }
+      }
+      else if(filterMode=="data.table") {
+        # build a data.table query
+        # todo: checking the escaping of the variable names and values below
+        # filterCmd is e.g. "data <- data[", filters[1]$variableName, " %in% filters[1]$values & ", filters[2]$variableName, " %in% filters[2]$values)]"
+        if(length(private$p_filters) > 0)
+        {
+          filterCmd <- NULL
+          filterCount <- 0
+          for(j in 1:length(private$p_filters)) {
+            filter <- private$p_filters[[j]]
+            if(is.null(filter$variableName))
+              stop("PivotFilters$getFilteredDataFrame(): filter$variableName must not be null", call. = FALSE)
+            if(is.null(filter$values)) next
+            if(length(filter$values)==0) next
+            if(!is.null(filterCmd)) filterCmd <- paste0(filterCmd, " & ")
+            if(length(filter$values)>0) {
+              # %in% handles NA correctly for our use-case, i.e. NA %in% NA returns TRUE, not NA
+              filterCmd <- paste0(filterCmd, "(", filter$variableName, " %in% private$p_filters[[", j, "]]$values)")
+              filterCount <- filterCount + 1
+            }
+          }
+          if(filterCount > 0) {
+            # check is a data table
+            if(private$p_parentPivot$argumentCheckMode == 4) {
+              if(!data.table::is.data.table(data))
+                stop(paste0("PivotFilters$getFilteredDataFrame(): A data.table was expected but the following was encountered: ",
+                            paste(class(data), sep="", collapse=", ")), call. = FALSE)
+            }
+            # apply the filter
+            filterCmd <- paste0("data <- data[", filterCmd, "]")
+            eval(parse(text=filterCmd))
+          }
+        }
+      }
+      else stop(paste0("PivotFilters$getFilteredDataFrame(): Unknown filterMode encountered: ", filterMode), call. = FALSE)
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotFilters$getFilteredDataFrame", "Got filtered data frame (SOME DATA).")
+      return(invisible(data))
     },
     getCopy = function() {
       copy <- PivotFilters$new(private$p_parentPivot)
@@ -251,23 +374,77 @@ PivotFilters <- R6::R6Class("PivotFilters",
     },
     asJSON = function() { return(jsonlite::toJSON(self$asList())) },
     asString = function(includeVariableName=TRUE, seperator=", ") {
-       checkArgument("PivotFilters", "asString", includeVariableName, missing(includeVariableName), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
-       checkArgument("PivotFilters", "asString", seperator, missing(seperator), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character")
-       fstr <- ""
-       if(length(private$p_filters)>0) {
-         for(i in 1:length(private$p_filters)) {
-           f <- private$p_filters[[i]]
-           sep <- ""
-           if(i > 1) { sep <- seperator }
-           fstr <- paste0(fstr, sep, f$asString(includeVariableName=includeVariableName))
-         }
+      if(private$p_parentPivot$argumentCheckMode > 0) {
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotFilters", "asString", includeVariableName, missing(includeVariableName), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotFilters", "asString", seperator, missing(seperator), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character")
        }
-       return(fstr)
+      fstr <- ""
+      if(length(private$p_filters)>0) {
+       for(i in 1:length(private$p_filters)) {
+         f <- private$p_filters[[i]]
+         sep <- ""
+         if(i > 1) { sep <- seperator }
+         fstr <- paste0(fstr, sep, f$asString(includeVariableName=includeVariableName))
+       }
+      }
+      return(fstr)
     }
   ),
   active = list(
-    count = function(Value) { return(invisible(length(private$p_filters))) },
-    filters = function(value) { return(invisible(private$p_filters)) }
+    count = function(value) { return(invisible(length(private$p_filters))) },
+    filters = function(value) { return(invisible(private$p_filters)) },
+    isALL = function(value) {
+      if(self$count==0) return(TRUE)
+      else {
+        bALL <- TRUE
+        for(i in 1:length(private$p_filters)) {
+          f <- private$p_filters[[i]]
+          if(f$type!="ALL") {
+            bALL <- FALSE
+            break
+          }
+        }
+        return(bALL)
+      }
+    },
+    isNONE = function(value) {
+      if(self$count==0) return(FALSE)
+      else {
+        for(i in 1:length(private$p_filters)) {
+          f <- private$p_filters[[i]]
+          if(f$type=="NONE") return(TRUE)
+        }
+        return(FALSE)
+      }
+    },
+    filteredVariables = function(value) { # returns a character vector of variable names that are filtered
+      variableNames = NULL
+      if(!is.null(private$p_filters)) {
+        if(length(private$p_filters)>0) {
+          for(i in 1:length(private$p_filters)) {
+            filter <- private$p_filters[[i]]
+            if(filter$type=="VALUES") {
+              variableNames[length(variableNames)+1] <- filter$variableName
+            }
+          }
+        }
+      }
+      return(variableNames)
+    },
+    filteredValues = function(value) { # returns a list of variable names that are filtered plus the filter values
+      values = list()
+      if(!is.null(private$p_filters)) {
+        if(length(private$p_filters)>0) {
+          for(i in 1:length(private$p_filters)) {
+            filter <- private$p_filters[[i]]
+            if(filter$type=="VALUES") {
+              values[[filter$variableName]] <- filter$values
+            }
+          }
+        }
+      }
+      return(values)
+    }
   ),
   private = list(
     p_parentPivot = NULL,

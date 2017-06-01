@@ -37,35 +37,43 @@
 PivotCalculationGroups <- R6::R6Class("PivotCalculationGroups",
   public = list(
     initialize = function(parentPivot) {
-      checkArgument("PivotCalculationGroups", "initialize", parentPivot, missing(parentPivot), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotTable")
+      if(parentPivot$argumentCheckMode > 0) {
+        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculationGroups", "initialize", parentPivot, missing(parentPivot), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotTable")
+      }
       private$p_parentPivot <- parentPivot
-      private$p_parentPivot$message("PivotCalculationGroups$new", "Creating new Pivot Calculation Groups...")
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculationGroups$new", "Creating new Pivot Calculation Groups...")
       private$p_groups <- list()
-      private$p_parentPivot$message("PivotCalculationGroups$new", "Created new Pivot Calculation Groups.")
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculationGroups$new", "Created new Pivot Calculation Groups.")
     },
     isExistingCalculationGroup = function(calculationGroupName=NULL) {
-      checkArgument("PivotCalculationGroups", "isExistingCalculationGroup", calculationGroupName, missing(calculationGroupName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
-      private$p_parentPivot$message("PivotCalculationGroups$isExistingCalculationGroup", "Checking calculation group exists...",
+      if(private$p_parentPivot$argumentCheckMode > 0) {
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculationGroups", "isExistingCalculationGroup", calculationGroupName, missing(calculationGroupName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
+      }
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculationGroups$isExistingCalculationGroup", "Checking calculation group exists...",
                                     list(calculationGroupName=calculationGroupName))
       calcGroupExists <- calculationGroupName %in% names(private$p_groups)
-      private$p_parentPivot$message("PivotCalculationGroups$isExistingCalculationGroup", "Checked calculation group exists.")
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculationGroups$isExistingCalculationGroup", "Checked calculation group exists.")
       return(invisible(calcGroupExists))
     },
     getCalculationGroup = function(calculationGroupName=NULL) {
-      checkArgument("PivotCalculationGroups", "getCalculationGroup", calculationGroupName, missing(calculationGroupName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
-      private$p_parentPivot$message("PivotCalculationGroups$getCalculationGroup", "Getting calculation group...",
+      if(private$p_parentPivot$argumentCheckMode > 0) {
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculationGroups", "getCalculationGroup", calculationGroupName, missing(calculationGroupName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
+      }
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculationGroups$getCalculationGroup", "Getting calculation group...",
                                     list(calculationGroupName=calculationGroupName))
       calculationGroup <- private$p_groups[[calculationGroupName]]
       if(is.null(calculationGroup)) {
         stop(paste0("PivotCalculationGroups$getCalculationGroup(): No calculationGroup exists with the name '",
                     calculationGroupName, "'"), call. = FALSE)
       }
-      private$p_parentPivot$message("PivotCalculationGroups$getCalculationGroup", "Got calculation group.")
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculationGroups$getCalculationGroup", "Got calculation group.")
       return(invisible(calculationGroup))
     },
     addCalculationGroup = function(calculationGroupName=NULL) {
-      checkArgument("PivotCalculationGroups", "addCalculationGroup", calculationGroupName, missing(calculationGroupName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
-      private$p_parentPivot$message("PivotCalculationGroups$addCalculationGroup", "Adding calculation group...",
+      if(private$p_parentPivot$argumentCheckMode > 0) {
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculationGroups", "addCalculationGroup", calculationGroupName, missing(calculationGroupName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
+      }
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculationGroups$addCalculationGroup", "Adding calculation group...",
                                     list(calculationGroupName=calculationGroupName))
       if(calculationGroupName %in% names(private$p_groups)) {
         stop(paste0("PivotCalculationGroups$addCalculationGroup():  A calculation group already exists",
@@ -74,7 +82,7 @@ PivotCalculationGroups <- R6::R6Class("PivotCalculationGroups",
       calculationGroup <- PivotCalculationGroup$new(private$p_parentPivot, calculationGroupName)
       private$p_groups[[calculationGroupName]] <- calculationGroup
       if(is.null(private$p_defaultGroup)) private$p_defaultGroup <- calculationGroup
-      private$p_parentPivot$message("PivotCalculationGroups$addCalculationGroup", "Added calculation group.")
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculationGroups$addCalculationGroup", "Added calculation group.")
       return(invisible(calculationGroup))
     },
     asList = function() {
@@ -90,8 +98,10 @@ PivotCalculationGroups <- R6::R6Class("PivotCalculationGroups",
     },
     asJSON = function() { return(jsonlite::toJSON(self$asList())) },
     asString = function(seperator=", ") {
-       checkArgument("PivotCalculationGroups", "asString", seperator, missing(seperator), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character")
-       cstr <- ""
+      if(private$p_parentPivot$argumentCheckMode > 0) {
+        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculationGroups", "asString", seperator, missing(seperator), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character")
+       }
+      cstr <- ""
        if(length(private$p_groups)>0) {
          for(i in 1:length(private$p_groups)) {
            cg <- private$p_groups[[i]]

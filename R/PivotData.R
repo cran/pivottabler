@@ -5,6 +5,7 @@
 #'
 #' @docType class
 #' @importFrom R6 R6Class
+#' @importFrom data.table data.table is.data.table
 #' @import jsonlite
 #' @return Object of \code{\link{R6Class}} with properties and methods that help
 #'   quickly storing and retrieving data frames.
@@ -37,42 +38,58 @@
 PivotData <- R6::R6Class("PivotData",
   public = list(
    initialize = function(parentPivot=NULL) {
-     checkArgument("PivotData", "initialize", parentPivot, missing(parentPivot), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotTable")
+     if(parentPivot$argumentCheckMode > 0) {
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotData", "initialize", parentPivot, missing(parentPivot), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotTable")
+     }
      private$p_parentPivot <- parentPivot
-     private$p_parentPivot$message("PivotData$new", "Creating new Pivot Data...")
+     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotData$new", "Creating new Pivot Data...")
      private$p_data <- list()
      private$p_defaultData <- NULL
-     private$p_parentPivot$message("PivotData$new", "Created new Pivot Data.")
+     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotData$new", "Created new Pivot Data.")
    },
-   addData = function(df, dataName) {
-     checkArgument("PivotData", "addData", df, missing(df), allowMissing=FALSE, allowNull=FALSE, allowedClasses="data.frame")
-     checkArgument("PivotData", "addData", dataName, missing(dataName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
-     private$p_parentPivot$message("PivotData$addData", "Adding data...", list(dataName=dataName, df=private$getDfStr(df)))
+   addData = function(dataFrame=NULL, dataName=NULL) {
+     if(private$p_parentPivot$argumentCheckMode > 0) {
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotData", "addData", dataFrame, missing(dataFrame), allowMissing=FALSE, allowNull=FALSE, allowedClasses="data.frame")
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotData", "addData", dataName, missing(dataName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+     }
+     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotData$addData", "Adding data...", list(dataName=dataName, df=private$getDfStr(df)))
+     if(private$p_parentPivot$processingLibrary=="data.table") {
+       if(data.table::is.data.table(dataFrame)) data <- dataFrame
+       else data <- data.table::as.data.table(dataFrame)
+     }
+     else {
+       if(is.data.frame(dataFrame)) data <- dataFrame
+       else stop("PivotData$addData():  The specified data is not a data frame.", call. = FALSE)
+     }
      dn <- dataName
-     if(is.null(dn)) dn <- deparse(substitute(df))
+     if(is.null(dn)) dn <- deparse(substitute(dataFrame))
      if(is.null(dn)) stop("PivotData$addData(): Please specify a name for the data frame.", call. = FALSE)
      if(length(dn)==0) stop("PivotData$addData(): Please specify a name for the data frame.", call. = FALSE)
      if(is.null(private$p_defaultData)) {
-       private$p_defaultData <- df
+       private$p_defaultData <- data
        private$p_defaultName <- dn
      }
-     private$p_data[[dn]] <- df
-     private$p_parentPivot$message("PivotData$addData", "Added data.")
+     private$p_data[[dn]] <- data
+     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotData$addData", "Added data.")
      return(invisible())
    },
-   getData = function(dataName) {
-     checkArgument("PivotData", "getData", dataName, missing(dataName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
-     private$p_parentPivot$message("PivotData$getData", "Getting data...", list(dataName=dataName))
+   getData = function(dataName=NULL) {
+     if(private$p_parentPivot$argumentCheckMode > 0) {
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotData", "getData", dataName, missing(dataName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
+     }
+     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotData$getData", "Getting data...", list(dataName=dataName))
      if (!(dataName %in% names(private$p_data))) stop(paste0("PivotData$getData(): dataName '", dataName, "' not found."), call. = FALSE)
      data <- private$p_data[[dataName]]
-     private$p_parentPivot$message("PivotData$addData", "Got data.")
+     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotData$addData", "Got data.")
      return(invisible(data))
    },
-   isKnownData = function(dataName) {
-     checkArgument("PivotData", "isKnownData", dataName, missing(dataName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
-     private$p_parentPivot$message("PivotData$isKnownData", "Checking dataName...", list(dataName=dataName))
+   isKnownData = function(dataName=NULL) {
+     if(private$p_parentPivot$argumentCheckMode > 0) {
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotData", "isKnownData", dataName, missing(dataName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
+     }
+     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotData$isKnownData", "Checking dataName...", list(dataName=dataName))
      if (!(dataName %in% names(private$p_data))) return(invisible(FALSE))
-     private$p_parentPivot$message("PivotData$isKnownData", "Checked dataName.")
+     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotData$isKnownData", "Checked dataName.")
      return(invisible(TRUE))
    },
    asList = function() {

@@ -40,13 +40,15 @@ in the pivot table.}
   column coordinates in the pivot table.}
   \item{\code{setCell(r, c, cell))}}{Set the PivotCell at the specified row
   and column coordinates in the pivot table.}
-  \item{\code{getCells = function(rowNumbers=NULL,
-  columnNumbers=NULL)}}{Retrieve cells by a combination of row and/or column
-  numbers.}
+  \item{\code{getCells(specifyCellsAsList=FALSE, rowNumbers=NULL,
+  columnNumbers=NULL, cellCoordinates=NULL)}}{Retrieve cells by a combination
+  of row and/or column numbers.}
   \item{\code{findCells(variableNames=NULL, variableValues=NULL,
   totals="include", calculationNames=NULL, minValue=NULL, maxValue=NULL,
   exactValues=NULL, includeNull=TRUE, includeNA=TRUE)}}{Find cells matching
   the specified criteria.}
+  \item{\code{getColumnWidths())}}{Retrieve the width of the longest value
+  (in characters) in each column.}
   \item{\code{asMatrix(rawValue=TRUE))}}{Get a matrix containing all of the
   numerical values from the body of the pivot table (for rawValue=TRUE) or
   all of the formatted (i.e. character) values (for rawValue=FALSE).}
