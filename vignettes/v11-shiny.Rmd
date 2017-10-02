@@ -24,7 +24,6 @@ Good starting points for using Shiny are:
 
 * [Overview](https://shiny.rstudio.com/)
 * [Video Tutorial](https://shiny.rstudio.com/tutorial/)
-* [Older Written Tutorial](https://shiny.rstudio.com/tutorial/lesson1/)
 * [Detailed Written Articles](https://shiny.rstudio.com/articles/)
 
 ## Examples
@@ -216,3 +215,4 @@ The full set of vignettes is:
 9. [Irregular Layout](v09-irregularlayout.html)
 10. [Performance](v10-performance.html)
 11. [Shiny](v11-shiny.html)
+12. [Excel Export](v12-excelexport.html)

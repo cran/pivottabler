@@ -26,6 +26,8 @@
 #' pt$renderPivot()
 #' @field argumentCheckMode A number (0-4 meaning none, minimal, basic,
 #'   balanced, full) indicating the argument checking level.
+#' @field traceEnabled A logical value indicating whether actions are logged to
+#'   a trace file.
 #' @field processingLibrary A character value indicating the processing library
 #'   being used (base, dplyr, data.table).
 #' @field data A PivotData object containing the data frames used to populate
@@ -45,6 +47,8 @@
 #'   evaluation of this pivot table.
 #' @field cells A PivotCells object containing all of the cells in the body of
 #'   the pivot table.
+#' @field rowCount The number of rows in the table.
+#' @field columnCount The number of columns in the table.
 #' @field theme The name of the theme currently applied to the pivot table.
 #' @field styles A PivotStyles object containing the styles used to theme the
 #'   pivot table.
@@ -186,6 +190,10 @@
 #'   specifying the caption to appear above the table, the label to use when
 #'   referring to the table elsewhere in the document and how headings should be
 #'   styled.}
+#'   \item{\code{writeToExcelWorksheet(wb=NULL, wsName=NULL, topRowNumber=NULL,
+#'   leftMostColumnNumber=NULL, mapStylesFromCSS=TRUE)}}{Output the pivot table
+#'   into the specified workbook and worksheet at the specified row-column
+#'   location.}
 #'   \item{\code{showBatchInfo()}}{Show a text summary of the batch calculations
 #'   from the last evaluation of this pivot table.}
 #'   \item{\code{asList()}}{Get a list representation of the pivot table.}
@@ -248,6 +256,7 @@ PivotTable <- R6::R6Class("PivotTable",
       private$p_cells <- PivotCells$new(self)
       private$p_htmlRenderer <- PivotHtmlRenderer$new(parentPivot=self)
       private$p_latexRenderer <- PivotLatexRenderer$new(parentPivot=self)
+      private$p_openxlsxRenderer <- PivotOpenXlsxRenderer$new(parentPivot=self)
       private$p_timings <- list()
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$new", "Created new Pivot Table.")
       return(invisible())
@@ -268,7 +277,7 @@ PivotTable <- R6::R6Class("PivotTable",
     },
     getTopColumnGroups = function() {
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getTopColumnGroups", "Getting top level column groups...")
-      grps <- private$p_columnGroup$getChildGroups()
+      grps <- private$p_columnGroup$childGroups
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getTopColumnGroups", "Got top level column groups", list(count = length(grps)))
       return(invisible(grps))
     },
@@ -353,7 +362,7 @@ PivotTable <- R6::R6Class("PivotTable",
     },
     getTopRowGroups = function() {
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getTopRowGroups", "Getting top level row groups...")
-      grps <- private$p_rowGroup$getChildGroups()
+      grps <- private$p_rowGroup$childGroups
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getTopRowGroups", "Got top level row groups", list(count = length(grps)))
       return(invisible(grps))
     },
@@ -934,7 +943,8 @@ PivotTable <- R6::R6Class("PivotTable",
           for(cg in 1:length(levelGroups)) {
             cgrp <- levelGroups[[cg]]
             if(is.null(cgrp$caption)) currentLine <- paste0(currentLine, repStr(" ", cgrp$fixedWidthSize))
-            if(is.na(cgrp$caption)) currentLine <- paste0(currentLine, repStr(" ", cgrp$fixedWidthSize))
+            else if(length(cgrp$caption)==0) currentLine <- paste0(currentLine, repStr(" ", cgrp$fixedWidthSize))
+            else if(is.na(cgrp$caption)) currentLine <- paste0(currentLine, repStr(" ", cgrp$fixedWidthSize))
             else currentLine <- paste0(currentLine, cgrp$caption, repStr(" ", cgrp$fixedWidthSize - nchar(cgrp$caption)))
           }
           # print this line
@@ -965,7 +975,8 @@ PivotTable <- R6::R6Class("PivotTable",
             }
             else {
               if(is.null(rg$caption)) currentLine <- paste0(currentLine, repStr(" ", rowLevelWidths[rl]))
-              if(is.na(rg$caption)) currentLine <- paste0(currentLine, repStr(" ", rowLevelWidths[rl]))
+              else if(length(rg$caption)==0) currentLine <- paste0(currentLine, repStr(" ", rowLevelWidths[rl]))
+              else if(is.na(rg$caption)) currentLine <- paste0(currentLine, repStr(" ", rowLevelWidths[rl]))
               else currentLine <- paste0(currentLine, rg$caption, repStr(" ", rowLevelWidths[rl] - nchar(rg$caption)))
               rg$isRendered <- TRUE
             }
@@ -977,6 +988,7 @@ PivotTable <- R6::R6Class("PivotTable",
             for(c in 1:self$columnCount) {
               cell <- private$p_cells$getCell(r, c)
               if(is.null(cell$formattedValue)) currentLine <- paste0(currentLine, repStr(" ", columnWidths[c]))
+              else if(length(cell$formattedValue)==0) currentLine <- paste0(currentLine, repStr(" ", columnWidths[c]))
               else if(is.na(cell$formattedValue)) currentLine <- paste0(currentLine, repStr(" ", columnWidths[c]))
               else currentLine <- paste0(currentLine, repStr(" ", columnWidths[c] - 2 - nchar(cell$formattedValue)), cell$formattedValue, "  ")
             }
@@ -1059,6 +1071,7 @@ PivotTable <- R6::R6Class("PivotTable",
           }
           else v <- cell$formattedValue
           if(is.null(v)) m[columnHeaderLevelCount + r, rowHeaderLevelCount + c] <- ""
+          else if(length(v)==0) m[columnHeaderLevelCount + r, rowHeaderLevelCount + c] <- ""
           else if(is.na(v)) m[columnHeaderLevelCount + r, rowHeaderLevelCount + c] <- ""
           else m[columnHeaderLevelCount + r, rowHeaderLevelCount + c] <- v
         }
@@ -1405,6 +1418,26 @@ PivotTable <- R6::R6Class("PivotTable",
       private$addTiming("getLatex", timeStart)
       return(ltx)
     },
+    writeToExcelWorksheet = function(wb=NULL, wsName=NULL, topRowNumber=NULL, leftMostColumnNumber=NULL, outputValuesAs="rawValue", applyStyles=TRUE, mapStylesFromCSS=TRUE) {
+      if(private$p_argumentCheckMode > 0) {
+        checkArgument(private$p_argumentCheckMode, FALSE, "PivotTable", "writeToExcelWorksheet", wb, missing(wb), allowMissing=TRUE, allowNull=TRUE, allowedClasses="Workbook")
+        checkArgument(private$p_argumentCheckMode, FALSE, "PivotTable", "writeToExcelWorksheet", wsName, missing(wsName), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character")
+        checkArgument(private$p_argumentCheckMode, FALSE, "PivotTable", "writeToExcelWorksheet", topRowNumber, missing(topRowNumber), allowMissing=TRUE, allowNull=FALSE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, FALSE, "PivotTable", "writeToExcelWorksheet", leftMostColumnNumber, missing(leftMostColumnNumber), allowMissing=TRUE, allowNull=FALSE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, FALSE, "PivotTable", "writeToExcelWorksheet", outputValuesAs, missing(outputValuesAs), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("rawValue", "formattedValueAsText", "formattedValueAsNumber"))
+        checkArgument(private$p_argumentCheckMode, FALSE, "PivotTable", "writeToExcelWorksheet", applyStyles, missing(applyStyles), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, FALSE, "PivotTable", "writeToExcelWorksheet", mapStylesFromCSS, missing(mapStylesFromCSS), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+      }
+      if (!requireNamespace("openxlsx", quietly = TRUE)) {
+        stop("PivotTable$writeToExcelWorksheet():  The openxlsx package is needed to write the pivot table to an Excel file.  Please install it.", call. = FALSE)
+      }
+      if(private$p_traceEnabled==TRUE) self$trace("PivotTable$writeToExcelWorksheet", "Writing to worksheet...")
+      private$p_openxlsxRenderer$writeToWorksheet(wb=wb, wsName=wsName, topRowNumber=topRowNumber,
+                                                  leftMostColumnNumber=leftMostColumnNumber,
+                                                  outputValuesAs=outputValuesAs,
+                                                  applyStyles=applyStyles, mapStylesFromCSS=mapStylesFromCSS)
+      if(private$p_traceEnabled==TRUE) self$trace("PivotTable$writeToExcelWorksheet", "Written to worksheet.")
+    },
     trace = function(methodName, desc, detailList=NULL) {
       if(!private$p_traceEnabled) return()
       stackdepth <- length(sys.calls())
@@ -1568,6 +1601,7 @@ PivotTable <- R6::R6Class("PivotTable",
     p_fixedWidthSized = FALSE,
     p_htmlRenderer = NULL,
     p_latexRenderer = NULL,
+    p_openxlsxRenderer = NULL,
     p_traceFile = NULL,
     p_timings = NULL,
     clearIsRenderedFlags = function() {

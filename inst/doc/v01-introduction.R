@@ -131,6 +131,12 @@ qhpvt(bhmtrains, "TOC", "TrainCategory",
      c("Mean Speed"="mean(SchedSpeedMPH, na.rm=TRUE)", "Std Dev Speed"="sd(SchedSpeedMPH, na.rm=TRUE)"), 
      formats=list("%.0f", "%.1f"))
 
+## ---- message=FALSE, warning=FALSE---------------------------------------
+library(pivottabler)
+qhpvt(bhmtrains, "TOC", "TrainCategory", 
+     c("Mean Speed"="mean(SchedSpeedMPH, na.rm=TRUE)", "Std Dev Speed"="sd(SchedSpeedMPH, na.rm=TRUE)"), 
+     formats=list("%.0f", "%.1f"), totals=list("TOC"="All TOCs", "TrainCategory"="All Categories"))
+
 ## ---- message=FALSE, warning=FALSE, echo=FALSE---------------------------
 # derive the date of each train (from the arrival/dep times),
 # then the month of each train from the date of each train

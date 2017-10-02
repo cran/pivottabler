@@ -27,7 +27,7 @@ vignette: >
 
 ## Introducing pivottabler
 
-The `pivottabler` package enables pivot tables to be created with just a few lines of R.
+The `pivottabler` package enables pivot tables to be created and rendered/exported with just a few lines of R.
 
 Pivot tables are constructed natively in R, either via a short one line command to build a basic pivot table or via series of R commands that gradually build a more bespoke pivot table to meet your needs. 
 
@@ -47,7 +47,11 @@ Output can be rendered as:
 - Latex, e.g. to PDF, or
 - Plain text, e.g. to the console.  
 
-The generated HTML, Latex and text can also be easily retrieved, e.g. to be used outside of R.
+The generated HTML, Latex and text can also be easily retrieved, e.g. to be used outside of R
+
+The pivot tables can also be exported to Excel, including the styling/formatting.
+
+`pivottabler` is a companion package to the `basictabler` package.  `pivottabler` is focussed on generating pivot tables and can aggregate data.  `basictabler` does not aggregate data but offers more control of table structure.
 
 The latest version of the pivottabler package can be obtained directly from the [package repository](https://github.com/cbailiss/pivottabler/).  Please log any questions not answered by the vignettes or any bug reports [here](https://github.com/cbailiss/pivottabler/issues).
 
@@ -134,7 +138,7 @@ Each line above works as follows:
 3. Specify the data frame that contains the data for the pivot table.
 4. Add the distinct values from the TrainCategory column in the data frame as columns in the pivot table.
 5. Add the distinct values from the TOC column in the data frame as rows in the pivot table.
-6. Specify the calculation.  The summarise expression must be an expression that can be used with the dplyr summarise() function.  This expression is used internally by the pivottabler package with the dplyr summarise function^[See the [dplyr cheatsheet](https://github.com/rstudio/cheatsheets/raw/master/source/pdfs/data-transformation-cheatsheet.pdf) for other summary functions.].  `pivottabler` also supports data.table - see the [Performance](v10-performance.html) vignette for more details.
+6. Specify the calculation.  The summarise expression must be an expression that can be used with the dplyr summarise() function.  This expression is used internally by the pivottabler package with the dplyr summarise function.  `pivottabler` also supports data.table - see the [Performance](v10-performance.html) vignette for more details.
 7. Generate the pivot table.
 
 ## Constructing the Basic Pivot Table
@@ -283,6 +287,7 @@ The arguments to all three functions are essentially the same:
 - `calculations` specifies the summary calculations (as a character vector) used to calculate the cell values in the pivot table.  The names of the elements in this vector become the calculation names (and so the calculation headings when more than one calculation is present in the pivot table).
 - `format` specifies the same formatting for all calculations (as either a character vaue, list or R function).  See the "Formatting calculated values" section of the Calculations vignette for more details.
 - `formats` specifies a different format for each calculation (as a list of the same length as `calculations` containing any combination of character values, lists or R functions).
+- `totals` specifies which totals are shown and can also control the captions of totals.  This is described in more detail below.
 
 Specifying "=" in either the `rows` or `columns` vectors sets the position of the calculations in the row/column headings.
 
@@ -317,7 +322,23 @@ qhpvt(bhmtrains, "TOC", "TrainCategory",
      formats=list("%.0f", "%.1f"))
 ```
 
-In the above pivot table, the "Total" would be better renamed to something like "All" or "Overall" since a total for a mean or standard deviation does not make complete sense.  Renaming the captions in total headings can be accomplished using the more verbose syntax for building a pivot table.
+In the above pivot table, the "Total" would be better renamed to something like "All" or "Overall" since a total for a mean or standard deviation does not make complete sense.
+
+Totals can be controlled using the `totals` argument.  This works as follows:
+
+* If not specified, then totals are generated for all variables.
+* To hide all totals, specify `totals=NONE`.
+* To specify which variables have totals, specify the names of the variables in a character vector, e.g. in a pivot table containing the variables x, y and z, to display totals only for variables x and z, specify `totals=c("x", "z")`.
+* To specify which variables have totals and also rename the captions of the total cells, specify a list, e.g. to rename the totals for x to "All x" and y to "All y", specify `totals=list("x"="All x", "y"="All y")`.
+
+Returning to the previous quick pivot texample, the totals can now be renamed to "All ..." using:
+
+```{r, message=FALSE, warning=FALSE}
+library(pivottabler)
+qhpvt(bhmtrains, "TOC", "TrainCategory", 
+     c("Mean Speed"="mean(SchedSpeedMPH, na.rm=TRUE)", "Std Dev Speed"="sd(SchedSpeedMPH, na.rm=TRUE)"), 
+     formats=list("%.0f", "%.1f"), totals=list("TOC"="All TOCs", "TrainCategory"="All Categories"))
+```
 
 ## Examples Gallery
 
@@ -452,7 +473,7 @@ See the [Outputs](v04-outputs.html) vignette for more details, including other c
 
 ![Latex Output](latex4.png)
 
-See the [Latex Output](latexoutput.html) vignette for more details.
+See the [Latex Output](v05-latexoutput.html) vignette for more details.
 
 ### Styling
 
@@ -657,3 +678,4 @@ The full set of vignettes is:
 9. [Irregular Layout](v09-irregularlayout.html)
 10. [Performance](v10-performance.html)
 11. [Shiny](v11-shiny.html)
+12. [Excel Export](v12-excelexport.html)

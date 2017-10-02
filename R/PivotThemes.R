@@ -37,27 +37,33 @@ getDefaultTheme <- function(parentPivot, themeName="default") {
       "border-collapse"="collapse"
     ))
   pivotStyles$addStyle(styleName="ColumnHeader", list(
-      font="0.75em arial",
+      "font-family"="Arial",
+      "font-size"="0.75em",
       padding="2px",
       border="1px solid lightgray",
       "vertical-align"="middle",
       "text-align"="center",
       "font-weight"="bold",
-      "background-color"="#F2F2F2"
+      "background-color"="#F2F2F2",
+      "xl-wrap-text"="wrap"
     ))
   pivotStyles$addStyle(styleName="RowHeader", list(
-      font="0.75em arial",
+      "font-family"="Arial",
+      "font-size"="0.75em",
       padding="2px 8px 2px 2px",
       border="1px solid lightgray",
       "vertical-align"="middle",
       "text-align"="left",
       "font-weight"="bold",
-      "background-color"="#F2F2F2"
+      "background-color"="#F2F2F2",
+      "xl-wrap-text"="wrap"
     ))
   pivotStyles$addStyle(styleName="Cell", list(
-      font="0.75em arial",
+      "font-family"="Arial",
+      "font-size"="0.75em",
       padding="2px 2px 2px 8px",
       border="1px solid lightgray",
+      "vertical-align"="middle",
       "text-align"="right"
     ))
   pivotStyles$tableStyle <- "Table"
@@ -87,28 +93,34 @@ getLargePlainTheme <- function(parentPivot, themeName="largeplain") {
       "border-collapse"="collapse"
     ))
   pivotStyles$addStyle(styleName="ColumnHeader", list(
-      font="0.875em arial",
+      "font-family"="Arial",
+      "font-size"="0.875em",
       padding="4px",
       "min-width"="100px",
       border="1px solid lightgray",
       "vertical-align"="middle",
       "text-align"="center",
-      "font-weight"="bold"
+      "font-weight"="bold",
+      "xl-wrap-text"="wrap"
     ))
   pivotStyles$addStyle(styleName="RowHeader", list(
-      font="0.875em arial",
+      "font-family"="Arial",
+      "font-size"="0.875em",
       padding="4px",
       "min-width"="100px",
       border="1px solid lightgray",
       "vertical-align"="middle",
       "text-align"="left",
-      "font-weight"="bold"
+      "font-weight"="bold",
+      "xl-wrap-text"="wrap"
     ))
   pivotStyles$addStyle(styleName="Cell", list(
-      font="0.875em arial",
+      "font-family"="Arial",
+      "font-size"="0.875em",
       padding="4px",
       "min-width"="100px",
       border="1px solid lightgray",
+      "vertical-align"="middle",
       "text-align"="right"
     ))
   pivotStyles$tableStyle <- "Table"
@@ -138,27 +150,33 @@ getCompactTheme <- function(parentPivot, themeName="compact") {
       "border-collapse"="collapse"
     ))
   pivotStyles$addStyle(styleName="ColumnHeader", list(
-      font="0.625em arial",
+      "font-family"="Arial",
+      "font-size"="0.625em",
       padding="2px",
       border="1px solid lightgray",
       "vertical-align"="middle",
       "text-align"="center",
       "font-weight"="bold",
-      "background-color"="#F2F2F2"
+      "background-color"="#F2F2F2",
+      "xl-wrap-text"="wrap"
     ))
   pivotStyles$addStyle(styleName="RowHeader", list(
-      font="0.625em arial",
+      "font-family"="Arial",
+      "font-size"="0.625em",
       padding="2px 4px 2px 2px",
       border="1px solid lightgray",
       "vertical-align"="middle",
       "text-align"="left",
       "font-weight"="bold",
-      "background-color"="#F2F2F2"
+      "background-color"="#F2F2F2",
+      "xl-wrap-text"="wrap"
     ))
   pivotStyles$addStyle(styleName="Cell", list(
-      font="0.625em arial",
+      "font-family"="Arial",
+      "font-size"="0.625em",
       padding="2px 2px 2px 6px",
       border="1px solid lightgray",
+      "vertical-align"="middle",
       "text-align"="right"
     ))
   pivotStyles$tableStyle <- "Table"
@@ -195,37 +213,45 @@ getSimpleColoredTheme <- function(parentPivot, themeName="coloredTheme", colors,
       "border"=paste0("2px solid ", colors$borderColor)
     ))
   pivotStyles$addStyle(styleName="ColumnHeader", list(
-      font=paste0("0.75em ", fontName),
+      "font-family"=fontName,
+      "font-size"="0.75em",
       padding="2px",
       "border"=paste0("1px solid ", colors$borderColor),
       "vertical-align"="middle",
       "text-align"="center",
       "font-weight"="bold",
       color=colors$headerColor,
-      "background-color"=colors$headerBackgroundColor
+      "background-color"=colors$headerBackgroundColor,
+      "xl-wrap-text"="wrap"
     ))
   pivotStyles$addStyle(styleName="RowHeader", list(
-      font=paste0("0.75em ", fontName),
+      "font-family"=fontName,
+      "font-size"="0.75em",
       padding="2px 8px 2px 2px",
       "border"=paste0("1px solid ", colors$borderColor),
       "vertical-align"="middle",
       "text-align"="left",
       "font-weight"="bold",
       color=colors$headerColor,
-      "background-color"=colors$headerBackgroundColor
+      "background-color"=colors$headerBackgroundColor,
+      "xl-wrap-text"="wrap"
     ))
   pivotStyles$addStyle(styleName="Cell", list(
-      font=paste0("0.75em ", fontName),
+      "font-family"=fontName,
+      "font-size"="0.75em",
       padding="2px 2px 2px 8px",
       "border"=paste0("1px solid ", colors$borderColor),
+      "vertical-align"="middle",
       "text-align"="right",
       color=colors$cellColor,
       "background-color"=colors$cellBackgroundColor
     ))
   pivotStyles$addStyle(styleName="Total", list(
-      font=paste0("0.75em ", fontName),
+      "font-family"=fontName,
+      "font-size"="0.75em",
       padding="2px 2px 2px 8px",
       "border"=paste0("1px solid ", colors$borderColor),
+      "vertical-align"="middle",
       "text-align"="right",
       color=colors$totalColor,
       "background-color"=colors$totalBackgroundColor

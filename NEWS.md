@@ -1,3 +1,28 @@
+pivottabler 0.4.0
+================
+
+Breaking Changes
+----------------
+
+* Removed support for R 3.2.x.  Minimum supported version of base R now R 3.3.0. 
+
+Improvements
+----------------
+
+* It is now possible to output a pivot table to an Excel file with one line of R, including with styling that closely matches the HTML output.  See the Excel Export vignette for more details. 
+* Quick-pivot functions now support showing/hiding totals and renaming the captions of totals, which was previously only possible using the verbose syntax.  See the Introduction vignette for more details.
+
+Bug Fixes
+----------------
+
+* Corrections to ordering of code in Styling vignette.
+* A couple of other small bug fixes.
+
+Upcoming Changes
+----------------
+
+* The previous usage of the arguments for the getCells() function is still supported (and is still the default) however the new argument usage will be made the default in a future version.  For now, a message is displayed noting the upcoming change.  See the Finding and Formatting vignette for more details.
+
 pivottabler 0.3.0:  Performance Improvements and Quick-Pivot Functions
 ================
 
