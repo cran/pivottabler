@@ -219,7 +219,53 @@ pt <- PivotTable$new(processingLibrary="data.table")
 
 When using `batch` evaluation mode, the data.table package typically offers slightly better performance, since it calculates summary values in one step, i.e. filtering and aggregation together, without the need to generate intermediate data frames.
 
-When using `sequential` evaluation mode, the dplyr package typically offers slightly better performance.  This is because in `sequential` mode, two data.table calculations are needed for each cell.  The first to count the number of rows after filtering is applied, in order to determine whether data exists for the cell and if not set the cell value to the no data value/caption.  The second is then to perform the actual cell calculation.  Without the first calculation, data.table cell calculations involving functions like `max()` return infinity rather a clear indicator of no data. 
+When using `sequential` evaluation mode, the dplyr package typically offers slightly better performance.  This is because in `sequential` mode, two data.table calculations are needed for each cell.  The first to count the number of rows after filtering is applied, in order to determine whether data exists for the cell and if not set the cell value to the no data value/caption.  The second is then to perform the actual cell calculation.  Without the first calculation, data.table cell calculations involving functions like `max()` return infinity rather a clear indicator of no data.
+
+### A warning about data.table
+
+The data.table has a few inconsistencies when grouping and aggregating on the same variables.  This can cause a pivot table to have inconsistencies e.g. pivot table cells with the wrong values that is most obvious when row or columns totals that don't equal the sum of the values in the row or column:
+
+```{r, warning=FALSE, message=FALSE, comment=""}
+library(data.table)
+library(pivottabler)
+df <- data.frame(SomeNumber=c(1, 1, 1, 2, 2, 2, 3, 3, 3))
+pt <- PivotTable$new(processingLibrary="data.table")
+pt$addData(df)
+pt$addRowDataGroups("SomeNumber")
+pt$defineCalculation(calculationName="SomeNumber", summariseExpression="sum(SomeNumber)", caption="Some Number")
+pt$evaluatePivot()
+pt$renderPivot()
+```
+
+As a comparison, this problem does not occur when using dplyr:
+
+```{r, warning=FALSE, message=FALSE, comment=""}
+library(data.table)
+library(pivottabler)
+df <- data.frame(SomeNumber=c(1, 1, 1, 2, 2, 2, 3, 3, 3))
+pt <- PivotTable$new(processingLibrary="dplyr")
+pt$addData(df)
+pt$addRowDataGroups("SomeNumber")
+pt$defineCalculation(calculationName="SomeNumber", summariseExpression="sum(SomeNumber)", caption="Some Number")
+pt$evaluatePivot()
+pt$renderPivot()
+```
+
+In general, do not group by and aggregate on the same columns.  One workaround is to duplicate the column:
+
+```{r, warning=FALSE, message=FALSE, comment=""}
+library(data.table)
+library(pivottabler)
+df <- data.frame(SomeNumberA=c(1, 1, 1, 2, 2, 2, 3, 3, 3), SomeNumberB=c(1, 1, 1, 2, 2, 2, 3, 3, 3))
+pt <- PivotTable$new(processingLibrary="data.table")
+pt$addData(df)
+pt$addRowDataGroups("SomeNumberA")
+pt$defineCalculation(calculationName="SomeNumber", summariseExpression="sum(SomeNumberB)", caption="Some Number")
+pt$evaluatePivot()
+pt$renderPivot()
+```
+
+The above was raised with the authors/contributors of data.table package under [GitHub issue 3103](https://github.com/Rdatatable/data.table/issues/3103).
 
 ## Argument check mode
 
@@ -696,7 +742,7 @@ To achieve optimum performance:
 * Don't create large pivot tables needlessly.
     - Pivot tables having 10,000 cells will take at least one minute to create, even in `batch` evaluation mode.
     - Pivot tables having more than 100,000 cells will take a relatively long time to create (more than ten minutes), even in `batch` evaluation mode.
-* Use the data.table processing library with `pivottabler` for data frames with more than ten million rows (but only with the `batch` evaluation mode).
+* Use the data.table processing library with `pivottabler` for data frames with more than ten million rows (but only with the `batch` evaluation mode), though take note of the warning above regarding the odd behaviour of data.table in some circumstances.
 * Reduce the argument check mode for large pivot tables.
 
 ## Further Reading
@@ -715,3 +761,6 @@ The full set of vignettes is:
 10. [Performance](v10-performance.html)
 11. [Shiny](v11-shiny.html)
 12. [Excel Export](v12-excelexport.html)
+13. [Appendix: Details](vA1-appendix.html)
+14. [Appendix: Calculations](vA2-appendix.html)
+15. [Appendix: Class Overview](vA3-appendix.html)

@@ -71,6 +71,39 @@ pt$renderPivot(includeWorkingData = TRUE)
 #  pt <- PivotTable$new(processingLibrary="data.table")
 #  # ...
 
+## ---- warning=FALSE, message=FALSE, comment=""---------------------------
+library(data.table)
+library(pivottabler)
+df <- data.frame(SomeNumber=c(1, 1, 1, 2, 2, 2, 3, 3, 3))
+pt <- PivotTable$new(processingLibrary="data.table")
+pt$addData(df)
+pt$addRowDataGroups("SomeNumber")
+pt$defineCalculation(calculationName="SomeNumber", summariseExpression="sum(SomeNumber)", caption="Some Number")
+pt$evaluatePivot()
+pt$renderPivot()
+
+## ---- warning=FALSE, message=FALSE, comment=""---------------------------
+library(data.table)
+library(pivottabler)
+df <- data.frame(SomeNumber=c(1, 1, 1, 2, 2, 2, 3, 3, 3))
+pt <- PivotTable$new(processingLibrary="dplyr")
+pt$addData(df)
+pt$addRowDataGroups("SomeNumber")
+pt$defineCalculation(calculationName="SomeNumber", summariseExpression="sum(SomeNumber)", caption="Some Number")
+pt$evaluatePivot()
+pt$renderPivot()
+
+## ---- warning=FALSE, message=FALSE, comment=""---------------------------
+library(data.table)
+library(pivottabler)
+df <- data.frame(SomeNumberA=c(1, 1, 1, 2, 2, 2, 3, 3, 3), SomeNumberB=c(1, 1, 1, 2, 2, 2, 3, 3, 3))
+pt <- PivotTable$new(processingLibrary="data.table")
+pt$addData(df)
+pt$addRowDataGroups("SomeNumberA")
+pt$defineCalculation(calculationName="SomeNumber", summariseExpression="sum(SomeNumberB)", caption="Some Number")
+pt$evaluatePivot()
+pt$renderPivot()
+
 ## ---- eval=FALSE---------------------------------------------------------
 #  library(pivottabler)
 #  pt <- PivotTable$new(argumentCheckMode="none")

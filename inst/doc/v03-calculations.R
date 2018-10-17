@@ -45,38 +45,6 @@ library(lubridate)
 # derive some additional data
 trains <- mutate(bhmtrains,
    ArrivalDelta=difftime(ActualArrival, GbttArrival, units="mins"),
-   ArrivalDelay=ifelse(ArrivalDelta<0, 0, ArrivalDelta))
-
-# create the pivot table
-pt <- PivotTable$new()
-pt$addData(trains)
-pt$addColumnDataGroups("TOC", totalCaption="All TOCs")   #  << ***** CODE CHANGE ***** <<
-pt$defineCalculation(calculationName="TotalTrains", caption="Total Trains", 
-                     summariseExpression="n()")
-pt$defineCalculation(calculationName="MinArrivalDelay", caption="Min Arr. Delay", 
-                     summariseExpression="min(ArrivalDelay, na.rm=TRUE)")
-pt$defineCalculation(calculationName="MaxArrivalDelay", caption="Max Arr. Delay", 
-                     summariseExpression="max(ArrivalDelay, na.rm=TRUE)")
-pt$defineCalculation(calculationName="MeanArrivalDelay", caption="Mean Arr. Delay", 
-                     summariseExpression="mean(ArrivalDelay, na.rm=TRUE)", format="%.1f")
-pt$defineCalculation(calculationName="MedianArrivalDelay", caption="Median Arr. Delay", 
-                     summariseExpression="median(ArrivalDelay, na.rm=TRUE)")
-pt$defineCalculation(calculationName="IQRArrivalDelay", caption="Delay IQR", 
-                     summariseExpression="IQR(ArrivalDelay, na.rm=TRUE)")
-pt$defineCalculation(calculationName="SDArrivalDelay", caption="Delay Std. Dev.", 
-                     summariseExpression="sd(ArrivalDelay, na.rm=TRUE)", format="%.1f")
-
-pt$addRowCalculationGroups()                             #  << ***** CODE CHANGE ***** <<
-pt$renderPivot()
-
-## ---- message=FALSE, warning=FALSE---------------------------------------
-library(pivottabler)
-library(dplyr)
-library(lubridate)
-
-# derive some additional data
-trains <- mutate(bhmtrains,
-   ArrivalDelta=difftime(ActualArrival, GbttArrival, units="mins"),
    ArrivalDelay=ifelse(ArrivalDelta<0, 0, ArrivalDelta),
    DelayedByMoreThan5Minutes=ifelse(ArrivalDelay>5,1,0))
 
@@ -120,6 +88,151 @@ pt$defineCalculation(calculationName="DelayedPercent", caption="% Trains Arr. 5+
                      type="calculation", basedOn=c("DelayedTrains", "TotalTrains"), 
                      format="%.1f %%",
                      calculationExpression="values$DelayedTrains/values$TotalTrains*100")
+pt$renderPivot()
+
+## ---- message=FALSE, warning=FALSE---------------------------------------
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="NumberOfTrains", caption="Number of Trains",
+                     summariseExpression="n()")
+pt$defineCalculation(calculationName="MaximumSpeedMPH", caption="Maximum Speed (MPH)",
+                     summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
+pt$renderPivot()
+
+## ---- message=FALSE, warning=FALSE---------------------------------------
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="NumberOfTrains", caption="Number of Trains",
+                     summariseExpression="n()")
+pt$defineCalculation(calculationName="MaximumSpeedMPH", caption="Maximum Speed (MPH)",
+                     summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
+pt$addRowCalculationGroups()
+pt$renderPivot()
+
+## ---- message=FALSE, warning=FALSE---------------------------------------
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$defineCalculation(calculationName="NumberOfTrains", caption="Number of Trains",
+                     summariseExpression="n()")
+pt$defineCalculation(calculationName="MaximumSpeedMPH", caption="Maximum Speed (MPH)",
+                     summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
+pt$addColumnCalculationGroups()
+pt$addColumnDataGroups("TrainCategory")
+pt$addRowDataGroups("TOC")
+pt$renderPivot()
+
+## ---- message=FALSE, warning=FALSE---------------------------------------
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$defineCalculation(calculationName="NumberOfTrains", caption="Number of Trains",
+                     summariseExpression="n()")
+pt$defineCalculation(calculationName="MaximumSpeedMPH", caption="Maximum Speed (MPH)",
+                     summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
+pt$addRowCalculationGroups()
+pt$addColumnDataGroups("PowerType")
+pt$addRowDataGroups("TOC")
+pt$renderPivot()
+
+## ---- message=FALSE, warning=FALSE---------------------------------------
+library(dplyr)
+library(lubridate)
+library(pivottabler)
+
+# get the date of each train and whether that date is a weekday or weekend
+trains <- bhmtrains %>%
+  mutate(GbttDateTime=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
+         DayNumber=wday(GbttDateTime),
+         WeekdayOrWeekend=ifelse(DayNumber %in% c(1,7), "Weekend", "Weekday"))
+
+# render the pivot table
+pt <- PivotTable$new()
+pt$addData(trains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addRowDataGroups("TOC")
+weekendFilter <- PivotFilters$new(pt, variableName="WeekdayOrWeekend", values="Weekend")
+pt$defineCalculation(calculationName="WeekendTrains", summariseExpression="n()", 
+                     filters=weekendFilter, visible=FALSE)
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()", visible=FALSE)
+pt$defineCalculation(calculationName="WeekendTrainsPercentage",
+                     type="calculation", basedOn=c("WeekendTrains", "TotalTrains"),
+                     format="%.1f %%",
+                     calculationExpression="values$WeekendTrains/values$TotalTrains*100")
+pt$renderPivot()
+
+## ---- message=FALSE, warning=FALSE---------------------------------------
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="CountTrains", summariseExpression="n()", 
+                     caption="Count", visible=FALSE)
+filterOverrides <- PivotFilterOverrides$new(pt, keepOnlyFiltersFor="TOC")
+pt$defineCalculation(calculationName="TOCTotalTrains", filters=filterOverrides, 
+                     summariseExpression="n()", caption="TOC Total", visible=FALSE)
+pt$defineCalculation(calculationName="PercentageOfTOCTrains", type="calculation", 
+                     basedOn=c("CountTrains", "TOCTotalTrains"),
+                     calculationExpression="values$CountTrains/values$TOCTotalTrains*100", 
+                     format="%.1f %%", caption="% of TOC")
+pt$renderPivot()
+
+## ---- message=FALSE, warning=FALSE---------------------------------------
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()", noDataValue=0)
+pt$renderPivot()
+
+## ---- message=FALSE, warning=FALSE---------------------------------------
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()", noDataCaption="-")
+pt$renderPivot()
+
+## ---- message=FALSE, warning=FALSE---------------------------------------
+library(pivottabler)
+library(dplyr)
+
+# derive some additional data
+trains <- mutate(bhmtrains, 
+  ArrivalDelta=difftime(ActualArrival, GbttArrival, units="mins"),
+  ArrivalDelay=ifelse(ArrivalDelta<0, 0, ArrivalDelta),
+  DelayedByMoreThan5Minutes=ifelse(ArrivalDelay>5,1,0)) %>%
+  select(TrainCategory, TOC, DelayedByMoreThan5Minutes) 
+# in this example, bhmtraindisruption is joined to bhmtrains
+# so that the TrainCategory and TOC columns are present in both
+# data frames added to the pivot table
+cancellations <- bhmtraindisruption %>%
+  inner_join(bhmtrains, by="ServiceId") %>%
+  mutate(CancelledInBirmingham=ifelse(LastCancellationLocation=="BHM",1,0)) %>%
+  select(TrainCategory, TOC, CancelledInBirmingham)
+
+# create the pivot table
+pt <- PivotTable$new()
+pt$addData(trains, "trains")
+pt$addData(cancellations, "cancellations")
+pt$addColumnDataGroups("TrainCategory")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="DelayedTrains", dataName="trains", 
+                     caption="Delayed", 
+                     summariseExpression="sum(DelayedByMoreThan5Minutes, na.rm=TRUE)")
+pt$defineCalculation(calculationName="CancelledTrains", dataName="cancellations", 
+                     caption="Cancelled", 
+                     summariseExpression="sum(CancelledInBirmingham, na.rm=TRUE)")
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -273,108 +386,5 @@ pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains",  # <<  *** CODE CHANGE (AND BELOW) *** <<
                      type="value", valueName="NumberOfTrains", 
                      summariseExpression="sum(NumberOfTrains)")
-pt$renderPivot()
-
-## ---- message=FALSE, warning=FALSE---------------------------------------
-library(pivottabler)
-pt <- PivotTable$new()
-pt$addData(bhmtrains)
-pt$defineCalculation(calculationName="NumberOfTrains", caption="Number of Trains",
-                     summariseExpression="n()")
-pt$defineCalculation(calculationName="MaximumSpeedMPH", caption="Maximum Speed (MPH)",
-                     summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
-pt$addColumnCalculationGroups()
-pt$addColumnDataGroups("TrainCategory")
-pt$addRowDataGroups("TOC")
-pt$renderPivot()
-
-## ---- message=FALSE, warning=FALSE---------------------------------------
-library(pivottabler)
-pt <- PivotTable$new()
-pt$addData(bhmtrains)
-pt$addColumnDataGroups("TrainCategory")
-pt$defineCalculation(calculationName="NumberOfTrains", caption="Number of Trains",
-                     summariseExpression="n()")
-pt$defineCalculation(calculationName="MaximumSpeedMPH", caption="Maximum Speed (MPH)",
-                     summariseExpression="max(SchedSpeedMPH, na.rm=TRUE)")
-pt$addRowCalculationGroups()
-pt$addColumnDataGroups("PowerType")
-pt$addRowDataGroups("TOC")
-pt$renderPivot()
-
-## ---- message=FALSE, warning=FALSE---------------------------------------
-library(pivottabler)
-library(dplyr)
-
-# derive some additional data
-trains <- mutate(bhmtrains, 
-  ArrivalDelta=difftime(ActualArrival, GbttArrival, units="mins"),
-  ArrivalDelay=ifelse(ArrivalDelta<0, 0, ArrivalDelta),
-  DelayedByMoreThan5Minutes=ifelse(ArrivalDelay>5,1,0)) %>%
-  select(TrainCategory, TOC, DelayedByMoreThan5Minutes) 
-# in this example, bhmtraindisruption is joined to bhmtrains
-# so that the TrainCategory and TOC columns are present in both
-# data frames added to the pivot table
-cancellations <- bhmtraindisruption %>%
-  inner_join(bhmtrains, by="ServiceId") %>%
-  mutate(CancelledInBirmingham=ifelse(LastCancellationLocation=="BHM",1,0)) %>%
-  select(TrainCategory, TOC, CancelledInBirmingham)
-
-# create the pivot table
-pt <- PivotTable$new()
-pt$addData(trains, "trains")
-pt$addData(cancellations, "cancellations")
-pt$addColumnDataGroups("TrainCategory")
-pt$addRowDataGroups("TOC")
-pt$defineCalculation(calculationName="DelayedTrains", dataName="trains", 
-                     caption="Delayed", 
-                     summariseExpression="sum(DelayedByMoreThan5Minutes, na.rm=TRUE)")
-pt$defineCalculation(calculationName="CancelledTrains", dataName="cancellations", 
-                     caption="Cancelled", 
-                     summariseExpression="sum(CancelledInBirmingham, na.rm=TRUE)")
-pt$renderPivot()
-
-## ---- message=FALSE, warning=FALSE---------------------------------------
-library(dplyr)
-library(lubridate)
-library(pivottabler)
-
-# get the date of each train and whether that date is a weekday or weekend
-trains <- bhmtrains %>%
-  mutate(GbttDateTime=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
-         DayNumber=wday(GbttDateTime),
-         WeekdayOrWeekend=ifelse(DayNumber %in% c(1,7), "Weekend", "Weekday"))
-
-# render the pivot table
-pt <- PivotTable$new()
-pt$addData(trains)
-pt$addColumnDataGroups("TrainCategory")
-pt$addRowDataGroups("TOC")
-weekendFilter <- PivotFilters$new(pt, variableName="WeekdayOrWeekend", values="Weekend")
-pt$defineCalculation(calculationName="WeekendTrains", summariseExpression="n()", 
-                     filters=weekendFilter, visible=FALSE)
-pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()", visible=FALSE)
-pt$defineCalculation(calculationName="WeekendTrainsPercentage",
-                     type="calculation", basedOn=c("WeekendTrains", "TotalTrains"),
-                     format="%.1f %%",
-                     calculationExpression="values$WeekendTrains/values$TotalTrains*100")
-pt$renderPivot()
-
-## ---- message=FALSE, warning=FALSE---------------------------------------
-library(pivottabler)
-pt <- PivotTable$new()
-pt$addData(bhmtrains)
-pt$addColumnDataGroups("TrainCategory")
-pt$addRowDataGroups("TOC")
-pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()", noDataValue=0)
-pt$renderPivot()
-
-## ---- message=FALSE, warning=FALSE---------------------------------------
-library(pivottabler)
-pt <- PivotTable$new()
-pt$addData(bhmtrains)
-pt$addColumnDataGroups("TrainCategory")
-pt$addRowDataGroups("TOC")
-pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()", noDataCaption="-")
 pt$renderPivot()
 

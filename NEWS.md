@@ -1,3 +1,36 @@
+pivottabler 1.0.0
+================
+
+Breaking Changes
+----------------
+
+* The default value of the `specifyCellsAsList` argument in the `pt$getCells()` function has been changed to `TRUE`.
+The previous usage of the `pt$getCells()` function is still supported (now you must explicitly specify `specifyCellsAsList=FALSE`).  This change has been planned since v0.3.0 (June 2017) and a warning message has been displayed since then.  See the Finding and Formatting vignette for more details on the `specifyCellsAsList` argument. 
+* Additional checks are now made to prevent calculations being moved/added after the calculation row/column groups have been generated.   There is a small chance this will cause errors in existing user code - though this will only occur where user code is trying to move/add calculations after the calculations have already been set in the pivot table by a call to `pt$addColumnCalculationGroups()` or `pt$addRowCalculationGroups()` (previously this would silently fail).
+
+Improvements
+----------------
+
+* pivottabler now supports using any of the following data types in both row/column headings and cell values: integer, numeric, character, logical, Date, and POSIXct.
+* Improved support for illegal data frame column names and illegal calculation names (e.g. including spaces or symbols such as dash, plus, dollar, etc).  See  the Details Appendix (A1) vignette for details.
+* The new `PivotFiltersOverrides` class provides many new options for overriding the data used to calculate cell values.  It is now possible to add to, remove from or entirely replace filter criteria as part of calculation definitions.  This makes calculations such as "% of row/column/grand total", ratios/multiples, rolling averages and cumulative sums easier.  See the Calculations Appendix (A2) vignette for examples.
+* Row/column heading style settings for data groups can now be declared up-front using the `baseStyleName` and `styleDeclarations` arguments in `pt$addColumnDataGroups(...)` and `pt$addRowDataGroups(...)`.  See the Styling vignette for an example.
+* Row/column heading style settings for calculations can now be declared up-front using the `headingBaseStyleName` and `headingStyleDeclarations` arguments in `pt$defineCalculation(...)`.  See the Styling vignette for an example.
+* Cell style settings for calculations can now be declared up-front using the `cellBaseStyleName` and `cellStyleDeclarations` arguments in `pt$defineCalculation(...)`.  See the Styling vignette for an example.
+* Additional `exportOptions` parameter when exporting to HTML, Latex and Excel for controlling how NA, NaN, -Inf and Inf are exported.  See the Details Appendix (A1) for more information.
+* Additional parameter `outputHeadingsAs` in `pt$writeToExcelWorksheet(...)` to control how row/column headings are formatted when exporting to Excel.  See the Excel Export vignette for more details.
+* `pt$asDataFrame(...)` and `pt$asTidyDataFrame(...)` now support additional parameter `stringsAsFactors` with default value `default.stringsAsFactors()`.
+
+Bug Fixes
+----------------
+
+* Bug fixed that would cause corrupt Excel files to be generated when exporting pivottables with no row/column groups to Excel.
+
+Upcoming Changes
+----------------
+
+No breaking changes currently planned.
+
 pivottabler 0.4.0
 ================
 

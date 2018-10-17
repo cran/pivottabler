@@ -56,17 +56,11 @@
 #'   \item{\code{formatValue(value, format)}}{Formats a numerical value using
 #'   either an sprintf string, a list of arguments for the base::format()
 #'   function or using a custom R function.}
-#'   \item{\code{getFiltersForSingleValue = function(rowColFilters=NULL,
-#'   calcFilters=NULL)}}{Get the working filters for a single value
-#'   calculation.}
-#'   \item{\code{getFiltersForSummariseExpression = function(rowColFilters=NULL,
-#'   calcFilters=NULL)}}{Get the working filters for a summary calculation.}
-#'   \item{\code{getFiltersForCalculateFunction = function(rowColFilters=NULL,
-#'   calcFilters=NULL)}}{Get the working filters for a calculation based on
-#'   other calculations.}
+#'   \item{\code{getCombinedFilters = function(rowColFilters=NULL,
+#'   calcFilters=NULL, cell=NULL)}}{Get the working filters for a calculation.}
 #'   \item{\code{getFiltersForNamedCalculation = function(calculationName=NULL,
 #'   calculationGroupName=NULL, rowColFilters=NULL, cell=NULL)}}{Get the working
-#'   filters for a custom calculation.}
+#'   filters for a named calculation.}
 #'   \item{\code{setWorkingData = function(cell=NULL)}}{Set the working
 #'   filters for a cell.}
 #'   \item{\code{evaluateSingleValue(dataFrame, workingFilters, valueName,
@@ -178,10 +172,9 @@ PivotCalculator <- R6::R6Class("PivotCalculator",
      if(private$p_parentPivot$argumentCheckMode > 0) {
        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "setFilters", filters1, missing(filters1), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotFilters")
        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "setFilters", filters2, missing(filters2), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotFilters")
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "setFilters", action, missing(action), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character", allowedValues=c("intersect", "replace", "union"))
      }
      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculator$setFilters", "Setting filters...")
-     checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "setFilters", filters1, missing(filters1), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotFilters")
-     checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "setFilters", filters2, missing(filters2), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotFilters")
      copy <- filters1$getCopy() # always copy, to avoid inadvertant bugs of a change to one filter affecting multiple cells in the Pivot Table
      copy$setFilters(filters=filters2, action=action)
      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculator$setFilters", "Set filters.")
@@ -191,6 +184,7 @@ PivotCalculator <- R6::R6Class("PivotCalculator",
      if(private$p_parentPivot$argumentCheckMode > 0) {
        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "setFilter", filters, missing(filters), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotFilters")
        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "setFilter", filter, missing(filter), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotFilter")
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "setFilter", action, missing(action), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character", allowedValues=c("intersect", "replace", "union"))
      }
      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculator$setFilter", "Setting filter...")
      copy <- filters$getCopy() # always copy, to avoid inadvertant bugs of changing one filter affecting multiple cells
@@ -203,6 +197,7 @@ PivotCalculator <- R6::R6Class("PivotCalculator",
        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "setFilterValues", filters, missing(filters), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotFilters")
        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "setFilterValues", variableName, missing(variableName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
        checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "setFilterValues", values, missing(values), allowMissing=TRUE, allowNull=TRUE, mustBeAtomic=TRUE)
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "setFilterValues", action, missing(action), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character", allowedValues=c("intersect", "replace", "union"))
      }
      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculator$setFilterValues", "Setting filter values...")
      copy <- filters$getCopy() # always copy, to avoid inadvertant bugs of changing one filter affecting multiple cells
@@ -226,12 +221,13 @@ PivotCalculator <- R6::R6Class("PivotCalculator",
        checkArgument(private$p_parentPivot$argumentCheckMode, TRUE, "PivotCalculator", "getDistinctValues", variableName, missing(variableName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
      }
      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculator$getDistinctValues", "Getting filtered data frame...")
+     safeVariableName <- processIdentifier(variableName)
      # build a dplyr query
      data <- dataFrame
      if(private$p_parentPivot$processingLibrary=="dplyr") {
-       eval(parse(text=paste0("data <- dplyr::select(data, ", variableName, ")")))
+       eval(parse(text=paste0("data <- dplyr::select(data, ", safeVariableName, ")")))
        data <- dplyr::distinct(data)
-       eval(parse(text=paste0("data <- dplyr::arrange(data, ", variableName, ")")))
+       eval(parse(text=paste0("data <- dplyr::arrange(data, ", safeVariableName, ")")))
        distinctValues <- dplyr::collect(data)[[variableName]]
        if(is.factor(distinctValues)) distinctValues <- as.character(distinctValues)
      }
@@ -245,7 +241,7 @@ PivotCalculator <- R6::R6Class("PivotCalculator",
        # seem to need a dummy row count in order to get the distinct values
        rcName <- "rc"
        if(variableName==rcName) rcName <- "rowCount"
-       eval(parse(text=paste0("distinctValues <- data[order(", variableName, "), .(", rcName, "=.N), by=.(", variableName, ")][, ", variableName, "]")))
+       eval(parse(text=paste0("distinctValues <- data[order(", safeVariableName, "), .(", rcName, "=.N), by=.(", safeVariableName, ")][, ", safeVariableName, "]")))
        if(is.factor(distinctValues)) distinctValues <- as.character(distinctValues)
      }
      else stop(paste0("PivotCalculator$getDistinctValues(): Unknown processingLibrary encountered: ", private$p_parentPivot$processingLibrary), call. = FALSE)
@@ -253,16 +249,13 @@ PivotCalculator <- R6::R6Class("PivotCalculator",
      return(invisible(distinctValues))
    },
    formatValue = function(value=NULL, format=NULL) {
-     # this function is ready to support other data types, once the other PivotTable logic/cells have been modified
-     # to work with data types other than numeric/integer
-     # , "character", "factor", "logical", "Date", "POSIXct", "POSIXlt"
      if(private$p_parentPivot$argumentCheckMode > 0) {
-       checkArgument(private$p_parentPivot$argumentCheckMode, TRUE, "PivotCalculator", "formatValue", value, missing(value), allowMissing=FALSE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+       checkArgument(private$p_parentPivot$argumentCheckMode, TRUE, "PivotCalculator", "formatValue", value, missing(value), allowMissing=FALSE, allowNull=TRUE, allowedClasses=c("integer", "numeric", "character", "logical", "date", "Date", "POSIXct"))
        checkArgument(private$p_parentPivot$argumentCheckMode, TRUE, "PivotCalculator", "formatValue", format, missing(format), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("character", "list", "function"))
      }
      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculator$formatValue", "Formatting value...")
      if(is.null(value)) return(invisible(NULL))
-     if(is.null(format)) return(value)
+     if(is.null(format)) return(base::as.character(value))
      clsv <- class(value)
      if(("numeric" %in% clsv)||("integer" %in% clsv)) {
        clsf <- class(format)
@@ -273,82 +266,84 @@ PivotCalculator <- R6::R6Class("PivotCalculator",
          value <- do.call(base::format, args)
        }
        else if ("function" %in% class(format)) value <- format(value)
+       else value <- base::as.character(value)
      }
-     # else if(("Date" %in% clsv)||("POSIXct" %in% clsv)||("POSIXlt" %in% clsv)) {
-     #   clsf <- class(format)
-     #   if ("list" %in% clsf) {
-     #     args <- format
-     #     args$x <- value
-     #     value <- do.call(base::format, args)
-     #   }
-     #   else if ("function" %in% class(format)) value <- format(value)
-     # }
-     # else if ("factor" %in% clsv) value <- as.character(value)
-     # else if("logical" %in% clsv) value <- as.character(value)
+     else if("logical" %in% clsv) {
+       clsf <- class(format)
+       if("character" %in% clsf) {
+         if (length(format)==2) {
+           if(value==FALSE) value <- format[1]
+           else if(value==TRUE) value <- format[2]
+           else value <- "NA"
+         }
+         else if (length(format)==3) {
+           if(value==FALSE) value <- format[1]
+           else if(value==TRUE) value <- format[2]
+           else value <- format[3]
+         }
+         else value <- sprintf(format, value)
+       }
+       else if ("list" %in% clsf) {
+         args <- format
+         args$x <- value
+         value <- do.call(base::format, args)
+       }
+       else if ("function" %in% class(format)) value <- format(value)
+       else value <- base::as.character(value)
+     }
+     else if(("Date" %in% clsv)||("POSIXct" %in% clsv)||("POSIXlt" %in% clsv)) {
+       clsf <- class(format)
+       if ("character" %in% clsf) {
+         if (format %in% c("%d","%i","%o","%x","%X")) value <- sprintf(format, value)
+         else {
+           args <- list(format)
+           args$x <- value
+           value <- do.call(base::format, args)
+         }
+       }
+       else if ("list" %in% clsf) {
+         args <- format
+         args$x <- value
+         value <- do.call(base::format, args)
+       }
+       else if ("function" %in% class(format)) value <- format(value)
+       else value <- base::as.character(value)
+     }
+     else value <- base::as.character(value)
      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculator$formatValue", "Formated value.")
      return(invisible(value))
    },
-   getFiltersForSingleValue = function(rowColFilters=NULL, calcFilters=NULL) {
+   getCombinedFilters = function(rowColFilters=NULL, calcFilters=NULL, cell=NULL) {
      if(private$p_parentPivot$argumentCheckMode > 0) {
-       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "getFiltersForSingleValue", rowColFilters, missing(rowColFilters), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotFilters")
-       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "getFiltersForSingleValue", calcFilters, missing(calcFilters), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotFilters")
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "getCombinedFilters", rowColFilters, missing(rowColFilters), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotFilters")
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "getCombinedFilters", calcFilters, missing(calcFilters), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("PivotFilters", "PivotFilterOverrides"))
+       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "getCombinedFilters", cell, missing(cell), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotCell")
      }
-     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculator$getFiltersForSingleValue", "Getting filters for single value...")
+     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculator$getCombinedFilters", "Getting filters for calculation...")
      # get the final filter context for this calculation (calcFilters override row/col filters)
+     # see the comments above PivotFilter$setFilters() for rules/details on how the filters are combined
      rf <- list()
      rf$calculationFilters <- calcFilters
      filters <- NULL
      if(is.null(rowColFilters)) {
-       if(!isnull(calcFilters)) filters <- calcFilters$getCopy()
+       if(!isnull(calcFilters)) {
+         if("PivotFilters" %in% class(calcFilters)) filters <- calcFilters$getCopy()
+         else if("PivotFilterOverrides" %in% class(calcFilters)) {
+           filters <- PivotFilters$new(private$p_parentPivot)
+           calcFilters$apply(filters, cell)
+           if(filters$isALL) filters <- NULL #i.e. if none of the calculation filters amounted to anything, then skip keeping the filters
+         }
+       }
      }
      else {
        filters <- rowColFilters$getCopy()
-       if(!is.null(calcFilters)) filters$setFilters(filters=calcFilters, action="and")
+       if(!is.null(calcFilters)) {
+         if("PivotFilters" %in% class(calcFilters)) filters$setFilters(filters=calcFilters, action="intersect")
+         else if("PivotFilterOverrides" %in% class(calcFilters)) calcFilters$apply(filters, cell)
+       }
      }
      rf$workingFilters <- filters
-     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculator$getFiltersForSingleValue", "Got filters for single value.")
-     return(invisible(rf))
-   },
-   getFiltersForSummariseExpression = function(rowColFilters=NULL, calcFilters=NULL) {
-     if(private$p_parentPivot$argumentCheckMode > 0) {
-       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "getFiltersForSummariseExpression", rowColFilters, missing(rowColFilters), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotFilters")
-       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "getFiltersForSummariseExpression", calcFilters, missing(calcFilters), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotFilters")
-     }
-     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculator$getFiltersForSummariseExpression", "Getting filters for summary expression...")
-     # get the final filter context for this calculation (calcFilters override row/col filters)
-     rf <- list()
-     rf$calculationFilters <- calcFilters
-     filters <- NULL
-     if(is.null(rowColFilters)) {
-       if(!isnull(calcFilters)) filters <- calcFilters$getCopy()
-     }
-     else {
-       filters <- rowColFilters$getCopy()
-       if(!is.null(calcFilters)) filters$setFilters(filters=calcFilters, action="and")
-     }
-     rf$workingFilters <- filters
-     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculator$getFiltersForSummariseExpression", "Got filters for summary expression.")
-     return(invisible(rf))
-   },
-   getFiltersForCalculateFunction = function(rowColFilters=NULL, calcFilters=NULL) {
-     if(private$p_parentPivot$argumentCheckMode > 0) {
-       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "getFiltersForCalculateFunction", rowColFilters, missing(rowColFilters), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotFilters")
-       checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCalculator", "getFiltersForCalculateFunction", calcFilters, missing(calcFilters), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotFilters")
-     }
-     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculator$getFiltersForCalculateFunction", "Getting filters for calculation function...")
-     # get the final filter context for this calculation (calcFilters override row/col filters)
-     rf <- list()
-     rf$calculationFilters <- calcFilters
-     filters <- NULL
-     if(is.null(rowColFilters)) {
-       if(!isnull(calcFilters)) filters <- calcFilters$getCopy()
-     }
-     else {
-       filters <- rowColFilters$getCopy()
-       if(!is.null(calcFilters)) filters$setFilters(filters=calcFilters, action="and")
-     }
-     rf$workingFilters <- filters
-     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculator$getFiltersForCalculateFunction", "Got filters for calculation function.")
+     if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculator$getCombinedFilters", "Got filters for calculation....")
      return(invisible(rf))
    },
    getFiltersForNamedCalculation = function(calculationName=NULL, calculationGroupName=NULL, rowColFilters=NULL, cell=NULL) {
@@ -375,16 +370,16 @@ PivotCalculator <- R6::R6Class("PivotCalculator",
          if((!is.null(cell))&&(cell$isTotal==TRUE)) {
            if(is.null(calc$summariseExpression)) { rf <- list() }
            else {
-             rf <- self$getFiltersForSummariseExpression(rowColFilters=rowColFilters, calcFilters=calc$filters)
+             rf <- self$getCombinedFilters(rowColFilters=rowColFilters, calcFilters=calc$filters, cell)
            }
          }
          else {
-           rf <- self$getFiltersForSingleValue(rowColFilters=rowColFilters, calcFilters=calc$filters)
+           rf <- self$getCombinedFilters(rowColFilters=rowColFilters, calcFilters=calc$filters, cell)
          }
          filters[[calc$calculationName]] <- rf
        }
        else if(calc$type=="summary") {
-         rf <- self$getFiltersForSummariseExpression(rowColFilters=rowColFilters, calcFilters=calc$filters)
+         rf <- self$getCombinedFilters(rowColFilters=rowColFilters, calcFilters=calc$filters, cell)
          filters[[calc$calculationName]] <- rf
        }
        else if(calc$type=="calculation") {
@@ -392,7 +387,7 @@ PivotCalculator <- R6::R6Class("PivotCalculator",
          filters[[calc$calculationName]] <- rf
        }
        else if(calc$type=="function") {
-         rf <- self$getFiltersForCalculateFunction(rowColFilters=rowColFilters, calcFilters=calc$filters)
+         rf <- self$getCombinedFilters(rowColFilters=rowColFilters, calcFilters=calc$filters, cell)
          filters[[calc$calculationName]] <- rf
        }
        else stop(paste0("PivotCalculator$getFiltersForNamedCalculation():  Unknown calculation type encountered '", calc$type,
@@ -559,7 +554,7 @@ PivotCalculator <- R6::R6Class("PivotCalculator",
              # calculate the value
              # todo: escaping below
              if(nrow(data)==0) return(invisible(NULL))
-             summaryCmd <- paste0("data <- dplyr::summarise(data, ", summaryName, " = ", summariseExpression, ")")
+             summaryCmd <- paste0("data <- dplyr::summarise(data, ", processIdentifier(summaryName), " = ", summariseExpression, ")")
              eval(parse(text=summaryCmd))
              if((nrow(data)>1)||(ncol(data)>1))
                stop(paste0("PivotCalculator$evaluateSummariseExpression(): Summary expression '", summaryName, "' has resulted in '", nrow(data),
@@ -591,7 +586,7 @@ PivotCalculator <- R6::R6Class("PivotCalculator",
                if(!is.null(filterCmd)) filterCmd <- paste0(filterCmd, " & ")
                if(length(filter$values)>0) {
                  # %in% handles NA correctly for our use-case, i.e. NA %in% NA returns TRUE, not NA
-                 filterCmd <- paste0(filterCmd, "(", filter$variableName, " %in% workingFilters$filters[[", j, "]]$values)")
+                 filterCmd <- paste0(filterCmd, "(", filter$safeVariableName, " %in% workingFilters$filters[[", j, "]]$values)")
                  filterCount <- filterCount + 1
                }
              }

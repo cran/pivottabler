@@ -237,6 +237,48 @@ pt$theme <- createCustomTheme(pt)
 pt$renderPivot(styleNamePrefix="t8")
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory", styleDeclarations=list("color"="red", "font-weight"="bold", "background-color"="yellow"))
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$renderPivot(styleNamePrefix="tdg")
+
+## ---- message=FALSE, warning=FALSE---------------------------------------
+library(pivottabler)
+pt <- PivotTable$new()
+pt$styles$addStyle(styleName="NewHeadingStyle1", list(
+      "font-family"="Arial",
+      "font-size"="0.75em",
+      padding="2px",
+      border="1px solid lightgray",
+      "vertical-align"="middle",
+      "text-align"="center",
+      "font-weight"="bold",
+      "background-color"="Gold",
+      "xl-wrap-text"="wrap"
+    ))
+pt$styles$addStyle(styleName="CellStyle1", list(
+      "font-family"="Arial",
+      "font-size"="0.75em",
+      padding="2px 2px 2px 8px",
+      border="1px solid lightgray",
+      "vertical-align"="middle",
+      "background-color"="Yellow",
+      "text-align"="right"
+    ))
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains1", summariseExpression="n()",
+                     headingBaseStyleName="NewHeadingStyle1", cellBaseStyleName="CellStyle1")
+pt$defineCalculation(calculationName="TotalTrains2", summariseExpression="n()",
+                     headingStyleDeclarations=list("color"="red", "font-weight"="bold"),
+                     cellStyleDeclarations=list("color"="blue"))
+pt$renderPivot(styleNamePrefix="tcn")
+
+## ---- message=FALSE, warning=FALSE---------------------------------------
 # define the colours
 orangeColors <- list(
   headerBackgroundColor = "rgb(237, 125, 49)",

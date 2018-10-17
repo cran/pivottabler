@@ -99,17 +99,9 @@ pt$renderPivot()
 #  pt$addColumnDataGroups("PowerType")
 #  pt$addRowDataGroups("TOC", totalCaption="All TOCs")
 #  pt$defineCalculation(calculationName="MeanArrivalDelay", caption="Mean Arr. Delay",
-#                       summariseExpression="mean(ArrivalDelay, na.rm=TRUE)", format="%.1f")
+#                       summariseExpression="mean(ArrivalDelay, na.rm=TRUE)", format="%.1f",
+#                       cellStyleDeclarations=list("xl-value-format"="##0.0"))
 #  pt$evaluatePivot()
-#  # style setting function
-#  setStyle <- function(cell, baseStyleName, declarations) {
-#    if(is.null(cell$style))
-#      cell$style <- pt$createInlineStyle(baseStyleName=baseStyleName, declarations=declarations)
-#    else cell$style$setPropertyValues(declarations=declarations)
-#  }
-#  # set the styling on the cells
-#  cells <- pt$findCells(calculationNames="MeanArrivalDelay")
-#  invisible(lapply(cells, setStyle, baseStyleName="Cell", declarations=list("xl-value-format"="##0.0")))
 #  
 #  library(openxlsx)
 #  wb <- createWorkbook(creator = Sys.getenv("USERNAME"))

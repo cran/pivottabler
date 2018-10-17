@@ -12,16 +12,17 @@
 #' # This class should only be created by the pivot table.
 #' # It is not intended to be created outside of the pivot table.
 #' @field parentPivot Owning pivot table.
-#' @field calculationName Calculation unique name.  Recommendation:  Do not have
-#'   spaces in this name.
+#' @field calculationName Calculation unique name.
 #' @field caption Calculation display name - i.e. the name shown in the pivot
 #'   table.
 #' @field visible Show or hide the calculation.  Hidden calculations are
 #'   typically used as base values for other calculations.
 #' @field displayOrder The order the calculations are displayed in the pivot
 #'   table.
-#' @field filters Any data filters specific to this calculation.  A PivotFilters
-#'   object.
+#' @field filters Any additional data filters specific to this calculation.
+#'   This can be a PivotFilters object that further restrict the data for the
+#'   calculation of a list of individual PivotFilter objects that provide more
+#'   flexability (and/or/replace).  See the Calculations vignette for details.
 #' @field format A character, list or custom function to format the calculation
 #'   result.
 #' @field dataName Specifies which data frame in the pivot table is used for
@@ -59,14 +60,15 @@ PivotCalculation <- R6::R6Class("PivotCalculation",
    initialize = function(parentPivot, calculationName=NULL, caption=NULL, visible=TRUE, displayOrder=NULL,
                          filters=NULL, format=NULL, dataName=NULL, type="summary",
                          valueName=NULL, summariseExpression=NULL, calculationExpression=NULL, calculationFunction=NULL, basedOn=NULL,
-                         noDataValue=NULL, noDataCaption=NULL) {
+                         noDataValue=NULL, noDataCaption=NULL,
+                         headingBaseStyleName=NULL, headingStyleDeclarations=NULL, cellBaseStyleName=NULL, cellStyleDeclarations=NULL) {
      if(parentPivot$argumentCheckMode > 0) {
        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", parentPivot, missing(parentPivot), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotTable")
        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", calculationName, missing(calculationName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", caption, missing(caption), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", visible, missing(visible), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", displayOrder, missing(displayOrder), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
-       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", filters, missing(filters), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotFilters")
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", filters, missing(filters), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("PivotFilters", "PivotFilterOverrides"))
        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", format, missing(format), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("character","list","function"))
        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", dataName, missing(dataName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", type, missing(type), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("value", "summary", "calculation", "function"))
@@ -77,24 +79,25 @@ PivotCalculation <- R6::R6Class("PivotCalculation",
        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", basedOn, missing(basedOn), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", noDataValue, missing(noDataValue), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer","numeric"))
        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", noDataCaption, missing(noDataCaption), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", headingBaseStyleName, missing(headingBaseStyleName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", headingStyleDeclarations, missing(headingStyleDeclarations), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", allowedListElementClasses=c("character", "integer", "numeric"))
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", cellBaseStyleName, missing(cellBaseStyleName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCalculation", "initialize", cellStyleDeclarations, missing(cellStyleDeclarations), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", allowedListElementClasses=c("character", "integer", "numeric"))
      }
      private$p_parentPivot <- parentPivot
      fstr <- NULL
-     if(!is.null(filters)) {
-       if (!("PivotFilters" %in% class(filters))) stop("PivotCalculation$new(): filters must be of type PivotFilters", call. = FALSE)
-       fstr <- filters$asString()
-     }
+     if(!is.null(filters)) fstr <- filters$asString()
      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculation$new", "Creating new Pivot Calculation...",
                                                                              list(calculationName=calculationName, caption=caption, visible=visible,
                                                                              displayOrder=displayOrder, filters=fstr, format=format, dataName=dataName,
                                                                              valueName=valueName, summariseExpression=summariseExpression,
                                                                              calculationExpression=calculationExpression,
                                                                              calculationFunctionIsNull=is.null(calculationFunction), basedOn=basedOn,
-                                                                             noDataValue=noDataValue, noDataCaption=noDataCaption))
-     if(grepl(" ", calculationName)==TRUE)
-       stop("PivotCalculation$new():  calculationName must not contain any space characters.", call. = FALSE)
-     if(make.names(calculationName)!=calculationName)
-       stop(paste0("PivotCalculation$new():  Please specify a valid name for calculation '", calculationName, "'\nA valid name consists of letters, numbers and the dot or underline characters and starts with a letter or the dot not followed by a number."), call. = FALSE)
+                                                                             noDataValue=noDataValue, noDataCaption=noDataCaption,
+                                                                             headingBaseStyleName=headingBaseStyleName, headingStyleDeclarations=headingStyleDeclarations,
+                                                                             cellBaseStyleName=cellBaseStyleName, cellStyleDeclarations=cellStyleDeclarations))
+     if(grepl("`", calculationName)==TRUE)
+       stop("PivotCalculation$new():  calculationName must not contain any back-tick characters.", call. = FALSE)
      if(missing(caption)||is.null(caption)) caption <- calculationName
      if((!(missing(dataName)))&&(!is.null(dataName))) {
        if(!private$p_parentPivot$data$isKnownData(dataName))
@@ -140,6 +143,10 @@ PivotCalculation <- R6::R6Class("PivotCalculation",
      private$p_basedOn <- basedOn
      private$p_noDataValue <- noDataValue
      private$p_noDataCaption <- noDataCaption
+     private$p_headingBaseStyleName <- headingBaseStyleName
+     private$p_headingStyleDeclarations <- headingStyleDeclarations
+     private$p_cellBaseStyleName <- cellBaseStyleName
+     private$p_cellStyleDeclarations <- cellStyleDeclarations
      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCalculation$new", "Created new Pivot Calculation")
    },
    asList = function() {
@@ -158,7 +165,11 @@ PivotCalculation <- R6::R6Class("PivotCalculation",
        calculationFunction = private$p_calculationFunction,
        basedOn = private$p_basedOn,
        noDataValue = private$p_noDataValue,
-       noDataCaption = private$p_noDataCaption
+       noDataCaption = private$p_noDataCaption,
+       headingBaseStyleName = private$p_headingBaseStyleName,
+       headingStyleDeclarations = private$p_headingStyleDeclarations,
+       cellBaseStyleName = private$p_cellBaseStyleName,
+       cellStyleDeclarations = private$p_cellStyleDeclarations
      )
      return(invisible(lst))
    },
@@ -189,7 +200,11 @@ PivotCalculation <- R6::R6Class("PivotCalculation",
     calculationFunction = function(value) { return(invisible(private$p_calculationFunction)) },
     basedOn = function(value) { return(invisible(private$p_basedOn)) },
     noDataValue = function(value) { return(invisible(private$p_noDataValue)) },
-    noDataCaption = function(value) { return(invisible(private$p_noDataCaption)) }
+    noDataCaption = function(value) { return(invisible(private$p_noDataCaption)) },
+    headingBaseStyleName = function(value) { return(invisible(private$p_headingBaseStyleName)) },
+    headingStyleDeclarations = function(value) { return(invisible(private$p_headingStyleDeclarations)) },
+    cellBaseStyleName = function(value) { return(invisible(private$p_cellBaseStyleName)) },
+    cellStyleDeclarations = function(value) { return(invisible(private$p_cellStyleDeclarations)) }
   ),
   private = list(
     p_parentPivot = NULL,
@@ -207,6 +222,10 @@ PivotCalculation <- R6::R6Class("PivotCalculation",
     p_calculationFunction = NULL,
     p_basedOn = NULL,
     p_noDataValue = NULL,
-    p_noDataCaption = NULL
+    p_noDataCaption = NULL,
+    p_headingBaseStyleName=NULL,
+    p_headingStyleDeclarations=NULL,
+    p_cellBaseStyleName=NULL,
+    p_cellStyleDeclarations=NULL
   )
 )
