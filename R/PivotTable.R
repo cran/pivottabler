@@ -63,9 +63,11 @@
 #' \describe{
 #'   \item{Documentation}{For more complete explanations and examples please see
 #'   the extensive vignettes supplied with this package.}
-#'   \item{\code{new(processingLibrary="auto", traceEnabled=FALSE,
-#'   traceFile=NULL, argumentCheckMode="auto")}}{Create a new pivot table,
-#'   including optionally enabling debug logging.}
+#'   \item{\code{new(processingLibrary="auto", evaluationMode="batch",
+#'   argumentCheckMode="auto", theme=NULL, replaceExistingStyles=FALSE,
+#'   tableStyle=NULL, headingStyle=NULL, cellStyle=NULL, totalStyle=NULL,
+#'   compatibility=NULL, traceEnabled=FALSE, traceFile=NULL)}}{Create a new
+#'   pivot table, optionally specifying styling and enabling debug logging.}
 #'
 #'   \item{\code{addData(df, dataName)}}{Add a data frame with the specified
 #'   name to the pivot table.}
@@ -131,6 +133,10 @@
 #'   \item{\code{createInlineStyle(baseStyleName, declarations)}}{Create a
 #'   PivotStyle object that can be used to style individual cell in the pivot
 #'   table.}
+#'   \item{\code{setStyling(rFrom=NULL, cFrom=NULL, rTo=NULL, cTo=NULL,
+#'   groups=NULL, cells=NULL, baseStyleName=NULL, style=NULL,
+#'   declarations=NULL)}}{Set the styling for a one/multiple data groups and/or
+#'   cells in the pivot table.}
 #'   \item{\code{generateCellStructure()}}{Generate the empty pivot table cells
 #'   (after the row/column headings have been defined).}
 #'   \item{\code{resetCells()}}{Clear the cells of the pivot table (should be
@@ -211,10 +217,20 @@
 
 PivotTable <- R6::R6Class("PivotTable",
   public = list(
-    initialize = function(processingLibrary="auto", evaluationMode="batch", argumentCheckMode="auto", traceEnabled=FALSE, traceFile=NULL) {
+    initialize = function(processingLibrary="auto", evaluationMode="batch", argumentCheckMode="auto",
+                          theme=NULL, replaceExistingStyles=FALSE,
+                          tableStyle=NULL, headingStyle=NULL, cellStyle=NULL, totalStyle=NULL,
+                          compatibility=NULL, traceEnabled=FALSE, traceFile=NULL) {
       checkArgument(4, TRUE, "PivotTable", "initialize", processingLibrary, missing(processingLibrary), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("auto", "dplyr", "data.table"))
       checkArgument(4, TRUE, "PivotTable", "initialize", evaluationMode, missing(evaluationMode), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("batch", "sequential"))
       checkArgument(4, TRUE, "PivotTable", "initialize", argumentCheckMode, missing(argumentCheckMode), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("auto", "none", "minimal", "basic", "balanced", "full"))
+      checkArgument(4, TRUE, "PivotTable", "initialize", theme, missing(theme), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("character", "list", "PivotStyles"), allowedListElementClasses="character")
+      checkArgument(4, TRUE, "PivotTable", "initialize", replaceExistingStyles, missing(replaceExistingStyles), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+      checkArgument(4, TRUE, "PivotTable", "initialize", tableStyle, missing(tableStyle), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("character", "list", "PivotStyle"))
+      checkArgument(4, TRUE, "PivotTable", "initialize", headingStyle, missing(headingStyle), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("character", "list", "PivotStyle"))
+      checkArgument(4, TRUE, "PivotTable", "initialize", cellStyle, missing(cellStyle), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("character", "list", "PivotStyle"))
+      checkArgument(4, TRUE, "PivotTable", "initialize", totalStyle, missing(totalStyle), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("character", "list", "PivotStyle"))
+      checkArgument(4, TRUE, "PivotTable", "initialize", compatibility, missing(compatibility), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", allowedListElementClasses=c("character", "integer", "numeric", "logical"))
       checkArgument(4, TRUE, "PivotTable", "initialize", traceEnabled, missing(traceEnabled), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       checkArgument(4, TRUE, "PivotTable", "initialize", traceFile, missing(traceFile), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
       if(argumentCheckMode=="auto") {
@@ -235,6 +251,7 @@ PivotTable <- R6::R6Class("PivotTable",
         private$p_traceFile <- file(traceFile, open="w")
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$new", "Creating new Pivot Table...")
+      private$p_compatibility <- compatibility
       if(processingLibrary=="auto") {
         if(requireNamespace(package="dplyr", quietly=TRUE)==TRUE) private$p_processingLibrary <- "dplyr"
         else if(requireNamespace(package="data.table", quietly=TRUE)==TRUE) private$p_processingLibrary <- "data.table"
@@ -256,7 +273,6 @@ PivotTable <- R6::R6Class("PivotTable",
       private$p_evaluationMode <- evaluationMode
       # Create the basic parts of the pivot table
       private$p_data <- PivotData$new(parentPivot=self)
-      private$p_styles <- getTheme(parentPivot=self, themeName="default")
       private$p_rowGroup <- PivotDataGroup$new(parentPivot=self, parentGroup=NULL, rowOrColumn="row", isLevelTotal=TRUE)
       private$p_columnGroup <- PivotDataGroup$new(parentPivot=self, parentGroup=NULL, rowOrColumn="column", isLevelTotal=TRUE)
       private$p_calculationsPosition <- NULL
@@ -266,6 +282,104 @@ PivotTable <- R6::R6Class("PivotTable",
       private$p_latexRenderer <- PivotLatexRenderer$new(parentPivot=self)
       private$p_openxlsxRenderer <- PivotOpenXlsxRenderer$new(parentPivot=self)
       private$p_timings <- list()
+      # apply theming and styles
+      if(is.null(theme)) {
+        private$p_styles <- getTheme(parentPivot=self, themeName="default")
+      }
+      else {
+        if("PivotStyles" %in% class(theme)) { private$p_styles <- theme }
+        else if("list" %in% class(theme)) {
+          private$p_styles <- getSimpleColoredTheme(parentPivot=self, themeName="coloredTheme", colors=theme, fontName=theme$fontName)
+        }
+        else if("character" %in% class(theme)) {
+          if(tolower(trimws(theme))=="none") { theme <- "blank" }
+          private$p_styles <- getTheme(parentPivot=self, themeName=theme)
+        }
+      }
+      if(!is.null(tableStyle)) {
+        if("PivotStyle" %in% class(tableStyle)) { tableStyle <- tableStyle$declarations }
+        if("list" %in% class(tableStyle)) {
+          if(private$p_styles$isExistingStyle(private$p_styles$tableStyle)&&(!replaceExistingStyles)) {
+            private$p_styles$getStyle(private$p_styles$tableStyle)$setPropertyValues(declarations=tableStyle)
+            tableStyle <- private$p_styles$tableStyle
+          }
+          else {
+            private$p_styles$addStyle(styleName="customTableStyle", declarations=tableStyle)
+            tableStyle <- "customTableStyle"
+          }
+        }
+        if("character" %in% class(tableStyle)) { private$p_styles$tableStyle <- tableStyle }
+      }
+      if(!is.null(headingStyle)) {
+        if("PivotStyle" %in% class(headingStyle)) { headingStyle <- headingStyle$declarations }
+        # root style
+        rootStyle <- headingStyle
+        if("list" %in% class(rootStyle)) {
+          if(private$p_styles$isExistingStyle(private$p_styles$rootStyle)&&(!replaceExistingStyles)) {
+            private$p_styles$getStyle(private$p_styles$rootStyle)$setPropertyValues(declarations=rootStyle)
+            rootStyle <- private$p_styles$rootStyle
+          }
+          else {
+            private$p_styles$addStyle(styleName="customRootStyle", declarations=rootStyle)
+            rootStyle <- "customRootStyle"
+          }
+        }
+        if("character" %in% class(rootStyle)) { private$p_styles$rootStyle <- rootStyle }
+        # row heading style
+        rowHeaderStyle <- headingStyle
+        if("list" %in% class(rowHeaderStyle)) {
+          if(private$p_styles$isExistingStyle(private$p_styles$rowHeaderStyle)&&(!replaceExistingStyles)) {
+            private$p_styles$getStyle(private$p_styles$rowHeaderStyle)$setPropertyValues(declarations=rowHeaderStyle)
+            rowHeaderStyle <- private$p_styles$rowHeaderStyle
+          }
+          else {
+            private$p_styles$addStyle(styleName="customRowHeadingStyle", declarations=rowHeaderStyle)
+            rowHeaderStyle <- "customRowHeadingStyle"
+          }
+        }
+        if("character" %in% class(rowHeaderStyle)) { private$p_styles$rowHeaderStyle <- rowHeaderStyle }
+        # column heading style
+        colHeaderStyle <- headingStyle
+        if("list" %in% class(colHeaderStyle)) {
+          if(private$p_styles$isExistingStyle(private$p_styles$colHeaderStyle)&&(!replaceExistingStyles)) {
+            private$p_styles$getStyle(private$p_styles$colHeaderStyle)$setPropertyValues(declarations=colHeaderStyle)
+            colHeaderStyle <- private$p_styles$colHeaderStyle
+          }
+          else {
+            private$p_styles$addStyle(styleName="customColHeadingStyle", declarations=colHeaderStyle)
+            colHeaderStyle <- "customColHeadingStyle"
+          }
+        }
+        if("character" %in% class(colHeaderStyle)) { private$p_styles$colHeaderStyle <- colHeaderStyle }
+      }
+      if(!is.null(cellStyle)) {
+        if("PivotStyle" %in% class(cellStyle)) { cellStyle <- cellStyle$declarations }
+        if("list" %in% class(cellStyle)) {
+          if(private$p_styles$isExistingStyle(private$p_styles$cellStyle)&&(!replaceExistingStyles)) {
+            private$p_styles$getStyle(private$p_styles$cellStyle)$setPropertyValues(declarations=cellStyle)
+            cellStyle <- private$p_styles$cellStyle
+          }
+          else {
+            private$p_styles$addStyle(styleName="customCellStyle", declarations=cellStyle)
+            cellStyle <- "customCellStyle"
+          }
+        }
+        if("character" %in% class(cellStyle)) { private$p_styles$cellStyle <- cellStyle }
+      }
+      if(!is.null(totalStyle)) {
+        if("PivotStyle" %in% class(totalStyle)) { totalStyle <- totalStyle$declarations }
+        if("list" %in% class(totalStyle)) {
+          if(private$p_styles$isExistingStyle(private$p_styles$totalStyle)&&(!replaceExistingStyles)) {
+            private$p_styles$getStyle(private$p_styles$totalStyle)$setPropertyValues(declarations=totalStyle)
+            totalStyle <- private$p_styles$totalStyle
+          }
+          else {
+            private$p_styles$addStyle(styleName="customTotalStyle", declarations=totalStyle)
+            totalStyle <- "customTotalStyle"
+          }
+        }
+        if("character" %in% class(totalStyle)) { private$p_styles$totalStyle <- totalStyle }
+      }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$new", "Created new Pivot Table.")
       return(invisible())
     },
@@ -593,6 +707,73 @@ PivotTable <- R6::R6Class("PivotTable",
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$createInlineStyle", "Created inline style.")
       return(invisible(style))
+    },
+    setStyling = function(rFrom=NULL, cFrom=NULL, rTo=NULL, cTo=NULL, groups=NULL, cells=NULL, baseStyleName=NULL, style=NULL, declarations=NULL) {
+      if(private$p_argumentCheckMode > 0) {
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setStyling", rFrom, missing(rFrom), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setStyling", cFrom, missing(cFrom), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setStyling", rTo, missing(rTo), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setStyling", cTo, missing(cTo), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setStyling", groups, missing(groups), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("list", "PivotDataGroup"), allowedListElementClasses="PivotDataGroup")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setStyling", cells, missing(cells), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("list", "PivotCell"), allowedListElementClasses="PivotCell")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setStyling", baseStyleName, missing(baseStyleName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setStyling", style, missing(style), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotStyle")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setStyling", declarations, missing(declarations), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", allowedListElementClasses=c("character", "integer", "numeric"))
+      }
+      if(private$p_traceEnabled==TRUE) self$trace("PivotTable$setStyling", "Setting styling...")
+      if(missing(baseStyleName)&&missing(style)&&missing(declarations)) { stop("PivotTable$setStyling():  Please specify at least one of baseStyleName, style or declarations.", call. = FALSE) }
+      if(!is.null(groups)) {
+        if("PivotDataGroup" %in% class(groups)) {
+          groups <- list(groups)
+        }
+        for(i in 1:length(groups)) {
+          grp <- groups[[i]]
+          if(!is.null(grp)) {
+            if(!missing(baseStyleName)) { grp$baseStyleName <- baseStyleName }
+            if(!missing(style)) { grp$style <- ifelse(is.null(style), NULL, style$getCopy()) }
+            if((!missing(declarations))&&(!is.null(declarations))) {
+              if (is.null(grp$style)) { grp$style <- PivotStyle$new(parentPivot=self, declarations=declarations) }
+              else { grp$setPropertyValues(declarations) }
+            }
+          }
+        }
+      }
+      if(!is.null(cells)) {
+        if("PivotCell" %in% class(cells)) {
+          cells <- list(cells)
+        }
+        for(i in 1:length(cells)) {
+          cell <- cells[[i]]
+          if(!is.null(cell)) {
+            if(!missing(baseStyleName)) { cell$baseStyleName <- baseStyleName }
+            if(!missing(style)) { cell$style <- ifelse(is.null(style), NULL, style$getCopy()) }
+            if((!missing(declarations))&&(!is.null(declarations))) {
+              if (is.null(cell$style)) { cell$style <- PivotStyle$new(parentPivot=self, declarations=declarations) }
+              else { cell$setPropertyValues(declarations) }
+            }
+          }
+        }
+      }
+      if((!is.null(rFrom))&&(!is.null(cFrom))) {
+        if(is.null(rTo)) rTo <- rFrom
+        if(is.null(cTo)) cTo <- cFrom
+        if(rTo<rFrom) { stop("PivotTable$setStyling():  rTo must be greater than or equal to rFrom.", call. = FALSE) }
+        if(cTo<cFrom) { stop("PivotTable$setStyling():  cTo must be greater than or equal to cFrom.", call. = FALSE) }
+        for(r in rFrom:rTo) {
+          for(c in cFrom:cTo) {
+            cell <- self$cells$getCell(r, c)
+            if(!is.null(cell)) {
+              if(!missing(baseStyleName)) { cell$baseStyleName <- baseStyleName }
+              if(!missing(style)) { cell$style <- ifelse(is.null(style), NULL, style$getCopy()) }
+              if((!missing(declarations))&&(!is.null(declarations))) {
+                if (is.null(cell$style)) { cell$style <- PivotStyle$new(parentPivot=self, declarations=declarations) }
+                else { cell$setPropertyValues(declarations) }
+              }
+            }
+          }
+        }
+      }
+      if(private$p_traceEnabled==TRUE) self$trace("PivotTable$setStyling", "Set styling.")
     },
     generateCellStructure = function() {
       timeStart <- proc.time()
@@ -1312,6 +1493,19 @@ PivotTable <- R6::R6Class("PivotTable",
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$asTidyDataFrame", "Got pivot table as a tidy data frame.")
       return(invisible(as.data.frame(df, stringsAsFactors=stringsAsFactors)))
     },
+    asBasicTable = function(exportOptions=NULL) {
+      timeStart <- proc.time()
+      if(private$p_argumentCheckMode > 0) {
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asBasicTable", exportOptions, missing(exportOptions), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list")
+      }
+      if(private$p_traceEnabled==TRUE) self$trace("PivotTable$asBasicTable", "Converting to basic table...")
+      if(!private$p_evaluated) stop("PivotTable$getHtml():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
+      if(is.null(private$p_cells)) stop("PivotTable$getHtml():  No cells exist to render.", call. = FALSE)
+      btbl <- convertPvtTblToBasicTbl(self, exportOptions)
+      if(private$p_traceEnabled==TRUE) self$trace("PivotTable$asBasicTable", "Converted to basic table.")
+      private$addTiming("asBasicTable", timeStart)
+      return(invisible(btbl))
+    },
     getCss = function(styleNamePrefix=NULL) {
       timeStart <- proc.time()
       if(private$p_argumentCheckMode > 0) {
@@ -1560,6 +1754,7 @@ PivotTable <- R6::R6Class("PivotTable",
   ),
   active = list(
     argumentCheckMode = function(value) { return(private$p_argumentCheckMode) },
+    compatibility = function(value) { return(private$p_compatibility) },
     traceEnabled = function(value){
       if(missing(value)) return(invisible(private$p_traceEnabled))
       else {
@@ -1608,9 +1803,10 @@ PivotTable <- R6::R6Class("PivotTable",
       }
       else {
         if(private$p_argumentCheckMode > 0) {
-          checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "theme", value, missing(value), allowMissing=FALSE, allowNull=FALSE, allowedClasses=c("character", "PivotStyles"))
+          checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "theme", value, missing(value), allowMissing=FALSE, allowNull=FALSE, allowedClasses=c("character", "list", "PivotStyles"), allowedListElementClasses="character")
         }
         if("character" %in% class(value)) private$p_styles <- getTheme(parentPivot=self, themeName=value)
+        else if("list" %in% class(value)) private$p_styles <- getSimpleColoredTheme(parentPivot=self, colors=value, fontName=value$fontName)
         else if("PivotStyles" %in% class(value)) private$p_styles <- value
         return(invisible())
       }
@@ -1670,6 +1866,7 @@ PivotTable <- R6::R6Class("PivotTable",
     p_htmlRenderer = NULL,
     p_latexRenderer = NULL,
     p_openxlsxRenderer = NULL,
+    p_compatibility = NULL,
     p_traceFile = NULL,
     p_timings = NULL,
     clearIsRenderedFlags = function() {

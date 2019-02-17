@@ -94,7 +94,7 @@
 #'   calculation result values.}
 #'   \item{\code{addCalculationGroups(calculationGroupName, atLevel)}}{Add a
 #'   calculation group to the data group hierarchy.}
-#'   \item{\code{normaliseDataGroup()}}{Normalise the data group hierachy so
+#'   \item{\code{normaliseDataGroup()}}{Normalise the data group hierarchy so
 #'   that all branches have the same number of levels - accomplished by adding
 #'   empty child data groups where needed.}
 #'   \item{\code{getNetFilters()}}{Get a PivotFilters object that contains all
@@ -153,7 +153,7 @@ PivotDataGroup <- R6::R6Class("PivotDataGroup",
      private$p_calculationGroupName <- calculationGroupName
      private$p_calculationName <- calculationName
      private$p_baseStyleName = baseStyleName
-     if (!is.null(styleDeclarations)) private$p_style = pt$createInlineStyle(baseStyleName=baseStyleName, declarations=styleDeclarations)
+     if (!is.null(styleDeclarations)) private$p_style = private$p_parentPivot$createInlineStyle(declarations=styleDeclarations)
      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotDataGroup$new", "Created new data group.")
    },
    getLevelNumber = function() {

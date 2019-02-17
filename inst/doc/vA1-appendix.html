@@ -12,7 +12,7 @@
 
 <meta name="author" content="Chris Bailiss" />
 
-<meta name="date" content="2018-10-17" />
+<meta name="date" content="2019-02-17" />
 
 <title>A1. Appendix: Details</title>
 
@@ -21,7 +21,7 @@
 
 
 <style type="text/css">code{white-space: pre;}</style>
-<style type="text/css">
+<style type="text/css" data-origin="pandoc">
 div.sourceCode { overflow-x: auto; }
 table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
   margin: 0; padding: 0; vertical-align: baseline; border: none; }
@@ -57,7 +57,29 @@ code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
 code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
 code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
 code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+
 </style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
 
 
 
@@ -72,7 +94,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">A1. Appendix: Details</h1>
 <h4 class="author"><em>Chris Bailiss</em></h4>
-<h4 class="date"><em>2018-10-17</em></h4>
+<h4 class="date"><em>2019-02-17</em></h4>
 
 
 
@@ -231,7 +253,7 @@ pt<span class="op">$</span><span class="kw">defineCalculation</span>(<span class
 </div>
 <div id="output-of-na-nan--inf-and-inf" class="section level2">
 <h2>Output of NA, NaN, -Inf and Inf</h2>
-<p>The <code>pt$getHtml(...)</code>, <code>pt$saveHtml(...)</code>, <code>pt$renderPivot(...)</code>, <code>pt$getLatex(...)</code> and <code>pt$writeToExcelWorksheet(...)</code> functions all support an <code>exportOptions</code> list parameter that provides control over how NA, NaN, -Inf and Inf values in R are outout.</p>
+<p>The <code>pt$getHtml(...)</code>, <code>pt$saveHtml(...)</code>, <code>pt$renderPivot(...)</code>, <code>pt$getLatex(...)</code> and <code>pt$writeToExcelWorksheet(...)</code> functions all support an <code>exportOptions</code> list parameter that provides control over how NA, NaN, -Inf and Inf values in R are output.</p>
 <p><code>skipNegInf=TRUE, skipPosInf=TRUE, skipNA=TRUE, skipNaN=TRUE</code> specify that these values are exported as blanks.</p>
 <p><code>exportNegInfAs=&quot;-Infinity&quot;,exportPosInfAs=&quot;Infinity&quot;,exportNAAs=&quot;No Data&quot;,exportNaNAs=&quot;Not a Number&quot;</code> specify alternative values to output.</p>
 <p>Example of exporting a pivot table using the default values and replaced values:</p>
@@ -244,15 +266,15 @@ pt<span class="op">$</span><span class="kw">addRowDataGroups</span>(<span class=
 pt<span class="op">$</span><span class="kw">defineCalculation</span>(<span class="dt">calculationName=</span><span class="st">&quot;Total&quot;</span>, <span class="dt">summariseExpression=</span><span class="st">&quot;sum(SomeNumber)&quot;</span>)
 pt<span class="op">$</span><span class="kw">evaluatePivot</span>()
 pt<span class="op">$</span><span class="kw">renderPivot</span>()</code></pre></div>
-<div id="htmlwidget-b4a2c201d9ebbe07dfc8" style="width:auto;height:auto;" class="pivottabler html-widget"></div>
-<script type="application/json" data-for="htmlwidget-b4a2c201d9ebbe07dfc8">{"x":{"tableCss":".Table {border-collapse: collapse; }\r\n.ColumnHeader {font-family: Arial; font-size: 0.75em; padding: 2px; border: 1px solid lightgray; vertical-align: middle; text-align: center; font-weight: bold; background-color: #F2F2F2; }\r\n.RowHeader {font-family: Arial; font-size: 0.75em; padding: 2px 8px 2px 2px; border: 1px solid lightgray; vertical-align: middle; text-align: left; font-weight: bold; background-color: #F2F2F2; }\r\n.Cell {font-family: Arial; font-size: 0.75em; padding: 2px 2px 2px 8px; border: 1px solid lightgray; vertical-align: middle; text-align: right; }\r\n","tableHtml":"<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;<\/th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total<\/th>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Black<\/th>\n    <td class=\"Cell\">Inf<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Blue<\/th>\n    <td class=\"Cell\">NaN<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Green<\/th>\n    <td class=\"Cell\">NA<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Red<\/th>\n    <td class=\"Cell\">1<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">White<\/th>\n    <td class=\"Cell\">-Inf<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Yellow<\/th>\n    <td class=\"Cell\">2<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total<\/th>\n    <td class=\"Cell\">NA<\/td>\n  <\/tr>\n<\/table>","settings":[]},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-c83cacaf2bd048e9a090" style="width:auto;height:auto;" class="pivottabler html-widget"></div>
+<script type="application/json" data-for="htmlwidget-c83cacaf2bd048e9a090">{"x":{"tableCss":".Table {border-collapse: collapse; }\r\n.ColumnHeader {font-family: Arial; font-size: 0.75em; padding: 2px; border: 1px solid lightgray; vertical-align: middle; text-align: center; font-weight: bold; background-color: #F2F2F2; }\r\n.RowHeader {font-family: Arial; font-size: 0.75em; padding: 2px 8px 2px 2px; border: 1px solid lightgray; vertical-align: middle; text-align: left; font-weight: bold; background-color: #F2F2F2; }\r\n.Cell {font-family: Arial; font-size: 0.75em; padding: 2px 2px 2px 8px; border: 1px solid lightgray; vertical-align: middle; text-align: right; }\r\n.Total {font-family: Arial; font-size: 0.75em; padding: 2px 2px 2px 8px; border: 1px solid lightgray; vertical-align: middle; text-align: right; }\r\n","tableHtml":"<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;<\/th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total<\/th>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Black<\/th>\n    <td class=\"Cell\">Inf<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Blue<\/th>\n    <td class=\"Cell\">NaN<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Green<\/th>\n    <td class=\"Cell\">NA<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Red<\/th>\n    <td class=\"Cell\">1<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">White<\/th>\n    <td class=\"Cell\">-Inf<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Yellow<\/th>\n    <td class=\"Cell\">2<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total<\/th>\n    <td class=\"Total\">NA<\/td>\n  <\/tr>\n<\/table>","settings":[]},"evals":[],"jsHooks":[]}</script>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">pt<span class="op">$</span><span class="kw">renderPivot</span>(<span class="dt">exportOptions=</span><span class="kw">list</span>(<span class="dt">skipNegInf=</span><span class="ot">TRUE</span>, <span class="dt">skipPosInf=</span><span class="ot">TRUE</span>, <span class="dt">skipNA=</span><span class="ot">TRUE</span>, <span class="dt">skipNaN=</span><span class="ot">TRUE</span>))</code></pre></div>
-<div id="htmlwidget-b7a6dda53a0eb8be9676" style="width:auto;height:auto;" class="pivottabler html-widget"></div>
-<script type="application/json" data-for="htmlwidget-b7a6dda53a0eb8be9676">{"x":{"tableCss":".Table {border-collapse: collapse; }\r\n.ColumnHeader {font-family: Arial; font-size: 0.75em; padding: 2px; border: 1px solid lightgray; vertical-align: middle; text-align: center; font-weight: bold; background-color: #F2F2F2; }\r\n.RowHeader {font-family: Arial; font-size: 0.75em; padding: 2px 8px 2px 2px; border: 1px solid lightgray; vertical-align: middle; text-align: left; font-weight: bold; background-color: #F2F2F2; }\r\n.Cell {font-family: Arial; font-size: 0.75em; padding: 2px 2px 2px 8px; border: 1px solid lightgray; vertical-align: middle; text-align: right; }\r\n","tableHtml":"<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;<\/th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total<\/th>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Black<\/th>\n    <td class=\"Cell\"><\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Blue<\/th>\n    <td class=\"Cell\"><\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Green<\/th>\n    <td class=\"Cell\"><\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Red<\/th>\n    <td class=\"Cell\">1<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">White<\/th>\n    <td class=\"Cell\"><\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Yellow<\/th>\n    <td class=\"Cell\">2<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total<\/th>\n    <td class=\"Cell\"><\/td>\n  <\/tr>\n<\/table>","settings":[]},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-34453f29fd46a795d55e" style="width:auto;height:auto;" class="pivottabler html-widget"></div>
+<script type="application/json" data-for="htmlwidget-34453f29fd46a795d55e">{"x":{"tableCss":".Table {border-collapse: collapse; }\r\n.ColumnHeader {font-family: Arial; font-size: 0.75em; padding: 2px; border: 1px solid lightgray; vertical-align: middle; text-align: center; font-weight: bold; background-color: #F2F2F2; }\r\n.RowHeader {font-family: Arial; font-size: 0.75em; padding: 2px 8px 2px 2px; border: 1px solid lightgray; vertical-align: middle; text-align: left; font-weight: bold; background-color: #F2F2F2; }\r\n.Cell {font-family: Arial; font-size: 0.75em; padding: 2px 2px 2px 8px; border: 1px solid lightgray; vertical-align: middle; text-align: right; }\r\n.Total {font-family: Arial; font-size: 0.75em; padding: 2px 2px 2px 8px; border: 1px solid lightgray; vertical-align: middle; text-align: right; }\r\n","tableHtml":"<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;<\/th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total<\/th>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Black<\/th>\n    <td class=\"Cell\"><\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Blue<\/th>\n    <td class=\"Cell\"><\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Green<\/th>\n    <td class=\"Cell\"><\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Red<\/th>\n    <td class=\"Cell\">1<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">White<\/th>\n    <td class=\"Cell\"><\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Yellow<\/th>\n    <td class=\"Cell\">2<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total<\/th>\n    <td class=\"Total\"><\/td>\n  <\/tr>\n<\/table>","settings":[]},"evals":[],"jsHooks":[]}</script>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">pt<span class="op">$</span><span class="kw">renderPivot</span>(<span class="dt">exportOptions=</span><span class="kw">list</span>(<span class="dt">exportNegInfAs=</span><span class="st">&quot;-Infinity&quot;</span>, <span class="dt">exportPosInfAs=</span><span class="st">&quot;Infinity&quot;</span>,
                                   <span class="dt">exportNAAs=</span><span class="st">&quot;Nothing&quot;</span>, <span class="dt">exportNaNAs=</span><span class="st">&quot;Not a Number&quot;</span>))</code></pre></div>
-<div id="htmlwidget-0f67060f0ae2c617fafe" style="width:auto;height:auto;" class="pivottabler html-widget"></div>
-<script type="application/json" data-for="htmlwidget-0f67060f0ae2c617fafe">{"x":{"tableCss":".Table {border-collapse: collapse; }\r\n.ColumnHeader {font-family: Arial; font-size: 0.75em; padding: 2px; border: 1px solid lightgray; vertical-align: middle; text-align: center; font-weight: bold; background-color: #F2F2F2; }\r\n.RowHeader {font-family: Arial; font-size: 0.75em; padding: 2px 8px 2px 2px; border: 1px solid lightgray; vertical-align: middle; text-align: left; font-weight: bold; background-color: #F2F2F2; }\r\n.Cell {font-family: Arial; font-size: 0.75em; padding: 2px 2px 2px 8px; border: 1px solid lightgray; vertical-align: middle; text-align: right; }\r\n","tableHtml":"<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;<\/th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total<\/th>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Black<\/th>\n    <td class=\"Cell\">Infinity<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Blue<\/th>\n    <td class=\"Cell\">Not a Number<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Green<\/th>\n    <td class=\"Cell\">Nothing<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Red<\/th>\n    <td class=\"Cell\">1<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">White<\/th>\n    <td class=\"Cell\">-Infinity<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Yellow<\/th>\n    <td class=\"Cell\">2<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total<\/th>\n    <td class=\"Cell\">Nothing<\/td>\n  <\/tr>\n<\/table>","settings":[]},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-ed7d62b9bd974e2732ed" style="width:auto;height:auto;" class="pivottabler html-widget"></div>
+<script type="application/json" data-for="htmlwidget-ed7d62b9bd974e2732ed">{"x":{"tableCss":".Table {border-collapse: collapse; }\r\n.ColumnHeader {font-family: Arial; font-size: 0.75em; padding: 2px; border: 1px solid lightgray; vertical-align: middle; text-align: center; font-weight: bold; background-color: #F2F2F2; }\r\n.RowHeader {font-family: Arial; font-size: 0.75em; padding: 2px 8px 2px 2px; border: 1px solid lightgray; vertical-align: middle; text-align: left; font-weight: bold; background-color: #F2F2F2; }\r\n.Cell {font-family: Arial; font-size: 0.75em; padding: 2px 2px 2px 8px; border: 1px solid lightgray; vertical-align: middle; text-align: right; }\r\n.Total {font-family: Arial; font-size: 0.75em; padding: 2px 2px 2px 8px; border: 1px solid lightgray; vertical-align: middle; text-align: right; }\r\n","tableHtml":"<table class=\"Table\">\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\" colspan=\"1\">&nbsp;<\/th>\n    <th class=\"ColumnHeader\" colspan=\"1\">Total<\/th>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Black<\/th>\n    <td class=\"Cell\">Infinity<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Blue<\/th>\n    <td class=\"Cell\">Not a Number<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Green<\/th>\n    <td class=\"Cell\">Nothing<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Red<\/th>\n    <td class=\"Cell\">1<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">White<\/th>\n    <td class=\"Cell\">-Infinity<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Yellow<\/th>\n    <td class=\"Cell\">2<\/td>\n  <\/tr>\n  <tr>\n    <th class=\"RowHeader\" rowspan=\"1\">Total<\/th>\n    <td class=\"Total\">Nothing<\/td>\n  <\/tr>\n<\/table>","settings":[]},"evals":[],"jsHooks":[]}</script>
 </div>
 <div id="styling-reference" class="section level2">
 <h2>Styling Reference</h2>

@@ -16,9 +16,8 @@ pt$addColumnDataGroups("TrainCategory")
 pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FFFF00"))
 groups <- pt$findColumnDataGroups(variableNames="TrainCategory")
-groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$setStyling(groups=groups, declarations=list("background-color"="#FFFF00"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -29,9 +28,8 @@ pt$addColumnDataGroups("TrainCategory")
 pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FFFF00"))
 groups <- pt$findColumnDataGroups(variableValues=list("PowerType"=c("DMU", "HST")))
-groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$setStyling(groups=groups, declarations=list("background-color"="#FFFF00"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -42,9 +40,8 @@ pt$addColumnDataGroups("TrainCategory")
 pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FFFF00"))
 groups <- pt$findColumnDataGroups(variableNames="TrainCategory", totals="exclude")
-groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$setStyling(groups=groups, declarations=list("background-color"="#FFFF00"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -55,9 +52,8 @@ pt$addColumnDataGroups("TrainCategory")
 pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FFFF00"))
 groups <- pt$findColumnDataGroups(variableNames="TrainCategory", totals="only")
-groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$setStyling(groups=groups, declarations=list("background-color"="#FFFF00"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -68,11 +64,10 @@ pt$addColumnDataGroups("TrainCategory")
 pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FFFF00"))
 groups <- pt$findColumnDataGroups(
   variableValues=list("TrainCategory"="Ordinary Passenger"), 
   includeDescendantGroup=TRUE)
-groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$setStyling(groups=groups, declarations=list("background-color"="#FFFF00"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -83,11 +78,10 @@ pt$addColumnDataGroups("TrainCategory")
 pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FFFF00"))
 groups <- pt$findColumnDataGroups(
   variableValues=list("TrainCategory"="**"), 
   includeDescendantGroup=TRUE)
-groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$setStyling(groups=groups, declarations=list("background-color"="#FFFF00"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -98,10 +92,9 @@ pt$addColumnDataGroups("TrainCategory")
 pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#00FFFF"))
 groups <- pt$findColumnDataGroups(matchMode="combinations",
                                   variableNames=c("TrainCategory", "PowerType"))
-groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$setStyling(groups=groups, declarations=list("background-color"="#00FFFF"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -112,10 +105,9 @@ pt$addColumnDataGroups("TrainCategory")
 pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#00FFFF"))
 groups <- pt$findColumnDataGroups(matchMode="combinations",
   variableValues=list("TrainCategory"="Express Passenger", "PowerType"=c("DMU", "HST")))
-groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$setStyling(groups=groups, declarations=list("background-color"="#00FFFF"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -126,10 +118,9 @@ pt$addColumnDataGroups("TrainCategory")
 pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FFFF00"))
 groups <- pt$findColumnDataGroups(
   variableValues=list("TrainCategory"="Express Passenger", "PowerType"=c("DMU", "HST")))
-groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$setStyling(groups=groups, declarations=list("background-color"="#00FFFF"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -140,10 +131,9 @@ pt$addColumnDataGroups("TrainCategory")
 pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#00FFFF"))
 groups <- pt$findColumnDataGroups(matchMode="combinations", variableNames="PowerType",
   variableValues=list("TrainCategory"="Express Passenger"))
-groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$setStyling(groups=groups, declarations=list("background-color"="#00FFFF"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -154,10 +144,9 @@ pt$addColumnDataGroups("TrainCategory")
 pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#00FFFF"))
 groups <- pt$findColumnDataGroups(matchMode="combinations", 
   variableValues=list("TrainCategory"="Express Passenger", "PowerType"="**"))
-groupCount <- lapply(groups, function(grp) {grp$style <- highlight})
+pt$setStyling(groups=groups, declarations=list("background-color"="#00FFFF"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -169,9 +158,8 @@ pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FFCC66"))
 cells <- pt$getCells(specifyCellsAsList=TRUE, rowNumbers=c(1, 3))
-lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#FFCC66"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -183,9 +171,8 @@ pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FFCC66"))
 cells <- pt$getCells(specifyCellsAsList=TRUE, columnNumbers=2)
-lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#FFCC66"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -197,9 +184,8 @@ pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FFCC66"))
 cells <- pt$getCells(specifyCellsAsList=TRUE, cellCoordinates=list(c(2, 3)))
-lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#FFCC66"))
 cat("The raw value of the cell is", cells[[1]]$rawValue, "and the formatted value is", cells[[1]]$formattedValue, ".")
 pt$renderPivot()
 
@@ -212,9 +198,8 @@ pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FFCC66"))
 cells <- pt$getCells(specifyCellsAsList=TRUE, cellCoordinates=list(c(2, 3), c(3, 4), c(5, 7)))
-lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#FFCC66"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -226,9 +211,8 @@ pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FFCC66"))
 cells <- pt$getCells(specifyCellsAsList=TRUE, rowNumbers=2, columnNumbers=4, cellCoordinates=list(c(5, 7)))
-lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#FFCC66"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -240,9 +224,8 @@ pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#00FF00"))
 cells <- pt$getCells(specifyCellsAsList=FALSE, rowNumbers=c(1, 3))
-lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#00FF00"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -254,9 +237,8 @@ pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#00FF00"))
 cells <- pt$getCells(specifyCellsAsList=FALSE, columnNumbers=2)
-lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#00FF00"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -268,9 +250,8 @@ pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#00FF00"))
 cells <- pt$getCells(specifyCellsAsList=FALSE, rowNumbers=2, columnNumbers=3)
-lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#00FF00"))
 cat("The raw value of the cell is", cells[[1]]$rawValue, "and the formatted value is", cells[[1]]$formattedValue, ".")
 pt$renderPivot()
 
@@ -283,9 +264,8 @@ pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#00FF00"))
 cells <- pt$getCells(specifyCellsAsList=FALSE, rowNumbers=c(2, 3, 5), columnNumbers=c(3, 4, 7))
-lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#00FF00"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -297,9 +277,8 @@ pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#00FF00"))
 cells <- pt$getCells(specifyCellsAsList=FALSE, rowNumbers=c(2, NA, 5), columnNumbers=c(NA, 4, 7))
-lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#00FF00"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -311,9 +290,8 @@ pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FF00FF"))
 cells <- pt$findCells(variableNames="PowerType")
-lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#FF00FF"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -325,9 +303,8 @@ pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FF00FF"))
 cells <- pt$findCells(variableValues=list("PowerType"=c("DMU", "HST")))
-lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#FF00FF"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -339,9 +316,8 @@ pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FF00FF"))
 cells <- pt$findCells(variableValues=list("PowerType"=c("DMU", "HST"), "TOC"="London Midland"))
-lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#FF00FF"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -353,9 +329,8 @@ pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FF00FF"))
 cells <- pt$findCells(variableNames="PowerType", totals="only")
-lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#FF00FF"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -367,9 +342,8 @@ pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FF00FF"))
 cells <- pt$findCells(variableValues=list("PowerType"="**"))
-lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#FF00FF"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -381,9 +355,8 @@ pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FF00FF"))
 cells <- pt$findCells(variableValues=list("TrainCategory"="!*", "PowerType"="**"))
-lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#FF00FF"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -395,9 +368,8 @@ pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- pt$createInlineStyle(declarations=list("background-color"="#FF00FF"))
 cells <- pt$findCells(variableValues=list("TrainCategory"="**", "PowerType"="**", "TOC"="**"))
-lst <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#FF00FF"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE---------------------------------------
@@ -409,9 +381,8 @@ pt$addColumnDataGroups("PowerType")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-redStyle <- pt$createInlineStyle(declarations=list("background-color"="#FFC7CE", "color"="#9C0006"))
 cells <- pt$findCells(minValue=30000, maxValue=50000, includeNull=FALSE, includeNA=FALSE)
-lst <- lapply(cells, function(cell) {cell$style <- redStyle})
+pt$setStyling(cells=cells, declarations=list("background-color"="#FFC7CE", "color"="#9C0006"))
 pt$renderPivot()
 
 ## ---- warning=FALSE, message=FALSE---------------------------------------
@@ -458,20 +429,15 @@ pt$defineCalculation(calculationName="AvgDelayMins", type="calculation",
                      format="%.1f")
 pt$evaluatePivot()
 
-# define three cell styles
-greenStyle <- pt$createInlineStyle(declarations=list("background-color"="#C6EFCE", "color"="#006100"))
-yellowStyle <- pt$createInlineStyle(declarations=list("background-color"="#FFEB9C", "color"="#9C5700"))
-redStyle <- pt$createInlineStyle(declarations=list("background-color"="#FFC7CE", "color"="#9C0006"))
-
 # apply the green style for an average arrival delay of between 0 and 2 minutes
 cells <- pt$findCells(minValue=0, maxValue=2, includeNull=FALSE, includeNA=FALSE)
-lst <- lapply(cells, function(cell) {cell$style <- greenStyle})
+pt$setStyling(cells=cells, declarations=list("background-color"="#C6EFCE", "color"="#006100"))
 # apply the yellow style for an average arrival delay of between 2 and 4 minutes
 cells <- pt$findCells(minValue=2, maxValue=4, includeNull=FALSE, includeNA=FALSE)
-lst <- lapply(cells, function(cell) {cell$style <- yellowStyle})
+pt$setStyling(cells=cells, declarations=list("background-color"="#FFEB9C", "color"="#9C5700"))
 # apply the red style for an average arrival delay of 4 minutes or greater
 cells <- pt$findCells(minValue=4, includeNull=FALSE, includeNA=FALSE)
-lst <- lapply(cells, function(cell) {cell$style <- redStyle})
+pt$setStyling(cells=cells, declarations=list("background-color"="#FFC7CE", "color"="#9C0006"))
 pt$renderPivot()
 
 ## ---- warning=FALSE, message=FALSE---------------------------------------
@@ -560,12 +526,12 @@ backClrRed <- hexToClr("#FFC7CE")
 
 # specify some conditional formatting, calculating the appropriate text colour and back colour for each cell.
 cells <- pt$findCells(includeNull=FALSE, includeNA=FALSE)
-for(i in 1:length(cells)) {
-  cell <- cells[[i]]
+formatCell <- function(cell) {
   value <- cell$rawValue
   textClr <- scale3Colours(textClrGreen, textClrYellow, textClrRed, 0.5, 2, 4, value)
   backClr <- scale3Colours(backClrGreen, backClrYellow, backClrRed, 0.5, 2, 4, value)
-  cell$style <- pt$createInlineStyle(declarations=list("background-color"=backClr, "color"=textClr))
+  pt$setStyling(cells=cell, declarations=list("background-color"=backClr, "color"=textClr))
 }
+invisible(lapply(cells, formatCell))
 pt$renderPivot()
 

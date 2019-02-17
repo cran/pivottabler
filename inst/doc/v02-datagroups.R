@@ -65,11 +65,11 @@ pt$renderPivot()
 # then the month of each train from the date of each train
 library(dplyr)
 library(lubridate)
+library(pivottabler)
 trains <- mutate(bhmtrains, 
    GbttDate=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
    GbttMonth=make_date(year=year(GbttDate), month=month(GbttDate), day=1))
 
-library(pivottabler)
 pt <- PivotTable$new()
 pt$addData(trains)
 pt$addColumnDataGroups("GbttMonth")
@@ -83,11 +83,11 @@ pt$renderPivot()
 # then the month of each train from the date of each train
 library(dplyr)
 library(lubridate)
+library(pivottabler)
 trains <- mutate(bhmtrains, 
    GbttDate=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
    GbttMonth=make_date(year=year(GbttDate), month=month(GbttDate), day=1))
 
-library(pivottabler)
 pt <- PivotTable$new()
 pt$addData(trains)
 pt$addColumnDataGroups("GbttMonth", dataFormat=list(format="%B %Y"))
@@ -100,6 +100,7 @@ pt$renderPivot()
 # derive the date of each train (from the arrival/dep times), then the month of each train from the date of each train
 library(dplyr)
 library(lubridate)
+library(pivottabler)
 trains <- mutate(bhmtrains, 
    GbttDate=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
    GbttMonth=make_date(year=year(GbttDate), month=month(GbttDate), day=1))
@@ -109,7 +110,6 @@ formatDate <- function(x) {
   base::format(x, format="%B %Y")
 }
 
-library(pivottabler)
 pt <- PivotTable$new()
 pt$addData(trains)
 pt$addColumnDataGroups("GbttMonth", dataFormat=formatDate)

@@ -15,7 +15,7 @@ All calculations for the pivot tables take place inside R, enabling the use of a
 
 Pivot tables are rendered as htmlwidgets, Latex or plain text. The HTML/Latex/text can be exported for use outside of R.
 
-Pivot tables can be converted to a standard R matrix or data frame. Pivot tables can also be exported to Excel.
+Pivot tables can be converted to a standard R matrix or data frame. Pivot tables can be exported to Excel. Pivot tables can also be converted to a `basictabler` table for further manipulation.
 
 `pivottabler` is a companion package to the `basictabler` package. `pivottabler` is focussed on generating pivot tables and can aggregate data. `basictabler` does not aggregate data but offers more control of table structure.
 
@@ -140,6 +140,82 @@ pt$renderPivot()
 ```
 
 ![<http://cbailiss.me.uk/pivottablerreadmeimgs/example2.png>](http://cbailiss.me.uk/pivottablerreadmeimgs/example2.png)
+
+#### Multiple Calculations
+
+Multiple calculations are supported. Calculations can be based on other calculations in the pivot table. Calculations can be hidden - e.g. to hide calculations that only exist to provide values to other calculations.
+
+For example, looking at the total number of trains and the percentage of trains that arrive more than five minutes late for combinations of train operating company (TOC) and train category:
+
+``` r
+library(pivottabler)
+library(dplyr)
+library(lubridate)
+
+# derive train delay data
+trains <- mutate(bhmtrains,
+                 ArrivalDelta=difftime(ActualArrival, GbttArrival, units="mins"),
+                 ArrivalDelay=ifelse(ArrivalDelta<0, 0, ArrivalDelta),
+                 DelayedByMoreThan5Minutes=ifelse(ArrivalDelay>=5,1,0))
+
+# create the pivot table
+pt <- PivotTable$new()
+pt$addData(trains)
+pt$addRowDataGroups("TOC", totalCaption="All TOCs")
+pt$addColumnDataGroups("TrainCategory", totalCaption="All Trains")
+pt$defineCalculation(calculationName="TotalTrains", caption="Train Count", 
+                     summariseExpression="n()")
+pt$defineCalculation(calculationName="DelayedTrains", caption="Trains Arr. 5+ Mins Late", 
+                     summariseExpression="sum(DelayedByMoreThan5Minutes, na.rm=TRUE)",
+                     visible=FALSE)
+pt$defineCalculation(calculationName="DelayedPercent", caption="% Late Trains", 
+                     type="calculation", basedOn=c("DelayedTrains", "TotalTrains"), 
+                     format="%.1f %%",
+                     calculationExpression="values$DelayedTrains/values$TotalTrains*100")
+pt$renderPivot()
+```
+
+![<http://cbailiss.me.uk/pivottablerreadmeimgs/example6.png>](http://cbailiss.me.uk/pivottablerreadmeimgs/example6.png)
+
+It is also possible to change the axis (rows or columns) and level in which the calculations appear. See the "Calculations" vignette for details.
+
+More advanced calculations such as % of row total, cumulative sums, etc are possible. See the "A2. Appendix: Calculations" vignette for details.
+
+#### Styling Example
+
+Styling can be specified when creating the pivot table. The example below shows specifying styling using a quick-pivot function and using the more verbose syntax.
+
+``` r
+library(pivottabler)
+qhpvt(bhmtrains, "TOC", "TrainCategory", "n()", 
+      tableStyle=list("border-color"="maroon"),
+      headingStyle=list("color"="cornsilk", "background-color"="maroon", 
+                        "font-style"="italic", "border-color"="maroon"), 
+      cellStyle=list("color"="maroon", "background-color"="cornsilk", 
+                     "border-color"="maroon"),
+      totalStyle=list("color"="maroon", "background-color"="cornsilk", 
+                      "border-color"="maroon", "font-weight"="bold")) 
+```
+
+``` r
+library(pivottabler)
+pt <- PivotTable$new(tableStyle=list("border-color"="maroon"),
+                     headingStyle=list("color"="cornsilk", "background-color"="maroon", 
+                                       "font-style"="italic", "border-color"="maroon"), 
+                     cellStyle=list("color"="maroon", "background-color"="cornsilk", 
+                                    "border-color"="maroon"),
+                     totalStyle=list("color"="maroon", "background-color"="cornsilk", 
+                                     "border-color"="maroon", "font-weight"="bold"))
+pt$addData(bhmtrains)
+pt$addColumnDataGroups("TrainCategory")
+pt$addRowDataGroups("TOC")
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$renderPivot()
+```
+
+![<http://cbailiss.me.uk/pivottablerreadmeimgs/example5.png>](http://cbailiss.me.uk/pivottablerreadmeimgs/example5.png)
+
+It is also possible to change the styling of single cells and ranges of cells after the pivot table has been created. See the "Styling" and "Finding and Formatting" vignettes for more details.
 
 #### Excel Output
 

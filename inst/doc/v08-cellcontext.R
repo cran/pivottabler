@@ -15,9 +15,8 @@ pt$addColumnDataGroups("TrainCategory")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#00FF00"))
 cells <- pt$getCells(specifyCellsAsList=TRUE, cellCoordinates=list(c(3, 2)))
-cellCount <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#00FF00"))
 pt$renderPivot()
 
 ## ---- message=FALSE, warning=FALSE, message=FALSE------------------------
@@ -28,9 +27,8 @@ pt$addColumnDataGroups("TrainCategory")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#00FF00"))
 cells <- pt$getCells(specifyCellsAsList=TRUE, cellCoordinates=list(c(3, 2)))
-cellCount <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#00FF00"))
 pt$renderPivot(includeHeaderValues=TRUE, includeRCFilters=TRUE)
 
 ## ---- warning=FALSE, message=FALSE---------------------------------------
@@ -41,9 +39,8 @@ pt$addColumnDataGroups("TrainCategory")
 pt$addRowDataGroups("TOC")
 pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 pt$evaluatePivot()
-highlight <- PivotStyle$new(pt, "cellHighlight", list("background-color"="#00FF00"))
 cells <- pt$getCells(specifyCellsAsList=TRUE, cellCoordinates=list(c(3, 2)))
-cellCount <- lapply(cells, function(cell) {cell$style <- highlight})
+pt$setStyling(cells=cells, declarations=list("background-color"="#00FF00"))
 pt$renderPivot(includeHeaderValues=TRUE, includeRCFilters=TRUE, 
                includeCalculationFilters=TRUE, includeWorkingData=TRUE, includeEvaluationFilters=TRUE,
                includeCalculationNames=TRUE, includeRawValue=TRUE, includeTotalInfo=TRUE)
