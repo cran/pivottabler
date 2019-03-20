@@ -34,9 +34,11 @@ getPvtStyleDeclarations <- function(pvtStyle=NULL) {
 #'
 #' @param pvt The pivot table to convert.
 #' @param exportOptions Options specifying how values are exported.
+#' @param compatibility Compatibility options specified when creating the
+#'   basictabler table.
 #' @return a basictabler table.
 
-convertPvtTblToBasicTbl <- function(pvt=NULL, exportOptions=NULL) {
+convertPvtTblToBasicTbl <- function(pvt=NULL, exportOptions=NULL, compatibility=NULL) {
   # pre-reqs
   if (!requireNamespace("basictabler", quietly = TRUE)) {
     stop("convertPvtTblToBasicTbl():  The basictabler package is needed convert a pivot tabler to a basic table.  Please install the basictabler package.", call. = FALSE)
@@ -45,8 +47,10 @@ convertPvtTblToBasicTbl <- function(pvt=NULL, exportOptions=NULL) {
   if(numeric_version(basictblrversion) < numeric_version("0.2.0")) {
     stop("convertPvtTblToBasicTbl():  Version 0.2.0 or above of the basictabler package is needed to convert a pivot table to a basic table.  Please install an updated version of the basictabler package.", call. = FALSE)
   }
+  isBasicTblrZeroPt3 <- numeric_version(basictblrversion) >= numeric_version("0.3.0")
   # create the new basic table
-  btbl <- basictabler::BasicTable$new()
+  if(isBasicTblrZeroPt3) btbl <- basictabler::BasicTable$new(compatibility=compatibility)
+  else btbl <- basictabler::BasicTable$new()
   # copy the styles over from the pivot table
   themeName <- pvt$theme
   if(is.null(themeName)) themeName <- "pivot_theme"
@@ -100,15 +104,22 @@ convertPvtTblToBasicTbl <- function(pvt=NULL, exportOptions=NULL) {
   bc <- 0 # this is reset to 1 on each new row
   # render the column headings, with a large blank cell at the start over the row headings
   if(insertDummyColumnHeading) {
-    btbl$cells$setBlankCell(r=1, c=1, cellType="root", visible=TRUE, rowSpan=columnGroupLevelCount, colSpan=rowGroupLevelCount)
-    btbl$cells$setBlankCell(r=1, c=2, cellType="columnHeader", visible=TRUE)
+    if(isBasicTblrZeroPt3) {
+      btbl$cells$setBlankCell(r=1, c=1, cellType="root", visible=TRUE, rowSpan=columnGroupLevelCount, colSpan=rowGroupLevelCount, asNBSP=TRUE)
+      btbl$cells$setBlankCell(r=1, c=2, cellType="columnHeader", visible=TRUE, asNBSP=TRUE)
+    }
+    else {
+      btbl$cells$setBlankCell(r=1, c=1, cellType="root", visible=TRUE, rowSpan=columnGroupLevelCount, colSpan=rowGroupLevelCount)
+      btbl$cells$setBlankCell(r=1, c=2, cellType="columnHeader", visible=TRUE)
+    }
     br <- 1
   }
   else {
     for(r in 1:columnGroupLevelCount) {
       br <- br + 1
       if(r==1) { # generate the large top-left blank cell
-        btbl$cells$setBlankCell(r=1, c=1, cellType="root", visible=TRUE, rowSpan=columnGroupLevelCount, colSpan=rowGroupLevelCount)
+        if(isBasicTblrZeroPt3) { btbl$cells$setBlankCell(r=1, c=1, cellType="root", visible=TRUE, rowSpan=columnGroupLevelCount, colSpan=rowGroupLevelCount, asNBSP=TRUE) }
+        else { btbl$cells$setBlankCell(r=1, c=1, cellType="root", visible=TRUE, rowSpan=columnGroupLevelCount, colSpan=rowGroupLevelCount) }
       }
       bc <- rowGroupLevelCount
       # get the groups at this level
@@ -130,7 +141,8 @@ convertPvtTblToBasicTbl <- function(pvt=NULL, exportOptions=NULL) {
     # render the row headings
     if(insertDummyRowHeading) {
       bc <- bc + 1
-      btbl$cells$setBlankCell(ri=br, c=bc, cellType="rowHeader", visible=TRUE)
+      if(isBasicTblrZeroPt3) { btbl$cells$setBlankCell(ri=br, c=bc, cellType="rowHeader", visible=TRUE, asNBSP=TRUE) }
+      else { btbl$cells$setBlankCell(ri=br, c=bc, cellType="rowHeader", visible=TRUE) }
     }
     else {
       # get the leaf row group, then render any parent data groups that haven't yet been rendered

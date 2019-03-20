@@ -1,7 +1,7 @@
 Package: pivottabler
 Type: Package
 Title: Create Pivot Tables in R
-Version: 1.1.0
+Version: 1.2.0
 Authors@R: person("Christopher", "Bailiss", email = "cbailiss@gmail.com",
   role = c("aut", "cre"))
 Description: Create regular pivot tables with just a few lines of R.  
@@ -25,8 +25,8 @@ BugReports: https://github.com/cbailiss/pivottabler/issues
 VignetteBuilder: knitr
 RoxygenNote: 6.1.1
 NeedsCompilation: no
-Packaged: 2019-02-17 13:21:15 UTC; Chris
+Packaged: 2019-03-20 17:33:50 UTC; Chris
 Author: Christopher Bailiss [aut, cre]
 Maintainer: Christopher Bailiss <cbailiss@gmail.com>
 Repository: CRAN
-Date/Publication: 2019-02-17 13:50:03 UTC
+Date/Publication: 2019-03-20 23:30:06 UTC

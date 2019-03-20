@@ -84,7 +84,7 @@
 #'   groups based on the distinct values in a data frame or using explicitly
 #'   specified data values.}
 #'   \item{\code{normaliseColumnGroups() }}{Normalise the column heading data
-#'   group hierachy so that all branches have the same number of levels -
+#'   group hierarchy so that all branches have the same number of levels -
 #'   accomplished by adding empty child data groups where needed.}
 #'   \item{\code{sortColumnDataGroups(levelNumber=1, orderBy="calculation",
 #'   sortOrder="desc", calculationGroupName="default", calculationName)}}{Sort
@@ -103,7 +103,7 @@
 #'   groups based on the distinct values in a data frame or using explicitly
 #'   specified data values.}
 #'   \item{\code{normaliseRowGroups()}}{Normalise the row heading data group
-#'   hierachy so that all branches have the same number of levels - accomplished
+#'   hierarchy so that all branches have the same number of levels - accomplished
 #'   by adding empty child data groups where needed.}
 #'   \item{\code{sortRowDataGroups(levelNumber=1, orderBy="calculation",
 #'   sortOrder="desc", calculationGroupName="default", calculationName)}}{Sort
@@ -733,7 +733,7 @@ PivotTable <- R6::R6Class("PivotTable",
             if(!missing(style)) { grp$style <- ifelse(is.null(style), NULL, style$getCopy()) }
             if((!missing(declarations))&&(!is.null(declarations))) {
               if (is.null(grp$style)) { grp$style <- PivotStyle$new(parentPivot=self, declarations=declarations) }
-              else { grp$setPropertyValues(declarations) }
+              else { grp$style$setPropertyValues(declarations) }
             }
           }
         }
@@ -749,7 +749,7 @@ PivotTable <- R6::R6Class("PivotTable",
             if(!missing(style)) { cell$style <- ifelse(is.null(style), NULL, style$getCopy()) }
             if((!missing(declarations))&&(!is.null(declarations))) {
               if (is.null(cell$style)) { cell$style <- PivotStyle$new(parentPivot=self, declarations=declarations) }
-              else { cell$setPropertyValues(declarations) }
+              else { cell$style$setPropertyValues(declarations) }
             }
           }
         }
@@ -767,7 +767,7 @@ PivotTable <- R6::R6Class("PivotTable",
               if(!missing(style)) { cell$style <- ifelse(is.null(style), NULL, style$getCopy()) }
               if((!missing(declarations))&&(!is.null(declarations))) {
                 if (is.null(cell$style)) { cell$style <- PivotStyle$new(parentPivot=self, declarations=declarations) }
-                else { cell$setPropertyValues(declarations) }
+                else { cell$style$setPropertyValues(declarations) }
               }
             }
           }
@@ -1493,15 +1493,16 @@ PivotTable <- R6::R6Class("PivotTable",
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$asTidyDataFrame", "Got pivot table as a tidy data frame.")
       return(invisible(as.data.frame(df, stringsAsFactors=stringsAsFactors)))
     },
-    asBasicTable = function(exportOptions=NULL) {
+    asBasicTable = function(exportOptions=NULL, compatibility=NULL) {
       timeStart <- proc.time()
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asBasicTable", exportOptions, missing(exportOptions), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asBasicTable", compatibility, missing(compatibility), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", allowedListElementClasses=c("character", "integer", "numeric", "logical"))
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$asBasicTable", "Converting to basic table...")
       if(!private$p_evaluated) stop("PivotTable$getHtml():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
       if(is.null(private$p_cells)) stop("PivotTable$getHtml():  No cells exist to render.", call. = FALSE)
-      btbl <- convertPvtTblToBasicTbl(self, exportOptions)
+      btbl <- convertPvtTblToBasicTbl(self, exportOptions, compatibility)
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$asBasicTable", "Converted to basic table.")
       private$addTiming("asBasicTable", timeStart)
       return(invisible(btbl))
