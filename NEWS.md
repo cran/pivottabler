@@ -1,3 +1,13 @@
+pivottabler 1.2.1
+=================
+
+Overview
+--------
+
+This release includes one small bug fix only:
+Calling pt$asDataFrame() on a pivot table containing blank/NA cells now succeeds without an error (issue #20).
+
+
 pivottabler 1.2.0
 ================
 
