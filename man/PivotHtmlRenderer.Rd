@@ -5,9 +5,6 @@
 \alias{PivotHtmlRenderer}
 \title{A class that renders a pivot table in HTML.}
 \format{\code{\link{R6Class}} object.}
-\usage{
-PivotHtmlRenderer
-}
 \value{
 Object of \code{\link{R6Class}} with properties and methods that
   render to HTML.
@@ -35,7 +32,8 @@ The PivotHtmlRenderer class creates a HTML representation of a pivot table.
   includeRCFilters=FALSE, includeCalculationFilters=FALSE,
   includeWorkingData=FALSE, includeEvaluationFilters=FALSE,
   includeCalculationNames=FALSE, includeRawValue=FALSE,
-  includeTotalInfo=FALSE, exportOptions=NULL)}}{Get a HTML
+  includeTotalInfo=FALSE, exportOptions=NULL,
+  showRowGroupHeaders=FALSE)}}{Get a HTML
   representation of the pivot table,
   optionally including additional detail for debugging purposes.}
 }
@@ -45,4 +43,3 @@ The PivotHtmlRenderer class creates a HTML representation of a pivot table.
 # This class should only be created by the pivot table.
 # It is not intended to be created outside of the pivot table.
 }
-\keyword{datasets}

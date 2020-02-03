@@ -69,44 +69,69 @@
 #'   compatibility=NULL, traceEnabled=FALSE, traceFile=NULL)}}{Create a new
 #'   pivot table, optionally specifying styling and enabling debug logging.}
 #'
+#'   \item{\code{getNextInstanceId()}}{Return a unique object identifier.}
 #'   \item{\code{addData(df, dataName)}}{Add a data frame with the specified
 #'   name to the pivot table.}
 #'   \item{\code{getTopColumnGroups()}}{Get the very top column PivotDataGroup
 #'   that sits at the top of the parent-child hierarchy.}
 #'   \item{\code{getLeafColumnGroups()}}{Get the PivotDataGroups at the bottom
 #'   of the column heading parent-child hierarchy.}
+#'   \item{\code{addColumnGroup(variableName, filterType="ALL", values=NULL,
+#'   doNotExpand=FALSE, isEmpty=FALSE, isOutline=FALSE, caption=NULL,
+#'   isTotal=FALSE, isLevelSubTotal=FALSE, isLevelTotal=FALSE,
+#'   calculationGroupName=NULL, calculationName=NULL,
+#'   baseStyleName=NULL, styleDeclarations=NULL,
+#'   insertAtIndex=NULL, insertBeforeGroup=NULL, insertAfterGroup=NULL,
+#'   mergeEmptySpace=NULL, cellBaseStyleName=NULL,
+#'   cellStyleDeclarations=NULL, sortAnchor=NULL, resetCells=TRUE)}}{
+#'   Add a new top-level column heading data group to the pivot table.}
 #'   \item{\code{addColumnDataGroups(variableName, atLevel, fromData=TRUE,
-#'   dataName, dataSortOrder="asc", dataFormat, onlyCombinationsThatExist=TRUE,
+#'   dataName, dataSortOrder="asc", dataFormat, dataFmtFuncArgs,
+#'   onlyCombinationsThatExist=TRUE,
 #'   explicitListOfValues, calculationGroupName, expandExistingTotals=FALSE,
 #'   addTotal=TRUE, visualTotals=FALSE, totalPosition="after",
 #'   totalCaption="Total", preGroupData=TRUE, baseStyleName=NULL,
 #'   styleDeclarations=NULL)}}{Generate new column heading data
 #'   groups based on the distinct values in a data frame or using explicitly
 #'   specified data values.}
-#'   \item{\code{normaliseColumnGroups() }}{Normalise the column heading data
-#'   group hierarchy so that all branches have the same number of levels -
-#'   accomplished by adding empty child data groups where needed.}
+#'   \item{\code{normaliseColumnGroups(resetCells=TRUE) }}{Normalise the
+#'   column heading data group hierarchy so that all branches have the same
+#'   number of levels - accomplished by adding empty child data groups where
+#'   needed.}
 #'   \item{\code{sortColumnDataGroups(levelNumber=1, orderBy="calculation",
-#'   sortOrder="desc", calculationGroupName="default", calculationName)}}{Sort
+#'   sortOrder="desc", calculationGroupName="default", calculationName,
+#'   fromIndex=NULL, toIndex=NULL, resetCells=TRUE)}}{Sort
 #'   the column heading data groups either by the data group data value, caption
 #'   or based on calculation result values.}
 #'   \item{\code{getTopRowGroups()}}{Get the left-most row PivotDataGroup that
 #'   sits at the top of the parent-child hierarchy.}
 #'   \item{\code{getLeafRowGroups()}}{Get the PivotDataGroups at the bottom of
 #'   the row heading parent-child hierarchy.}
+#'   \item{\code{addRowGroup(variableName, filterType="ALL", values=NULL,
+#'   doNotExpand=FALSE, isEmpty=FALSE, isOutline=FALSE, caption=NULL,
+#'   isTotal=FALSE, isLevelSubTotal=FALSE, isLevelTotal=FALSE,
+#'   calculationGroupName=NULL, calculationName=NULL,
+#'   baseStyleName=NULL, styleDeclarations=NULL,
+#'   insertAtIndex=NULL, insertBeforeGroup=NULL, insertAfterGroup=NULL,
+#'   mergeEmptySpace=NULL, cellBaseStyleName=NULL,
+#'   cellStyleDeclarations=NULL, sortAnchor=NULL, resetCells=TRUE)}}{
+#'   Add a new top-level row heading data group to the pivot table.}
 #'   \item{\code{addRowDataGroups(variableName, atLevel, fromData=TRUE,
-#'   dataName, dataSortOrder="asc", dataFormat, onlyCombinationsThatExist=TRUE,
+#'   dataName, dataSortOrder="asc", dataFormat, dataFmtFuncArgs,
+#'   onlyCombinationsThatExist=TRUE,
 #'   explicitListOfValues, calculationGroupName, expandExistingTotals=FALSE,
 #'   addTotal=TRUE, visualTotals=FALSE, totalPosition="after",
 #'   totalCaption="Total", preGroupData=TRUE, baseStyleName=NULL,
-#'   styleDeclarations=NULL)}}{Generate new row heading data
+#'   styleDeclarations=NULL, header=NULL, outlineBefore=NULL,
+#'   outlineAfter=NULL)}}{Generate new row heading data
 #'   groups based on the distinct values in a data frame or using explicitly
 #'   specified data values.}
-#'   \item{\code{normaliseRowGroups()}}{Normalise the row heading data group
-#'   hierarchy so that all branches have the same number of levels - accomplished
-#'   by adding empty child data groups where needed.}
+#'   \item{\code{normaliseRowGroups(resetCells=TRUE)}}{Normalise the row heading
+#'   data group hierarchy so that all branches have the same number of
+#'   levels - accomplished by adding empty child data groups where needed.}
 #'   \item{\code{sortRowDataGroups(levelNumber=1, orderBy="calculation",
-#'   sortOrder="desc", calculationGroupName="default", calculationName)}}{Sort
+#'   sortOrder="desc", calculationGroupName="default", calculationName,
+#'   fromIndex=NULL, toIndex=NULL, resetCells=TRUE)}}{Sort
 #'   the row heading data groups either by the data group data value, caption or
 #'   based on calculation result values.}
 #'   \item{\code{addCalculationGroup(calculationGroupName)}}{Create a new
@@ -149,37 +174,48 @@
 #'   evaluateCells() in sequence.}
 #'   \item{\code{findRowDataGroups(matchMode="simple", variableNames=NULL,
 #'   variableValues=NULL, totals="include", calculationNames=NULL,
-#'   includeDescendantGroups=FALSE)}}{Find row data groups matching the
-#'   specified criteria.}
+#'   includeDescendantGroups=FALSE, emptyGroups="exclude",
+#'   outlineGroups="exclude")}}{Find row data
+#'   groups matching the specified criteria.}
 #'   \item{\code{findColumnDataGroups(matchMode="simple", variableNames=NULL,
 #'   variableValues=NULL, totals="include", calculationNames=NULL,
-#'   includeDescendantGroups=FALSE)}}{Find column data groups matching the
-#'   specified criteria.}
+#'   includeDescendantGroups=FALSE, emptyGroups="exclude",
+#'   outlineGroups="exclude")}}{Find column
+#'   data groups matching the specified criteria.}
 #'   \item{\code{getCells(specifyCellsAsList=FALSE, rowNumbers=NULL,
-#'   columnNumbers=NULL, cellCoordinates=NULL)}}{Retrieve cells by a combination
-#'   of row and/or column numbers.}
+#'   columnNumbers=NULL, cellCoordinates=NULL, excludeEmptyCells=TRUE)}}{
+#'   Retrieve cells by a combination of row and/or column numbers.}
 #'   \item{\code{findCells(variableNames=NULL, variableValues=NULL,
 #'   totals="include", calculationNames=NULL, minValue=NULL, maxValue=NULL,
-#'   exactValues=NULL, includeNull=TRUE, includeNA=TRUE)}}{Find cells in the
+#'   exactValues=NULL, includeNull=TRUE, includeNA=TRUE,
+#'   emptyCells="exclude", outlineCells="exclude")}}{Find cells in the
 #'   body of the pivot table matching the specified criteria.}
-#'   \item{\code{print(asCharacter=FALSE)}}{Either print the pivot table to the
-#'   console or retrieve it as a character value.}
+#'   \item{\code{print(asCharacter=FALSE, showRowGroupHeaders=TRUE)}}{Either
+#'   print the pivot table to the console or retrieve it as a character value.}
 #'   \item{\code{asMatrix(includeHeaders=TRUE, repeatHeaders=FALSE,
-#'   rawValue=FALSE)}}{Gets the pivot table as a matrix, with or without
-#'   headings.}
+#'   rawValue=FALSE)}}{Gets the pivot table as a character matrix, with the
+#'   pivot table row/column headings within the body of the matrix.}
+#'   \item{\code{asDataMatrix = function(includeHeaders=TRUE, rawValue=TRUE,
+#'   separator=" ")}}{Gets the pivot table as a matrix, with the pivot table
+#'   row/column headings set as the row/column names in the matrix.}
 #'   \item{\code{asDataFrame(separator=" ")}}{Gets the pivot table as a data
 #'   frame, combining multiple levels of headings with the specified separator.}
 #'   \item{\code{asTidyDataFrame(includeGroupCaptions=TRUE,
-#'   includeGroupValues=TRUE, separator=" ")}}{Gets the pivot table as a tidy
-#'   data frame, where each cell in the body of the pivot table becomes one row
-#'   in the data frame.}
+#'   includeGroupValues=TRUE, separator=" ", excludeEmptyCells=TRUE)}}{Gets the
+#'   pivot table as a tidy data frame, where each cell in the body of the pivot
+#'   table becomes one row in the data frame.}
+#'   \item{\code{asBasicTable = function(exportOptions=NULL, compatibility=NULL,
+#'   showRowGroupHeaders=FALSE))}}{Generates a basictabler table (from the
+#'   basictabler R package) which allows further custom manipulation of the
+#'   pivot table.}
 #'   \item{\code{getCss(styleNamePrefix)}}{Get the CSS declarations for the
 #'   entire pivot table.}
 #'   \item{\code{getHtml(styleNamePrefix, includeHeaderValues=FALSE,
 #'   includeRCFilters=FALSE, includeCalculationFilters=FALSE,
 #'   includeWorkingData=FALSE, includeEvaluationFilters=FALSE,
 #'   includeCalculationNames=FALSE, includeRawValue=FALSE,
-#'   includeTotalInfo=FALSE, exportOptions=NULL)}}{Get
+#'   includeTotalInfo=FALSE, exportOptions=NULL,
+#'   showRowGroupHeaders=FALSE)}}{Get
 #'   the HTML representation of the pivot table,
 #'   specifying the CSS style name prefix to use and whether additional debug
 #'   information should be included in the pivot table.}
@@ -188,13 +224,14 @@
 #'   includeCalculationFilters=FALSE, includeWorkingData=FALSE,
 #'   includeEvaluationFilters=FALSE, includeCalculationNames=FALSE,
 #'   includeRawValue=FALSE, includeTotalInfo=FALSE,
-#'   exportOptions=NULL)}}{Save the HTML
+#'   exportOptions=NULL, showRowGroupHeaders=FALSE)}}{Save the HTML
 #'   representation of the pivot table to a file.}
 #'   \item{\code{renderPivot(width, height, styleNamePrefix,
 #'   includeHeaderValues=FALSE, includeRCFilters=FALSE,
 #'   includeCalculationFilters=FALSE, includeWorkingData=FALSE,
 #'   includeEvaluationFilters=FALSE, includeCalculationNames=FALSE,
-#'   includeRawValue=FALSE, includeTotalInfo=FALSE, exportOptions=NULL)}}{
+#'   includeRawValue=FALSE, includeTotalInfo=FALSE,
+#'   exportOptions=NULL, showRowGroupHeaders=FALSE)}}{
 #'   Render the pivot table as a htmlwidget.}
 #'   \item{\code{getLatex(caption=NULL, label=NULL, fromRow=NULL, toRow=NULL,
 #'   fromColumn=NULL, toColumn=NULL, boldHeadings=FALSE,
@@ -271,10 +308,12 @@ PivotTable <- R6::R6Class("PivotTable",
       }
       else stop("PivotTable$initialize():  Unknown processingLibrary encountered.", call. = FALSE)
       private$p_evaluationMode <- evaluationMode
+      private$p_lastInstanceId <- 0
       # Create the basic parts of the pivot table
       private$p_data <- PivotData$new(parentPivot=self)
       private$p_rowGroup <- PivotDataGroup$new(parentPivot=self, parentGroup=NULL, rowOrColumn="row", isLevelTotal=TRUE)
       private$p_columnGroup <- PivotDataGroup$new(parentPivot=self, parentGroup=NULL, rowOrColumn="column", isLevelTotal=TRUE)
+      private$p_rowGrpHeaders <- list()
       private$p_calculationsPosition <- NULL
       private$p_calculationGroups <- PivotCalculationGroups$new(parentPivot=self)
       private$p_cells <- PivotCells$new(self)
@@ -383,6 +422,10 @@ PivotTable <- R6::R6Class("PivotTable",
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$new", "Created new Pivot Table.")
       return(invisible())
     },
+    getNextInstanceId = function() { # used for reliable object instance comparisons (since R6 cannot easily compare object instances)
+      private$p_lastInstanceId <- private$p_lastInstanceId + 1
+      return(invisible(private$p_lastInstanceId))
+    },
     addData = function(dataFrame=NULL, dataName=NULL) {
       timeStart <- proc.time()
       if(private$p_argumentCheckMode > 0) {
@@ -398,23 +441,76 @@ PivotTable <- R6::R6Class("PivotTable",
       return(invisible(private$p_data))
     },
     getTopColumnGroups = function() {
+      .Deprecated(new="topColumnGroups")
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getTopColumnGroups", "Getting top level column groups...")
       grps <- private$p_columnGroup$childGroups
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getTopColumnGroups", "Got top level column groups", list(count = length(grps)))
       return(invisible(grps))
     },
     getLeafColumnGroups = function() {
+      .Deprecated(new="leafColumnGroups")
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getLeafColumnGroups", "Getting leaf level column groups...")
       leafGroups = list()
       grps <- private$p_columnGroup$getLeafGroups(leafGroups)
-      if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getTopColumnGroups", "Got leaf level column groups", list(count = length(grps)))
+      if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getLeafColumnGroups", "Got leaf level column groups", list(count = length(grps)))
       return(invisible(grps))
     },
+    addColumnGroup = function(variableName=NULL, filterType="ALL", values=NULL,
+                             doNotExpand=FALSE, isEmpty=FALSE, isOutline=FALSE, caption=NULL,
+                             isTotal=FALSE, isLevelSubTotal=FALSE, isLevelTotal=FALSE,
+                             calculationGroupName=NULL, calculationName=NULL,
+                             baseStyleName=NULL, styleDeclarations=NULL,
+                             insertAtIndex=NULL, insertBeforeGroup=NULL, insertAfterGroup=NULL,
+                             mergeEmptySpace=NULL, cellBaseStyleName=NULL, cellStyleDeclarations=NULL,
+                             sortAnchor=NULL, resetCells=TRUE) {
+      if(private$p_argumentCheckMode > 0) {
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", variableName, missing(variableName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", filterType, missing(filterType), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("ALL", "VALUES", "NONE"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", values, missing(values), allowMissing=TRUE, allowNull=TRUE, mustBeAtomic=TRUE)
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", doNotExpand, missing(doNotExpand), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", isEmpty, missing(isEmpty), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", isOutline, missing(isOutline), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", caption, missing(caption), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("character", "integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", isTotal, missing(isTotal), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", isLevelSubTotal, missing(isLevelSubTotal), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", isLevelTotal, missing(isLevelTotal), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", calculationGroupName, missing(calculationGroupName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", calculationName, missing(calculationName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", baseStyleName, missing(baseStyleName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", styleDeclarations, missing(styleDeclarations), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", allowedListElementClasses=c("character", "integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", insertAtIndex, missing(insertAtIndex), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", insertBeforeGroup, missing(insertBeforeGroup), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotDataGroup")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", insertAfterGroup, missing(insertAfterGroup), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotDataGroup")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", mergeEmptySpace, missing(mergeEmptySpace), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character", allowedValues=c("doNotMerge", "dataGroupsOnly", "cellsOnly", "dataGroupsAndCellsAs1", "dataGroupsAndCellsAs2"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", cellBaseStyleName, missing(cellBaseStyleName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", cellStyleDeclarations, missing(cellStyleDeclarations), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", allowedListElementClasses=c("character", "integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", sortAnchor, missing(sortAnchor), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character", allowedValues=c("fixed", "next", "previous"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", resetCells, missing(resetCells), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+      }
+      if(private$p_argumentCheckMode==TRUE) private$p_traceEnabled("PivotTable$addColumnGroup", "Adding column group...",
+                                                                   list(caption=caption, doNotExpand=doNotExpand, isEmpty=isEmpty, isOutline=isOutline, isTotal=isTotal,
+                                                                        variableName=variableName, values=values,
+                                                                        calculationGroupName=calculationGroupName, calculationName=calculationName,
+                                                                        baseStyleName=baseStyleName, styleDeclarations=styleDeclarations,
+                                                                        mergeEmptySpace=mergeEmptySpace, cellBaseStyleName=cellBaseStyleName,
+                                                                        cellStyleDeclarations=cellStyleDeclarations, sortAnchor=sortAnchor,
+                                                                        resetCells=resetCells))
+      grp <- private$p_columnGroup$addChildGroup(variableName=variableName, filterType=filterType, values=values,
+                                                 doNotExpand=doNotExpand, isEmpty=isEmpty, isOutline=isOutline, caption=caption,
+                                                 isTotal=isTotal, isLevelSubTotal=isLevelSubTotal, isLevelTotal=isLevelTotal,
+                                                 calculationGroupName=calculationGroupName, calculationName=calculationName,
+                                                 baseStyleName=baseStyleName, styleDeclarations=styleDeclarations,
+                                                 insertAtIndex=insertAtIndex, insertBeforeGroup=insertBeforeGroup, insertAfterGroup=insertAfterGroup,
+                                                 mergeEmptySpace=mergeEmptySpace, cellBaseStyleName=cellBaseStyleName, cellStyleDeclarations=cellStyleDeclarations,
+                                                 sortAnchor=sortAnchor, resetCells=resetCells)
+      if(private$p_argumentCheckMode==TRUE) private$p_traceEnabled("PivotTable$addColumnGroup", "Added column group.")
+      return(invisible(grp))
+    },
     addColumnDataGroups = function(variableName=NULL, atLevel=NULL, fromData=TRUE, # atLevel=1 is the top level, (since 1 is the top level as visible to the user)
-                                   dataName=NULL, dataSortOrder="asc", dataFormat=NULL, onlyCombinationsThatExist=TRUE,
-                                   explicitListOfValues=NULL, calculationGroupName=NULL,
+                                   dataName=NULL, dataSortOrder="asc", dataFormat=NULL, dataFmtFuncArgs=NULL,
+                                   onlyCombinationsThatExist=TRUE, explicitListOfValues=NULL, calculationGroupName=NULL,
                                    expandExistingTotals=FALSE, addTotal=TRUE, visualTotals=FALSE, totalPosition="after", totalCaption="Total",
-                                   preGroupData=TRUE, baseStyleName=NULL, styleDeclarations=NULL) {
+                                   preGroupData=TRUE, baseStyleName=NULL, styleDeclarations=NULL, outlineBefore=NULL, outlineAfter=NULL) {
       timeStart <- proc.time()
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnDataGroups", variableName, missing(variableName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
@@ -423,6 +519,7 @@ PivotTable <- R6::R6Class("PivotTable",
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnDataGroups", dataName, missing(dataName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnDataGroups", dataSortOrder, missing(dataSortOrder), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("asc", "desc", "none"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnDataGroups", dataFormat, missing(dataFormat), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("character", "list", "function"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnDataGroups", dataFmtFuncArgs, missing(dataFmtFuncArgs), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnDataGroups", onlyCombinationsThatExist, missing(onlyCombinationsThatExist), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnDataGroups", explicitListOfValues, missing(explicitListOfValues), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", listElementsMustBeAtomic=TRUE)
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnDataGroups", calculationGroupName, missing(calculationGroupName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
@@ -437,18 +534,18 @@ PivotTable <- R6::R6Class("PivotTable",
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$addColumnDataGroups", "Adding column groups...",
                    list(variableName=variableName, atLevel=atLevel, fromData=fromData,
-                        dataName=dataName, dataSortOrder=dataSortOrder, dataFormat=dataFormat,
+                        dataName=dataName, dataSortOrder=dataSortOrder, dataFormat=dataFormat, dataFmtFuncArgs=dataFmtFuncArgs,
                         onlyCombinationsThatExist=onlyCombinationsThatExist, explicitListOfValues=explicitListOfValues,
                         calculationGroupName=calculationGroupName, expandExistingTotals=expandExistingTotals,
                         addTotal=addTotal, visualTotals=visualTotals, totalPosition=totalPosition, totalCaption=totalCaption,
                         preGroupData=preGroupData, baseStyleName=baseStyleName, styleDeclarations=styleDeclarations))
       if((!is.null(styleDeclarations))&&(length(styleDeclarations)!=length(names(styleDeclarations))))
         stop("PivotTable$addColumnDataGroups(): One or more style declarations are missing a name.", call. = FALSE)
-      self$resetCells()
       levelsBelow <- NULL
       if((!is.null(atLevel))&&(atLevel>0)) levelsBelow <- atLevel - 1
       grp <- private$p_columnGroup$addDataGroups(variableName=variableName, atLevel=levelsBelow, fromData=fromData,
-                                                 dataName=dataName, dataSortOrder=dataSortOrder, dataFormat=dataFormat,
+                                                 dataName=dataName, dataSortOrder=dataSortOrder,
+                                                 dataFormat=dataFormat, dataFmtFuncArgs=dataFmtFuncArgs,
                                                  onlyCombinationsThatExist=onlyCombinationsThatExist, explicitListOfValues=explicitListOfValues,
                                                  calculationGroupName=calculationGroupName,
                                                  expandExistingTotals=expandExistingTotals, addTotal=addTotal,
@@ -458,16 +555,16 @@ PivotTable <- R6::R6Class("PivotTable",
       private$addTiming(paste0("addColumnDataGroups(", variableName, ")"), timeStart)
       return(invisible(grp))
     },
-    normaliseColumnGroups = function() {
+    normaliseColumnGroups = function(resetCells=TRUE) {
       timeStart <- proc.time()
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$normaliseColumnGroups", "Normalising column groups...")
-      self$resetCells()
-      groupsAdded <- private$p_columnGroup$normaliseDataGroup()
+      groupsAdded <- private$p_columnGroup$normaliseDataGroup(resetCells)
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$normaliseColumnGroups", "Normalised column groups.", list(groupsAdded = groupsAdded))
       private$addTiming("normaliseColumnGroups", timeStart)
       return(invisible())
     },
-    sortColumnDataGroups = function(levelNumber=1, orderBy="calculation", sortOrder="desc", calculationGroupName="default", calculationName=NULL) {
+    sortColumnDataGroups = function(levelNumber=1, orderBy="calculation", sortOrder="desc", calculationGroupName="default", calculationName=NULL,
+                                    fromIndex=NULL, toIndex=NULL, resetCells=TRUE) {
       timeStart <- proc.time()
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "sortColumnDataGroups", levelNumber, missing(levelNumber), allowMissing=TRUE, allowNull=FALSE, allowedClasses=c("integer", "numeric"))
@@ -475,35 +572,94 @@ PivotTable <- R6::R6Class("PivotTable",
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "sortColumnDataGroups", sortOrder, missing(sortOrder), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("asc","desc"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "sortColumnDataGroups", calculationGroupName, missing(calculationGroupName), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "sortColumnDataGroups", calculationName, missing(calculationName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "sortColumnDataGroups", fromIndex, missing(fromIndex), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "sortColumnDataGroups", toIndex, missing(toIndex), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "sortColumnDataGroups", resetCells, missing(resetCells), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$sortColumnDataGroups", "Sorting column data groups...",
                     list(levelNumber=levelNumber, orderBy=orderBy, sortOrder=sortOrder,
-                         calculationGroupName=calculationGroupName, calculationName=calculationName))
+                         calculationGroupName=calculationGroupName, calculationName=calculationName,
+                         fromIndex=fromIndex, toIndex=toIndex, resetCells=resetCells))
       if(levelNumber<1) stop("PivotTable$sortColumnDataGroups():  levelNumber must be 1 or above.", call. = FALSE)
       private$p_columnGroup$sortDataGroups(levelNumber=levelNumber-1, orderBy=orderBy, sortOrder=sortOrder,
-                                           calculationGroupName=calculationGroupName, calculationName=calculationName)
+                                           calculationGroupName=calculationGroupName, calculationName=calculationName,
+                                           fromIndex=fromIndex, toIndex=toIndex, resetCells=resetCells)
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$sortColumnDataGroups", "Sorted column data groups.")
       private$addTiming("sortColumnDataGroups", timeStart)
       return(invisible())
     },
     getTopRowGroups = function() {
+      .Deprecated(new="topRowGroups")
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getTopRowGroups", "Getting top level row groups...")
       grps <- private$p_rowGroup$childGroups
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getTopRowGroups", "Got top level row groups", list(count = length(grps)))
       return(invisible(grps))
     },
     getLeafRowGroups = function() {
+      .Deprecated(new="leafRowGroups")
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getLeafRowGroups", "Getting leaf level row groups...")
       leafGroups = list()
       grps <- private$p_rowGroup$getLeafGroups(leafGroups)
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getTopRowGroups", "Got leaf level row groups", list(count = length(grps)))
       return(invisible(grps))
     },
+    addRowGroup = function(variableName=NULL, filterType="ALL", values=NULL,
+                           doNotExpand=FALSE, isEmpty=FALSE, isOutline=FALSE, caption=NULL,
+                           isTotal=FALSE, isLevelSubTotal=FALSE, isLevelTotal=FALSE,
+                           calculationGroupName=NULL, calculationName=NULL,
+                           baseStyleName=NULL, styleDeclarations=NULL,
+                           insertAtIndex=NULL, insertBeforeGroup=NULL, insertAfterGroup=NULL,
+                           mergeEmptySpace=NULL, cellBaseStyleName=NULL, cellStyleDeclarations=NULL,
+                           sortAnchor=NULL, resetCells=TRUE) {
+      if(private$p_argumentCheckMode > 0) {
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", variableName, missing(variableName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", filterType, missing(filterType), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("ALL", "VALUES", "NONE"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", values, missing(values), allowMissing=TRUE, allowNull=TRUE, mustBeAtomic=TRUE)
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", doNotExpand, missing(doNotExpand), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", isEmpty, missing(isEmpty), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", isOutline, missing(isOutline), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", caption, missing(caption), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("character", "integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", isTotal, missing(isTotal), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", isLevelSubTotal, missing(isLevelSubTotal), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", isLevelTotal, missing(isLevelTotal), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", calculationGroupName, missing(calculationGroupName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", calculationName, missing(calculationName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", baseStyleName, missing(baseStyleName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", styleDeclarations, missing(styleDeclarations), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", allowedListElementClasses=c("character", "integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", insertAtIndex, missing(insertAtIndex), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", insertBeforeGroup, missing(insertBeforeGroup), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotDataGroup")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", insertAfterGroup, missing(insertAfterGroup), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotDataGroup")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", mergeEmptySpace, missing(mergeEmptySpace), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character", allowedValues=c("doNotMerge", "dataGroupsOnly", "cellsOnly", "dataGroupsAndCellsAs1", "dataGroupsAndCellsAs2"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", cellBaseStyleName, missing(cellBaseStyleName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", cellStyleDeclarations, missing(cellStyleDeclarations), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", allowedListElementClasses=c("character", "integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", sortAnchor, missing(sortAnchor), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character", allowedValues=c("fixed", "next", "previous"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", resetCells, missing(resetCells), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+      }
+      if(private$p_argumentCheckMode==TRUE) private$p_traceEnabled("PivotTable$addRowGroup", "Adding row group...",
+                                                                   list(caption=caption, doNotExpand=doNotExpand, isEmpty=isEmpty, isOutline=isOutline, isTotal=isTotal,
+                                                                        variableName=variableName, values=values,
+                                                                        calculationGroupName=calculationGroupName, calculationName=calculationName,
+                                                                        baseStyleName=baseStyleName, styleDeclarations=styleDeclarations,
+                                                                        mergeEmptySpace=mergeEmptySpace, cellBaseStyleName=cellBaseStyleName,
+                                                                        cellStyleDeclarations=cellStyleDeclarations, sortAnchor=sortAnchor,
+                                                                        resetCells=resetCells))
+      grp <- private$p_rowGroup$addChildGroup(variableName=variableName, filterType=filterType, values=values,
+                                              doNotExpand=doNotExpand, isEmpty=isEmpty, isOutline=isOutline, caption=caption,
+                                              isTotal=isTotal, isLevelSubTotal=isLevelSubTotal, isLevelTotal=isLevelTotal,
+                                              calculationGroupName=calculationGroupName, calculationName=calculationName,
+                                              baseStyleName=baseStyleName, styleDeclarations=styleDeclarations,
+                                              insertAtIndex=insertAtIndex, insertBeforeGroup=insertBeforeGroup, insertAfterGroup=insertAfterGroup,
+                                              mergeEmptySpace=mergeEmptySpace, cellBaseStyleName=cellBaseStyleName, cellStyleDeclarations=cellStyleDeclarations,
+                                              sortAnchor=sortAnchor, resetCells=resetCells)
+      if(private$p_argumentCheckMode==TRUE) private$p_traceEnabled("PivotTable$addRowGroup", "Added row group.")
+      return(invisible(grp))
+    },
     addRowDataGroups = function(variableName=NULL, atLevel=NULL, fromData=TRUE, # atLevel=1 is the top level, (since 1 is the top level as visible to the user)
-                                dataName=NULL, dataSortOrder="asc", dataFormat=NULL, onlyCombinationsThatExist=TRUE,
-                                explicitListOfValues=NULL, calculationGroupName=NULL,
+                                dataName=NULL, dataSortOrder="asc", dataFormat=NULL, dataFmtFuncArgs=NULL,
+                                onlyCombinationsThatExist=TRUE, explicitListOfValues=NULL, calculationGroupName=NULL,
                                 expandExistingTotals=FALSE, addTotal=TRUE, visualTotals=FALSE, totalPosition="after", totalCaption="Total",
-                                preGroupData=TRUE, baseStyleName=NULL, styleDeclarations=NULL) {
+                                preGroupData=TRUE, baseStyleName=NULL, styleDeclarations=NULL, header=NULL,
+                                outlineBefore=NULL, outlineAfter=NULL, outlineTotal=NULL) {
      timeStart <- proc.time()
      if(private$p_argumentCheckMode > 0) {
        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowDataGroups", variableName, missing(variableName), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
@@ -512,6 +668,7 @@ PivotTable <- R6::R6Class("PivotTable",
        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowDataGroups", dataName, missing(dataName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowDataGroups", dataSortOrder, missing(dataSortOrder), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("asc", "desc", "none"))
        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowDataGroups", dataFormat, missing(dataFormat), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("character", "list", "function"))
+       checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowDataGroups", dataFmtFuncArgs, missing(dataFmtFuncArgs), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list")
        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowDataGroups", onlyCombinationsThatExist, missing(onlyCombinationsThatExist), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowDataGroups", explicitListOfValues, missing(explicitListOfValues), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", listElementsMustBeAtomic=TRUE)
        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowDataGroups", calculationGroupName, missing(calculationGroupName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
@@ -523,40 +680,53 @@ PivotTable <- R6::R6Class("PivotTable",
        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowDataGroups", preGroupData, missing(preGroupData), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowDataGroups", baseStyleName, missing(baseStyleName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowDataGroups", styleDeclarations, missing(styleDeclarations), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", allowedListElementClasses=c("character", "integer", "numeric"))
+       checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowDataGroups", header, missing(header), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+       checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowDataGroups", outlineBefore, missing(outlineBefore), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("logical", "list"))
+       checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowDataGroups", outlineAfter, missing(outlineAfter), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("logical", "list"))
+       checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowDataGroups", outlineTotal, missing(outlineTotal), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("logical", "list"))
      }
      if(private$p_traceEnabled==TRUE) self$trace("PivotTable$addRowDataGroups", "Adding row groups...",
                    list(variableName=variableName, atLevel=atLevel, fromData=fromData,
-                        dataName=dataName, dataSortOrder=dataSortOrder, dataFormat=dataFormat,
-                        onlyCombinationsThatExist=onlyCombinationsThatExist, explicitListOfValues=explicitListOfValues,
-                        calculationGroupName=calculationGroupName, expandExistingTotals=expandExistingTotals,
-                        addTotal=addTotal, visualTotals=visualTotals, totalPosition=totalPosition, totalCaption=totalCaption,
-                        preGroupData=preGroupData, baseStyleName=baseStyleName, styleDeclarations=styleDeclarations))
+                   dataName=dataName, dataSortOrder=dataSortOrder, dataFormat=dataFormat, dataFmtFuncArgs=dataFmtFuncArgs,
+                   onlyCombinationsThatExist=onlyCombinationsThatExist, explicitListOfValues=explicitListOfValues,
+                   calculationGroupName=calculationGroupName, expandExistingTotals=expandExistingTotals,
+                   addTotal=addTotal, visualTotals=visualTotals, totalPosition=totalPosition, totalCaption=totalCaption,
+                   preGroupData=preGroupData, baseStyleName=baseStyleName, styleDeclarations=styleDeclarations), header=header,
+                   outlineBefore=outlineBefore, outlineAfter=outlineAfter, outlineTotal=outlineTotal)
      if((!is.null(styleDeclarations))&&(length(styleDeclarations)!=length(names(styleDeclarations))))
        stop("PivotTable$addRowDataGroups(): One or more style declarations are missing a name.", call. = FALSE)
-      self$resetCells()
       levelsBelow <- NULL
       if((!is.null(atLevel))&&(atLevel>0)) levelsBelow <- atLevel - 1
       grps <- private$p_rowGroup$addDataGroups(variableName=variableName, atLevel=levelsBelow, fromData=fromData,
-                                               dataName=dataName, dataSortOrder=dataSortOrder, dataFormat=dataFormat,
+                                               dataName=dataName, dataSortOrder=dataSortOrder,
+                                               dataFormat=dataFormat, dataFmtFuncArgs=dataFmtFuncArgs,
                                                onlyCombinationsThatExist=onlyCombinationsThatExist, explicitListOfValues=explicitListOfValues,
                                                calculationGroupName=calculationGroupName,
                                                expandExistingTotals=expandExistingTotals, addTotal=addTotal,
                                                visualTotals=visualTotals, totalPosition=totalPosition, totalCaption=totalCaption,
-                                               preGroupData=preGroupData, baseStyleName=baseStyleName, styleDeclarations=styleDeclarations)
+                                               preGroupData=preGroupData, baseStyleName=baseStyleName, styleDeclarations=styleDeclarations,
+                                               outlineBefore=outlineBefore, outlineAfter=outlineAfter, outlineTotal=outlineTotal)
+      if (!is.null(header)) {
+        if (length(grps)>0) {
+          levelNumber <- grps[[1]]$getLevelNumber()
+          private$p_rowGrpHeaders[[levelNumber]] <- header
+        }
+      }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$addRowDataGroups", "Added row groups.")
       private$addTiming(paste0("addRowDataGroups(", variableName, ")"), timeStart)
       return(invisible(grps))
     },
-    normaliseRowGroups = function() {
+    normaliseRowGroups = function(resetCells=TRUE) {
       timeStart <- proc.time()
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$normaliseRowGroups", "Normalising row groups...")
       self$resetCells()
-      groupsAdded <- private$p_rowGroup$normaliseDataGroup()
+      groupsAdded <- private$p_rowGroup$normaliseDataGroup(resetCells=resetCells)
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$normaliseRowGroups", "Normalised row groups.", list(groupsAdded = groupsAdded))
       private$addTiming("normaliseRowGroups", timeStart)
       return(invisible())
     },
-    sortRowDataGroups = function(levelNumber=1, orderBy="calculation", sortOrder="desc", calculationGroupName="default", calculationName=NULL) {
+    sortRowDataGroups = function(levelNumber=1, orderBy="calculation", sortOrder="desc", calculationGroupName="default", calculationName=NULL,
+                                 fromIndex=NULL, toIndex=NULL, resetCells=TRUE) {
       timeStart <- proc.time()
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "sortRowDataGroups", levelNumber, missing(levelNumber), allowMissing=TRUE, allowNull=FALSE, allowedClasses=c("integer", "numeric"))
@@ -564,16 +734,30 @@ PivotTable <- R6::R6Class("PivotTable",
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "sortRowDataGroups", sortOrder, missing(sortOrder), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("asc","desc"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "sortRowDataGroups", calculationGroupName, missing(calculationGroupName), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "sortRowDataGroups", calculationName, missing(calculationName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "sortRowDataGroups", fromIndex, missing(fromIndex), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "sortRowDataGroups", toIndex, missing(toIndex), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "sortRowDataGroups", resetCells, missing(resetCells), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$sortRowDataGroups", "Sorting row data groups...",
                     list(levelNumber=levelNumber, orderBy=orderBy, sortOrder=sortOrder,
-                         calculationGroupName=calculationGroupName, calculationName=calculationName))
+                         calculationGroupName=calculationGroupName, calculationName=calculationName,
+                         fromIndex=fromIndex, toIndex=toIndex, resetCells=resetCells))
       if(levelNumber<1) stop("PivotTable$sortRowDataGroups():  levelNumber must be 1 or above.", call. = FALSE)
       private$p_rowGroup$sortDataGroups(levelNumber=levelNumber-1, orderBy=orderBy, sortOrder=sortOrder,
-                                           calculationGroupName=calculationGroupName, calculationName=calculationName)
+                                           calculationGroupName=calculationGroupName, calculationName=calculationName,
+                                        fromIndex=fromIndex, toIndex=toIndex, resetCells=resetCells)
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$sortRowDataGroups", "Sorted row data groups.")
       private$addTiming("sortRowDataGroups", timeStart)
       return(invisible())
+    },
+    setRowDataGroupHeader = function(levelNumber=NULL, header=NULL) {
+      if(private$p_argumentCheckMode > 0) {
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setRowDataGroupHeader", levelNumber, missing(levelNumber), allowMissing=FALSE, allowNull=FALSE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setRowDataGroupHeader", header, missing(header), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
+      }
+      if(private$p_traceEnabled==TRUE) self$trace("PivotTable$setRowDataGroupHeader", "Setting row group header...")
+      private$p_rowGrpHeaders[[levelNumber]] <- header
+      if(private$p_traceEnabled==TRUE) self$trace("PivotTable$setRowDataGroupHeader", "Set row group header.")
     },
     addCalculationGroup = function(calculationGroupName=NULL) {
       timeStart <- proc.time()
@@ -589,10 +773,11 @@ PivotTable <- R6::R6Class("PivotTable",
       return(invisible(calculationGroup))
     },
     defineCalculation = function(calculationGroupName="default", calculationName=NULL, caption=NULL, visible=TRUE, displayOrder=NULL,
-                         filters=NULL, format=NULL, dataName=NULL, type="summary",
+                         filters=NULL, format=NULL, fmtFuncArgs=NULL, dataName=NULL, type="summary",
                          valueName=NULL, summariseExpression=NULL, calculationExpression=NULL, calculationFunction=NULL, basedOn=NULL,
                          noDataValue=NULL, noDataCaption=NULL,
-                         headingBaseStyleName=NULL, headingStyleDeclarations=NULL, cellBaseStyleName=NULL, cellStyleDeclarations=NULL) {
+                         headingBaseStyleName=NULL, headingStyleDeclarations=NULL, cellBaseStyleName=NULL, cellStyleDeclarations=NULL,
+                         resetCells=TRUE) {
       timeStart <- proc.time()
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "defineCalculation", calculationGroupName, missing(calculationGroupName), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character")
@@ -602,6 +787,7 @@ PivotTable <- R6::R6Class("PivotTable",
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "defineCalculation", displayOrder, missing(displayOrder), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "defineCalculation", filters, missing(filters), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("PivotFilters", "PivotFilterOverrides"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "defineCalculation", format, missing(format), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("function", "list", "character"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "defineCalculation", fmtFuncArgs, missing(fmtFuncArgs), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "defineCalculation", dataName, missing(dataName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "defineCalculation", type, missing(type), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("value", "summary", "calculation", "function"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "defineCalculation", valueName, missing(valueName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
@@ -615,6 +801,7 @@ PivotTable <- R6::R6Class("PivotTable",
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "defineCalculation", headingStyleDeclarations, missing(headingStyleDeclarations), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", allowedListElementClasses=c("character", "integer", "numeric"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "defineCalculation", cellBaseStyleName, missing(cellBaseStyleName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "defineCalculation", cellStyleDeclarations, missing(cellStyleDeclarations), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", allowedListElementClasses=c("character", "integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "defineCalculation", resetCells, missing(resetCells), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       }
       if(private$p_calculationsSet) stop("PivotTable$defineCalculation(): Calculations cannot be moved/added after either addColumnCalculationGroups() or addRowCalculationGroups() has been executed.", call. = FALSE)
       fstr <- NULL
@@ -625,13 +812,13 @@ PivotTable <- R6::R6Class("PivotTable",
         stop("PivotTable$defineCalculation(): One or more cell style declarations are missing a name.", call. = FALSE)
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$defineCalculation", "Defining calculation...",
                    list(calculationGroupName=calculationGroupName, calculationName=calculationName, caption=caption,
-                        visible=visible, displayOrder=displayOrder, filters=fstr, format=format, dataName=dataName,
-                        type=type, valueName=valueName, summariseExpression=summariseExpression,
+                        visible=visible, displayOrder=displayOrder, filters=fstr, format=format, fmtFuncArgs=fmtFuncArgs,
+                        dataName=dataName, type=type, valueName=valueName, summariseExpression=summariseExpression,
                         calculationExpression=calculationExpression, calculationFunction=calculationFunction, basedOn=basedOn,
                         noDataValue=noDataValue, noDataCaption=noDataCaption,
                         headingBaseStyleName=headingBaseStyleName, headingStyleDeclarations=headingStyleDeclarations,
-                        cellBaseStyleName=cellBaseStyleName, cellStyleDeclarations=cellStyleDeclarations))
-      self$resetCells()
+                        cellBaseStyleName=cellBaseStyleName, cellStyleDeclarations=cellStyleDeclarations, resetCells=resetCells))
+      if(resetCells) self$resetCells()
       calculationGroupExists <- private$p_calculationGroups$isExistingCalculationGroup(calculationGroupName)
       if(calculationGroupExists) {
         calculationGroup <- private$p_calculationGroups$getCalculationGroup(calculationGroupName)
@@ -640,7 +827,7 @@ PivotTable <- R6::R6Class("PivotTable",
         calculationGroup <- private$p_calculationGroups$addCalculationGroup(calculationGroupName)
       }
       calculation <- calculationGroup$defineCalculation(calculationName=calculationName, caption=caption, visible=visible,
-                         displayOrder=displayOrder, filters=filters, format=format, dataName=dataName,
+                         displayOrder=displayOrder, filters=filters, format=format, fmtFuncArgs=fmtFuncArgs, dataName=dataName,
                          type=type, valueName=valueName, summariseExpression=summariseExpression,
                          calculationExpression=calculationExpression, calculationFunction=calculationFunction, basedOn=basedOn,
                          noDataValue=noDataValue, noDataCaption=noDataCaption,
@@ -654,7 +841,7 @@ PivotTable <- R6::R6Class("PivotTable",
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnCalculationGroups", calculationGroupName, missing(calculationGroupName), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnCalculationGroups", atLevel, missing(atLevel), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
-      }
+        }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$addColumnCalculationGroups", "Adding column calculation groups...",
                    list(calculationGroupName=calculationGroupName, atLevel=atLevel))
       if(private$p_calculationsSet) stop("PivotTable$addColumnCalculationGroups(): Calculations cannot be moved/added after either addColumnCalculationGroups() or addRowCalculationGroups() has been executed.", call. = FALSE)
@@ -666,18 +853,21 @@ PivotTable <- R6::R6Class("PivotTable",
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$addColumnCalculationGroups", "Added column calculation groups.")
       return(invisible(grps))
     },
-    addRowCalculationGroups = function(calculationGroupName="default", atLevel=NULL) { # atLevel=1 is the top level, (since 1 is the top level as visible to the user)
+    addRowCalculationGroups = function(calculationGroupName="default", atLevel=NULL, outlineBefore=NULL, outlineAfter=NULL) { # atLevel=1 is the top level, (since 1 is the top level as visible to the user)
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowCalculationGroups", calculationGroupName, missing(calculationGroupName), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowCalculationGroups", atLevel, missing(atLevel), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowCalculationGroups", outlineBefore, missing(outlineBefore), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("logical", "list"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowCalculationGroups", outlineAfter, missing(outlineAfter), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("logical", "list"))
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$addRowCalculationGroups", "Adding row calculation groups...",
-                   list(calculationGroupName=calculationGroupName, atLevel=atLevel))
+                   list(calculationGroupName=calculationGroupName, atLevel=atLevel, outlineBefore=outlineBefore, outlineAfter=outlineAfter))
       if(private$p_calculationsSet) stop("PivotTable$addRowCalculationGroups(): Calculations cannot be moved/added after either addColumnCalculationGroups() or addRowCalculationGroups() has been executed.", call. = FALSE)
       self$resetCells()
       levelsBelow <- NULL
       if((!is.null(atLevel))&&(atLevel>0)) levelsBelow <- atLevel - 1
-      grps <- private$p_rowGroup$addCalculationGroups(calculationGroupName=calculationGroupName, atLevel=levelsBelow)
+      grps <- private$p_rowGroup$addCalculationGroups(calculationGroupName=calculationGroupName, atLevel=levelsBelow,
+                                                      outlineBefore=outlineBefore, outlineAfter=outlineAfter)
       private$p_calculationsSet <- TRUE
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$addRowCalculationGroups", "Added row calculation groups.")
       return(invisible(grps))
@@ -810,15 +1000,21 @@ PivotTable <- R6::R6Class("PivotTable",
       rowFilters <- list()
       rowCalculationGroupNames <- list()
       rowCalculationNames <- list()
+      rowIsEmptyFlags <- list()
       for(i in 1:rowCount) {
         # set the rowColumnNumber on the leaf cell
         rowGrps[[i]]$rowColumnNumber <- as.integer(i)
         # get the ancestor groups for this group, starting with the current object
         ancestors <- rowGrps[[i]]$getAncestorGroups(includeCurrentGroup=TRUE)
+        # construct the isEmpty flag using OR
+        rowIsEmptyFlag <- FALSE
         # construct the parent filter settings using "intersect" filter logic
         rowColFilters <- PivotFilters$new(self)
         for(j in length(ancestors):1) {
           acs <- ancestors[[j]]
+          if(!is.null(acs$isEmpty)) {
+            rowIsEmptyFlag <- rowIsEmptyFlag||acs$isEmpty
+          }
           filters <- acs$filters
           if(is.null(filters)) next
           if(filters$count==0) next
@@ -827,6 +1023,7 @@ PivotTable <- R6::R6Class("PivotTable",
             rowColFilters$setFilter(filter, action="intersect")
           }
         }
+        rowIsEmptyFlags[[i]] <- rowIsEmptyFlag
         rowFilters[[i]] <- rowColFilters
         # find the calculation
         for(j in 1:length(ancestors)) {
@@ -842,15 +1039,21 @@ PivotTable <- R6::R6Class("PivotTable",
       columnFilters <- list()
       columnCalculationGroupNames <- list()
       columnCalculationNames <- list()
+      columnIsEmptyFlags <- list()
       for(i in 1:columnCount) {
         # set the rowColumnNumber on the leaf cell
         columnGrps[[i]]$rowColumnNumber <- as.integer(i)
         # get the ancestor groups for this group, starting with the current object
         ancestors <- columnGrps[[i]]$getAncestorGroups(includeCurrentGroup=TRUE)
+        # construct the isEmpty flag using OR
+        columnIsEmptyFlag <- FALSE
         # construct the parent filter settings using "intersect" filter logic
         rowColFilters <- PivotFilters$new(self)
         for(j in length(ancestors):1) {
           acs <- ancestors[[j]]
+          if(!is.null(acs$isEmpty)) {
+            columnIsEmptyFlag <- columnIsEmptyFlag||acs$isEmpty
+          }
           filters <- acs$filters
           if(is.null(filters)) next
           if(filters$count==0) next
@@ -859,6 +1062,7 @@ PivotTable <- R6::R6Class("PivotTable",
             rowColFilters$setFilter(filter, action="intersect")
           }
         }
+        columnIsEmptyFlags[[i]] <- columnIsEmptyFlag
         columnFilters[[i]] <- rowColFilters
         # find the calculation
         for(j in 1:length(ancestors)) {
@@ -896,6 +1100,8 @@ PivotTable <- R6::R6Class("PivotTable",
         for(r in 1:rowCount) {
           if(columnCount>0) {
             for(c in 1:columnCount) {
+              # determine if this cell is empty
+              isEmpty <- rowIsEmptyFlags[[r]]||columnIsEmptyFlags[[c]]
               # calculate the net filters
               if(is.null(rowFilters[[r]])) {
                 if(!is.null(columnFilters[[c]])) { rowColFilters <- columnFilters[[c]]$getCopy() }
@@ -920,7 +1126,7 @@ PivotTable <- R6::R6Class("PivotTable",
                 else calcNme<- NULL
               }
               # create the cell
-              cell <- PivotCell$new(self, rowNumber=as.integer(r), columnNumber=as.integer(c),
+              cell <- PivotCell$new(self, rowNumber=as.integer(r), columnNumber=as.integer(c), isEmpty=isEmpty,
                                     calculationName=calcNme, calculationGroupName=calcGrpNme,
                                     rowColFilters=rowColFilters, rowFilters=rowFilters[[r]], columnFilters=columnFilters[[c]],
                                     rowLeafGroup=rowGrps[[r]], columnLeafGroup=columnGrps[[c]])
@@ -984,6 +1190,9 @@ PivotTable <- R6::R6Class("PivotTable",
       for(r in 1:rowCount) {
         for(c in 1:columnCount) {
           cell <- private$p_cells$getCell(r, c)
+          # ignore empty cells
+          if(cell$isEmpty) next
+          # calculate cell
           calculator$evaluateCell(cell)
         }
       }
@@ -1003,7 +1212,7 @@ PivotTable <- R6::R6Class("PivotTable",
       return(invisible())
     },
     findRowDataGroups = function(matchMode="simple", variableNames=NULL, variableValues=NULL,
-                                 totals="include", calculationNames=NULL, includeDescendantGroups=FALSE) {
+                                 totals="include", calculationNames=NULL, includeDescendantGroups=FALSE, emptyGroups="exclude", outlineGroups="exclude") {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findRowDataGroups", matchMode, missing(matchMode), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("simple", "combinations"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findRowDataGroups", variableNames, missing(variableNames), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
@@ -1011,15 +1220,18 @@ PivotTable <- R6::R6Class("PivotTable",
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findRowDataGroups", totals, missing(totals), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("include", "exclude", "only"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findRowDataGroups", calculationNames, missing(calculationNames), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findRowDataGroups", includeDescendantGroups, missing(includeDescendantGroups), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findRowDataGroups", emptyGroups, missing(emptyGroups), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("include", "exclude", "only"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findRowDataGroups", outlineGroups, missing(outlineGroups), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("include", "exclude", "only"))
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$findRowDataGroups", "Finding row data groups...")
-      grps <- private$p_rowGroup$findDataGroups(matchMode=matchMode, variableNames=variableNames, variableValues=variableValues,
-                                                totals=totals, calculationNames=calculationNames, includeDescendantGroups=includeDescendantGroups)
+      grps <- private$p_rowGroup$findDataGroups(matchMode=matchMode, variableNames=variableNames, variableValues=variableValues, totals=totals,
+                                                calculationNames=calculationNames, includeDescendantGroups=includeDescendantGroups,
+                                                emptyGroups=emptyGroups, outlineGroups=outlineGroups)
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$findRowDataGroups", "Found row data groups.")
       return(invisible(grps))
     },
     findColumnDataGroups = function(matchMode="simple", variableNames=NULL, variableValues=NULL,
-                                    totals="include", calculationNames=NULL, includeDescendantGroups=FALSE) {
+                                    totals="include", calculationNames=NULL, includeDescendantGroups=FALSE, emptyGroups="exclude", outlineGroups="exclude") {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findColumnDataGroups", matchMode, missing(matchMode), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("simple", "combinations"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findColumnDataGroups", variableNames, missing(variableNames), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
@@ -1027,35 +1239,40 @@ PivotTable <- R6::R6Class("PivotTable",
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findColumnDataGroups", totals, missing(totals), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("include", "exclude", "only"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findColumnDataGroups", calculationNames, missing(calculationNames), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findColumnDataGroups", includeDescendantGroups, missing(includeDescendantGroups), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findColumnDataGroups", emptyGroups, missing(emptyGroups), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("include", "exclude", "only"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findColumnDataGroups", outlineGroups, missing(outlineGroups), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("include", "exclude", "only"))
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$findColumnDataGroups", "Finding column data groups...")
-      grps <- private$p_columnGroup$findDataGroups(matchMode=matchMode, variableNames=variableNames, variableValues=variableValues,
-                                                   totals=totals, calculationNames=calculationNames, includeDescendantGroups=includeDescendantGroups)
+      grps <- private$p_columnGroup$findDataGroups(matchMode=matchMode, variableNames=variableNames, variableValues=variableValues, totals=totals,
+                                                   calculationNames=calculationNames, includeDescendantGroups=includeDescendantGroups,
+                                                   emptyGroups=emptyGroups, outlineGroups=outlineGroups)
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$findColumnDataGroups", "Found column data groups.")
       return(invisible(grps))
     },
-    getCells = function(specifyCellsAsList=TRUE, rowNumbers=NULL, columnNumbers=NULL, cellCoordinates=NULL) {
+    getCells = function(specifyCellsAsList=TRUE, rowNumbers=NULL, columnNumbers=NULL, cellCoordinates=NULL, excludeEmptyCells=TRUE) {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getCells", specifyCellsAsList, missing(specifyCellsAsList), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getCells", rowNumbers, missing(rowNumbers), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getCells", columnNumbers, missing(columnNumbers), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getCells", cellCoordinates, missing(cellCoordinates), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", allowedListElementClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getCells", excludeEmptyCells, missing(excludeEmptyCells), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getCells", "Getting cells...")
       if(!private$p_evaluated) stop("PivotTable$getCells():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
       if(is.null(private$p_cells)) stop("PivotTable$getCells():  No cells exist to retrieve.", call. = FALSE)
       # need to miss the specifyCellsAsList argument out if it is missing here, so the warning message is generated
       if(missing(specifyCellsAsList)) {
-        cells <- private$p_cells$getCells(rowNumbers=rowNumbers, columnNumber=columnNumbers, cellCoordinates=cellCoordinates)
+        cells <- private$p_cells$getCells(rowNumbers=rowNumbers, columnNumber=columnNumbers, cellCoordinates=cellCoordinates, excludeEmptyCells=excludeEmptyCells)
       }
       else {
-        cells <- private$p_cells$getCells(specifyCellsAsList=specifyCellsAsList, rowNumbers=rowNumbers, columnNumber=columnNumbers, cellCoordinates=cellCoordinates)
+        cells <- private$p_cells$getCells(specifyCellsAsList=specifyCellsAsList, rowNumbers=rowNumbers, columnNumber=columnNumbers, cellCoordinates=cellCoordinates, excludeEmptyCells=excludeEmptyCells)
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getCells", "Got cells.")
       return(invisible(cells))
     },
     findCells = function(variableNames=NULL, variableValues=NULL, totals="include", calculationNames=NULL,
-                         minValue=NULL, maxValue=NULL, exactValues=NULL, includeNull=TRUE, includeNA=TRUE) {
+                         minValue=NULL, maxValue=NULL, exactValues=NULL, includeNull=TRUE, includeNA=TRUE,
+                         emptyCells="exclude", outlineCells="exclude") {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", variableNames, missing(variableNames), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", variableValues, missing(variableValues), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", listElementsMustBeAtomic=TRUE)
@@ -1066,20 +1283,29 @@ PivotTable <- R6::R6Class("PivotTable",
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", exactValues, missing(exactValues), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", listElementsMustBeAtomic=TRUE)
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", includeNull, missing(includeNull), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", includeNA, missing(includeNA), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", emptyCells, missing(emptyCells), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("include", "exclude", "only"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", outlineCells, missing(outlineCells), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("include", "exclude", "only"))
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$findCells", "Finding cells...")
       if(!private$p_evaluated) stop("PivotTable$findCells():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
       if(is.null(private$p_cells)) stop("PivotTable$findCells():  No cells exist to retrieve.", call. = FALSE)
       cells <- private$p_cells$findCells(variableNames=variableNames, variableValues=variableValues, totals=totals, calculationNames=calculationNames,
-                                         minValue=minValue, maxValue=maxValue, exactValues=exactValues, includeNull=includeNull, includeNA=includeNA)
+                                         minValue=minValue, maxValue=maxValue, exactValues=exactValues, includeNull=includeNull, includeNA=includeNA,
+                                         emptyCells=emptyCells, outlineCells=outlineCells)
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$findCells", "Found cells.")
       return(invisible(cells))
     },
-    print = function(asCharacter=FALSE) {
+    print = function(asCharacter=FALSE, showRowGroupHeaders=TRUE) {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "print", asCharacter, missing(asCharacter), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "print", showRowGroupHeaders, missing(showRowGroupHeaders), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$print", "Printing matrix...")
+      # if not yet evaluated, need to normalise the row/column groups, otherwise errors occur for pivots of more than one level on row/columns
+      if(!private$p_evaluated) {
+        self$normaliseColumnGroups()
+        self$normaliseRowGroups()
+      }
       lineIndex <- 0
       if(asCharacter==TRUE) returnLines <- vector("list", self$rowCount + private$p_columnGroup$getLevelCount())
       else returnLines <- NULL
@@ -1149,8 +1375,19 @@ PivotTable <- R6::R6Class("PivotTable",
       rowLevelWidths <- vector("integer", rowLevelCount)
       if(rowLevelCount>0) {
         for(l in 1:rowLevelCount) {
-          levelGroups <- private$p_rowGroup$getLevelGroups(l)
           maxWidth <- 0
+          # row group header
+          if(showRowGroupHeaders==TRUE) {
+            if(!is.null(private$p_rowGrpHeaders)) {
+              if(l<=length(private$p_rowGrpHeaders)) {
+                if(!is.null(private$p_rowGrpHeaders[[l]])) {
+                  maxWidth <- max(maxWidth, nchar(private$p_rowGrpHeaders[[l]]))
+                }
+              }
+            }
+          }
+          # row groups
+          levelGroups <- private$p_rowGroup$getLevelGroups(l)
           for(r in 1:length(levelGroups)) {
             grp <- levelGroups[[r]]
             maxWidth <- max(maxWidth, nchar(grp$caption))
@@ -1174,11 +1411,17 @@ PivotTable <- R6::R6Class("PivotTable",
         # column headings
         for(cl in 1:columnLevelCount) {
           currentLine <- NULL
-          # empty cells at top left
+          # empty cells at top left or row group headings
           if(rowLevelCount==0) currentLine <- paste0(currentLine, "  ")
           else {
             for(rl in 1:rowLevelCount) {
-              currentLine <- paste0(currentLine, repStr(" ", rowLevelWidths[rl]))
+              if((showRowGroupHeaders==TRUE)&&(!is.null(private$p_rowGrpHeaders))&&
+                 (rl<=length(private$p_rowGrpHeaders))&&(!is.null(private$p_rowGrpHeaders[[rl]]))) {
+                currentLine <- paste0(currentLine, private$p_rowGrpHeaders[[rl]], repStr(" ", rowLevelWidths[rl]-nchar(private$p_rowGrpHeaders[[rl]])))
+              }
+              else {
+                currentLine <- paste0(currentLine, repStr(" ", rowLevelWidths[rl]))
+              }
             }
           }
           # column headings at this level
@@ -1247,10 +1490,11 @@ PivotTable <- R6::R6Class("PivotTable",
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$print", "Printed matrix.")
       return(invisible(paste0(returnLines, sep="", collapse="\n")))
     },
-    asMatrix = function(includeHeaders=TRUE, repeatHeaders=FALSE, rawValue=FALSE) {
+    asMatrix = function(includeHeaders=TRUE, repeatHeaders=FALSE, rawValue=FALSE, showRowGroupHeaders=FALSE) {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asMatrix", includeHeaders, missing(includeHeaders), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asMatrix", rawValue, missing(rawValue), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asMatrix", showRowGroupHeaders, missing(showRowGroupHeaders), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$asMatrix", "Getting pivot table as a matrix...",
                     list(includeHeaders=includeHeaders, repeatHeaders=repeatHeaders, rawValue=rawValue))
@@ -1271,7 +1515,13 @@ PivotTable <- R6::R6Class("PivotTable",
       # set the root cells
       for(r in 1:columnHeaderLevelCount) {
         for(c in 1:rowHeaderLevelCount) {
-          m[r, c] <- ""
+          if((r==1)&&(showRowGroupHeaders==TRUE)&&(!is.null(private$p_rowGrpHeaders))&&
+             (c<=length(private$p_rowGrpHeaders))&&(!is.null(private$p_rowGrpHeaders[[c]]))) {
+            m[r, c] <- private$p_rowGrpHeaders[[c]]
+          }
+          else {
+            m[r, c] <- ""
+          }
         }
       }
       # set the column headers
@@ -1322,10 +1572,68 @@ PivotTable <- R6::R6Class("PivotTable",
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$asMatrix", "Got pivot table as a matrix.")
       return(m)
     },
+    asDataMatrix = function(includeHeaders=TRUE, rawValue=TRUE, separator=" ") {
+      if(private$p_argumentCheckMode > 0) {
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asDataMatrix", includeHeaders, missing(includeHeaders), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asDataMatrix", rawValue, missing(rawValue), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+      }
+      if(private$p_traceEnabled==TRUE) self$trace("PivotTable$asDataMatrix", "Getting pivot table as a data matrix...",
+                                                  list(rawValue=rawValue, separator=separator))
+      if(!private$p_evaluated) stop("PivotTable$asDataMatrix():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
+      if(is.null(private$p_cells)) stop("PivotTable$asDataMatrix():  No cells exist to retrieve.", call. = FALSE)
+      if(includeHeaders==FALSE) {
+        return(private$p_cells$asMatrix(rawValue=rawValue))
+      }
+      # get the headings dimensions
+      rowHeaderLevelCount <- private$p_rowGroup$getLevelCount()
+      columnHeaderLevelCount <- private$p_columnGroup$getLevelCount()
+      rowCount <- private$p_cells$rowCount
+      columnCount <- private$p_cells$columnCount
+      # column names
+      colHeaderLeafGroups <- private$p_columnGroup$getLeafGroups()
+      colNames <-  vector("list", length = columnCount)
+      for(c in 1:columnCount) {
+        colName <- NULL
+        grps <- colHeaderLeafGroups[[c]]$getAncestorGroups(includeCurrentGroup=TRUE)
+        for(cl in 1:columnHeaderLevelCount) {
+          if(cl==1) {
+            colName <- grps[[columnHeaderLevelCount-cl+1]]$caption
+          }
+          else {
+            colName <- paste0(colName, separator, grps[[columnHeaderLevelCount-cl+1]]$caption)
+          }
+        }
+        colNames[[c]] <- colName
+      }
+      # row names
+      rowHeaderLeafGroups <- private$p_rowGroup$getLeafGroups()
+      rowNames <-  vector("list", length = rowCount)
+      for(r in 1:rowCount) {
+        rowName <- NULL
+        grps <- rowHeaderLeafGroups[[r]]$getAncestorGroups(includeCurrentGroup=TRUE)
+        for(rl in 1:rowHeaderLevelCount) {
+          if(rl==1) {
+            rowName <- grps[[rowHeaderLevelCount-rl+1]]$caption
+          }
+          else {
+            rowName <- paste0(rowName, separator, grps[[rowHeaderLevelCount-rl+1]]$caption)
+          }
+        }
+        rowNames[[r]] <- rowName
+      }
+      # data
+      m <- private$p_cells$asMatrix(rawValue=rawValue)
+      # apply names
+      colnames(m) <- make.unique(unlist(colNames))
+      rownames(m) <- make.unique(unlist(rowNames))
+      # done
+      if(private$p_traceEnabled==TRUE) self$trace("PivotTable$asDataMatrix", "Got pivot table as a data matrix.")
+      return(m)
+    },
     asDataFrame = function(separator=" ", stringsAsFactors=default.stringsAsFactors()) {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asDataFrame", separator, missing(separator), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character")
-        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asTidyDataFrame", stringsAsFactors, missing(stringsAsFactors), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asDataFrame", stringsAsFactors, missing(stringsAsFactors), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$asDataFrame", "Getting pivot table as a data frame...", list(separator=separator, stringsAsFactors=stringsAsFactors))
       if(!private$p_evaluated) stop("PivotTable$asDataFrame():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
@@ -1378,17 +1686,19 @@ PivotTable <- R6::R6Class("PivotTable",
         dfColumns[[c]] <- columnValues
       }
       df <- as.data.frame(dfColumns, stringsAsFactors=stringsAsFactors)
-      colnames(df) <- columnHeaders
-      rownames(df) <- rowHeaders
+      colnames(df) <- make.unique(unlist(columnHeaders))
+      rownames(df) <- make.unique(unlist(rowHeaders))
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$asDataFrame", "Got pivot table as a data frame.")
       return(df)
     },
-    asTidyDataFrame = function(includeGroupCaptions=TRUE, includeGroupValues=TRUE, separator=" ", stringsAsFactors=default.stringsAsFactors()) {
+    asTidyDataFrame = function(includeGroupCaptions=TRUE, includeGroupValues=TRUE, separator=" ", stringsAsFactors=default.stringsAsFactors(),
+                               excludeEmptyCells=TRUE) {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asTidyDataFrame", includeGroupCaptions, missing(includeGroupCaptions), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asTidyDataFrame", includeGroupValues, missing(includeGroupValues), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asTidyDataFrame", separator, missing(separator), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asTidyDataFrame", stringsAsFactors, missing(stringsAsFactors), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asTidyDataFrame", excludeEmptyCells, missing(excludeEmptyCells), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$asTidyDataFrame", "Getting pivot table as a tidy data frame...",
                    list(includeGroupCaptions=includeGroupCaptions, includeGroupValues=includeGroupValues, separator=separator, stringsAsFactors=stringsAsFactors))
@@ -1425,6 +1735,7 @@ PivotTable <- R6::R6Class("PivotTable",
               # get the cell
               cell <- private$p_cells$getCell(r, c)
               if(is.null(cell)) next
+              if(excludeEmptyCells && cell$isEmpty) next
               cellNumber <- cellNumber + 1
               # basic info
               df$rowNumber[cellNumber] <- r
@@ -1498,16 +1809,138 @@ PivotTable <- R6::R6Class("PivotTable",
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$asTidyDataFrame", "Got pivot table as a tidy data frame.")
       return(invisible(as.data.frame(df, stringsAsFactors=stringsAsFactors)))
     },
-    asBasicTable = function(exportOptions=NULL, compatibility=NULL) {
+    getMerges = function(axis=NULL) {
+      if(private$p_argumentCheckMode > 0) {
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getMerges", axis, missing(axis), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character", allowedValues=c("row", "column"))
+      }
+      if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getMerges", "Getting merges...", list(axis=axis))
+      if(!private$p_evaluated) stop("PivotTable$getMerges():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
+      if(is.null(private$p_cells)) stop("PivotTable$getMerges():  No cells exist.", call. = FALSE)
+      # get axis objects/info and allowed merges:  doNotMerge, dataGroupsOnly, cellsOnly, dataGroupsAndCellsAs1, dataGroupsAndCellsAs2
+      if(axis=="column") {
+        groups <- private$p_cells$columnGroups # leaf-level groups
+        levelCount <- private$p_columnGroup$getLevelCount(includeCurrentLevel=FALSE)
+        cellsAlongAxis <- private$p_cells$rowCount
+        defaultMergeEmptySpace <- private$p_mergeEmptyRowSpace
+        if(private$p_mergeEmptySpaceDirection=="row") {
+          if(defaultMergeEmptySpace=="cellsOnly") defaultMergeEmptySpace <- "doNotMerge"
+          if(defaultMergeEmptySpace=="dataGroupsAndCellsAs1") defaultMergeEmptySpace <- "dataGroupsOnly"
+          if(defaultMergeEmptySpace=="dataGroupsAndCellsAs2") defaultMergeEmptySpace <- "dataGroupsOnly"
+        }
+      }
+      else {
+        groups <- private$p_cells$rowGroups
+        levelCount <- private$p_rowGroup$getLevelCount(includeCurrentLevel=FALSE)
+        cellsAlongAxis <- private$p_cells$columnCount
+        defaultMergeEmptySpace <- private$p_mergeEmptyColumnSpace
+        if(private$p_mergeEmptySpaceDirection=="column") {
+          if(defaultMergeEmptySpace=="cellsOnly") defaultMergeEmptySpace <- "doNotMerge"
+          if(defaultMergeEmptySpace=="dataGroupsAndCellsAs1") defaultMergeEmptySpace <- "dataGroupsOnly"
+          if(defaultMergeEmptySpace=="dataGroupsAndCellsAs2") defaultMergeEmptySpace <- "dataGroupsOnly"
+        }
+      }
+      # build the merge info
+      mergeInfo <- list()
+      for(i in 1:length(groups)) {
+        grp <- groups[[i]]
+        mergeEmptySpace <- grp$mergeEmptySpace
+        if(is.null(mergeEmptySpace)) mergeEmptySpace <- defaultMergeEmptySpace
+        # validate the mergeEmptySpace for this row
+        if((!(grp$isEmpty))||(grp$isTotal)) {
+          if(mergeEmptySpace=="cellsOnly") mergeEmptySpace <- "doNotMerge"
+          else if(mergeEmptySpace %in% c("dataGroupsAndCellsAs1", "dataGroupsAndCellsAs2")) mergeEmptySpace <- "dataGroupsOnly"
+        }
+        # generate the merge info
+        if(mergeEmptySpace=="doNotMerge") {
+          mergeInfo[[i]] <- list(merge=FALSE, mergeGroups=FALSE, mergeCells=FALSE)
+          next
+        }
+        ancgrps <- grp$getAncestorGroups(includeCurrentGroup=TRUE) # top-most parent is at bottom of returned list
+        ancgrps <- rev(ancgrps) # top-most element is at top of list
+        mergeFromLevel <- NULL
+        mergeToLevel <- NULL
+        for(l in 1:length(ancgrps)) {
+          lgrp <- ancgrps[[l]]
+          if(lgrp$isEmpty||lgrp$isOutline) {
+            if(is.null(mergeFromLevel)) mergeFromLevel <- l - 1
+            mergeToLevel <- l - 1
+          }
+          else {
+            # reset back to null if descendant becomes non-empty again
+            mergeFromLevel <- NULL
+            mergeToLevel <- NULL
+          }
+        }
+        isOutline <- FALSE
+        if(isTRUE(grp$isOutline)) isOutline <- TRUE  #isTRUE() works with NULL
+        if(is.null(mergeFromLevel)) {
+          # no merge possible for this group
+          mergeInfo[[i]] <- list(merge=FALSE, mergeGroups=FALSE, mergeCells=FALSE)
+        }
+        else if(mergeEmptySpace=="dataGroupsOnly") {
+          if(mergeFromLevel==mergeToLevel) {
+            mergeInfo[[i]] <- list(merge=FALSE, mergeGroups=FALSE, mergeCells=FALSE)
+          }
+          else {
+            mergeInfo[[i]] <- list(merge=TRUE, mergeEmptySpace="dataGroupsOnly", isOutline=isOutline,
+                                   mergeGroups=TRUE, mergeGroupsFromLevel=mergeFromLevel, mergeGroupSpan=mergeToLevel-mergeFromLevel+1,
+                                   mergeCells=FALSE, skipCells=FALSE)
+          }
+        }
+        else if(mergeEmptySpace=="cellsOnly") {
+          if(cellsAlongAxis==1) {
+            mergeInfo[[i]] <- list(merge=FALSE, mergeGroups=FALSE, mergeCells=FALSE)
+          }
+          else {
+            mergeInfo[[i]] <- list(merge=TRUE, mergeEmptySpace="cellsOnly", isOutline=isOutline,
+                                   mergeGroups=FALSE,
+                                   mergeCells=TRUE, skipCells=FALSE, mergeCellSpan=cellsAlongAxis)
+          }
+        }
+        else if(mergeEmptySpace=="dataGroupsAndCellsAs1") {
+          mergeInfo[[i]] <- list(merge=TRUE, mergeEmptySpace="dataGroupsAndCellsAs1", isOutline=isOutline,
+                                 mergeGroups=TRUE, mergeGroupsFromLevel=mergeFromLevel,
+                                 mergeGroupSpan= mergeToLevel-mergeFromLevel+1+cellsAlongAxis,
+                                 mergeCells=FALSE, skipCells=TRUE)
+        }
+        else if(mergeEmptySpace=="dataGroupsAndCellsAs2") {
+          if((cellsAlongAxis==1)&&(mergeFromLevel==mergeToLevel)) {
+            mergeInfo[[i]] <- list(merge=FALSE, mergeGroups=FALSE, mergeCells=FALSE)
+          }
+          else if(mergeFromLevel==mergeToLevel){
+            mergeInfo[[i]] <- list(merge=TRUE, mergeEmptySpace="cellsOnly", isOutline=isOutline,
+                                   mergeGroups=FALSE,
+                                   mergeCells=TRUE, skipCells=FALSE, mergeCellSpan=cellsAlongAxis)
+          }
+          else if(cellsAlongAxis==1) {
+            mergeInfo[[i]] <- list(merge=TRUE, mergeEmptySpace="dataGroupsOnly", isOutline=isOutline,
+                                   mergeGroups=TRUE, mergeGroupsFromLevel=mergeFromLevel, mergeGroupSpan=mergeToLevel-mergeFromLevel+1,
+                                   mergeCells=FALSE, skipCells=FALSE)
+          }
+          else {
+            mergeInfo[[i]] <- list(merge=TRUE, mergeEmptySpace="dataGroupsAndCellsAs2", isOutline=isOutline,
+                                   mergeGroups=TRUE, mergeGroupsFromLevel=mergeFromLevel, mergeGroupSpan=mergeToLevel-mergeFromLevel+1,
+                                   mergeCells=TRUE, skipCells=FALSE, mergeCellSpan=cellsAlongAxis)
+          }
+        }
+        # message(paste0("Merge: ", ifelse(axis=="column", "c", "r"), " ", i, " mg=", mergeInfo[[i]]$merge, " mges=", mergeInfo[[i]]$mergeEmptySpace,
+        #                " outln=", mergeInfo[[i]]$isOutline, " mggrps=", mergeInfo[[i]]$mergeGroups, " mgrpsfl=", mergeInfo[[i]]$mergeGroupsFromLevel,
+        #                " mgrpssp=", mergeInfo[[i]]$mergeGroupSpan, " mrgclls=", mergeInfo[[i]]$mergeCells, " skpclls=", mergeInfo[[i]]$skipCells, " mrgcllspn=", mergeInfo[[i]]$mergeCellSpan))
+      }
+      if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getMerges", "Got merges.")
+      return(invisible(mergeInfo))
+    },
+    asBasicTable = function(exportOptions=NULL, compatibility=NULL, showRowGroupHeaders=FALSE) {
       timeStart <- proc.time()
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asBasicTable", exportOptions, missing(exportOptions), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asBasicTable", compatibility, missing(compatibility), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", allowedListElementClasses=c("character", "integer", "numeric", "logical"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asBasicTable", showRowGroupHeaders, missing(showRowGroupHeaders), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$asBasicTable", "Converting to basic table...")
       if(!private$p_evaluated) stop("PivotTable$getHtml():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
       if(is.null(private$p_cells)) stop("PivotTable$getHtml():  No cells exist to render.", call. = FALSE)
-      btbl <- convertPvtTblToBasicTbl(self, exportOptions, compatibility)
+      btbl <- convertPvtTblToBasicTbl(self, exportOptions, compatibility, showRowGroupHeaders=showRowGroupHeaders)
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$asBasicTable", "Converted to basic table.")
       private$addTiming("asBasicTable", timeStart)
       return(invisible(btbl))
@@ -1532,7 +1965,8 @@ PivotTable <- R6::R6Class("PivotTable",
     },
     getHtml = function(styleNamePrefix=NULL, includeHeaderValues=FALSE, includeRCFilters=FALSE,
                        includeCalculationFilters=FALSE, includeWorkingData=FALSE, includeEvaluationFilters=FALSE,
-                       includeCalculationNames=FALSE, includeRawValue=FALSE, includeTotalInfo=FALSE, exportOptions=NULL) {
+                       includeCalculationNames=FALSE, includeRawValue=FALSE, includeTotalInfo=FALSE,
+                       exportOptions=NULL, showRowGroupHeaders=FALSE) {
       timeStart <- proc.time()
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getHtml", styleNamePrefix, missing(styleNamePrefix), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
@@ -1545,6 +1979,7 @@ PivotTable <- R6::R6Class("PivotTable",
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getHtml", includeRawValue, missing(includeRawValue), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getHtml", includeTotalInfo, missing(includeTotalInfo), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getHtml", exportOptions, missing(exportOptions), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getHtml", showRowGroupHeaders, missing(showRowGroupHeaders), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getHtml", "Getting HTML...")
       if(!private$p_evaluated) stop("PivotTable$getHtml():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
@@ -1553,14 +1988,16 @@ PivotTable <- R6::R6Class("PivotTable",
                                                    includeRCFilters=includeRCFilters, includeCalculationFilters=includeCalculationFilters,
                                                    includeWorkingData=includeWorkingData,
                                                    includeEvaluationFilters=includeEvaluationFilters, includeCalculationNames=includeCalculationNames,
-                                                   includeRawValue=includeRawValue, includeTotalInfo=includeTotalInfo, exportOptions=exportOptions)
+                                                   includeRawValue=includeRawValue, includeTotalInfo=includeTotalInfo,
+                                                   exportOptions=exportOptions, showRowGroupHeaders=showRowGroupHeaders)
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getHtml", "Got HTML.")
       private$addTiming("getHtml", timeStart)
       return(invisible(htmlTable))
     },
     saveHtml = function(filePath=NULL, fullPageHTML=TRUE, styleNamePrefix=NULL, includeHeaderValues=FALSE, includeRCFilters=FALSE,
                         includeCalculationFilters=FALSE, includeWorkingData=FALSE, includeEvaluationFilters=FALSE,
-                        includeCalculationNames=FALSE, includeRawValue=FALSE, includeTotalInfo=FALSE, exportOptions=NULL) {
+                        includeCalculationNames=FALSE, includeRawValue=FALSE, includeTotalInfo=FALSE,
+                        exportOptions=NULL, showRowGroupHeaders=FALSE) {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "saveHtml", filePath, missing(filePath), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "saveHtml", fullPageHTML, missing(fullPageHTML), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
@@ -1574,6 +2011,7 @@ PivotTable <- R6::R6Class("PivotTable",
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "saveHtml", includeRawValue, missing(includeRawValue), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "saveHtml", includeTotalInfo, missing(includeTotalInfo), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "saveHtml", exportOptions, missing(exportOptions), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "saveHtml", showRowGroupHeaders, missing(showRowGroupHeaders), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$saveHtml", "Saving HTML...", list(filePath=filePath, fullPageHTML=fullPageHTML))
       if(!private$p_evaluated) stop("PivotTable$getHtml():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
@@ -1583,7 +2021,8 @@ PivotTable <- R6::R6Class("PivotTable",
                                                    includeRCFilters=includeRCFilters, includeCalculationFilters=includeCalculationFilters,
                                                    includeWorkingData=includeWorkingData,
                                                    includeEvaluationFilters=includeEvaluationFilters, includeCalculationNames=includeCalculationNames,
-                                                   includeRawValue=includeRawValue, includeTotalInfo=includeTotalInfo, exportOptions=exportOptions)
+                                                   includeRawValue=includeRawValue, includeTotalInfo=includeTotalInfo,
+                                                   exportOptions=exportOptions, showRowGroupHeaders=showRowGroupHeaders)
       if (fullPageHTML==FALSE) {
         fileConn <- file(filePath)
         writeLines(as.character(htmlTable), fileConn)
@@ -1610,7 +2049,8 @@ PivotTable <- R6::R6Class("PivotTable",
     },
     renderPivot = function(width=NULL, height=NULL, styleNamePrefix=NULL, includeHeaderValues=FALSE, includeRCFilters=FALSE,
                            includeCalculationFilters=FALSE, includeWorkingData=FALSE, includeEvaluationFilters=FALSE,
-                           includeCalculationNames=FALSE, includeRawValue=FALSE, includeTotalInfo=FALSE, exportOptions=NULL) {
+                           includeCalculationNames=FALSE, includeRawValue=FALSE, includeTotalInfo=FALSE,
+                           exportOptions=NULL, showRowGroupHeaders=FALSE) {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "renderPivot", width, missing(width), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "renderPivot", height, missing(height), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
@@ -1624,13 +2064,15 @@ PivotTable <- R6::R6Class("PivotTable",
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "renderPivot", includeRawValue, missing(includeRawValue), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "renderPivot", includeTotalInfo, missing(includeTotalInfo), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "renderPivot", exportOptions, missing(exportOptions), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "renderPivot", showRowGroupHeaders, missing(showRowGroupHeaders), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$renderPivot", "Rendering htmlwidget...", list(width=width, height=height, styleNamePrefix=styleNamePrefix,
                                                                              includeHeaderValues=includeHeaderValues,
                                                                              includeRCFilters=includeRCFilters, includeCalculationFilters=includeCalculationFilters,
                                                                              includeWorkingData=includeWorkingData,
                                                                              includeEvaluationFilters=includeEvaluationFilters, includeCalculationNames=includeCalculationNames,
-                                                                             includeRawValue=includeRawValue, includeTotalInfo=includeTotalInfo, exportOptions=exportOptions))
+                                                                             includeRawValue=includeRawValue, includeTotalInfo=includeTotalInfo,
+                                                                             exportOptions=exportOptions, showRowGroupHeaders=showRowGroupHeaders))
       if(!private$p_evaluated) self$evaluatePivot()
       if(!private$p_evaluated) stop("PivotTable$getHtml():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
       # pivottabler(self, width=width, height=height, includeRCFilters=includeRCFilters, includeCalculationFilters=includeCalculationFilters,
@@ -1642,7 +2084,8 @@ PivotTable <- R6::R6Class("PivotTable",
                                             includeRCFilters=includeRCFilters, includeCalculationFilters=includeCalculationFilters,
                                             includeWorkingData=includeWorkingData,
                                             includeEvaluationFilters=includeEvaluationFilters, includeCalculationNames=includeCalculationNames,
-                                            includeRawValue=includeRawValue, includeTotalInfo=includeTotalInfo, exportOptions=exportOptions)),
+                                            includeRawValue=includeRawValue, includeTotalInfo=includeTotalInfo,
+                                            exportOptions=exportOptions, showRowGroupHeaders=showRowGroupHeaders)),
         settings = settings
       )
       # viewer.fill=TRUE and browser.fill=TRUE sound like they would be good things, but they seem to prevent
@@ -1682,7 +2125,7 @@ PivotTable <- R6::R6Class("PivotTable",
       private$addTiming("getLatex", timeStart)
       return(ltx)
     },
-    writeToExcelWorksheet = function(wb=NULL, wsName=NULL, topRowNumber=NULL, leftMostColumnNumber=NULL, outputHeadingsAs="formattedValueAsText", outputValuesAs="rawValue", applyStyles=TRUE, mapStylesFromCSS=TRUE, exportOptions=NULL) {
+    writeToExcelWorksheet = function(wb=NULL, wsName=NULL, topRowNumber=NULL, leftMostColumnNumber=NULL, outputHeadingsAs="formattedValueAsText", outputValuesAs="rawValue", applyStyles=TRUE, mapStylesFromCSS=TRUE, exportOptions=NULL, showRowGroupHeaders=FALSE) {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "writeToExcelWorksheet", wb, missing(wb), allowMissing=TRUE, allowNull=TRUE, allowedClasses="Workbook")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "writeToExcelWorksheet", wsName, missing(wsName), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character")
@@ -1693,6 +2136,7 @@ PivotTable <- R6::R6Class("PivotTable",
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "writeToExcelWorksheet", applyStyles, missing(applyStyles), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "writeToExcelWorksheet", mapStylesFromCSS, missing(mapStylesFromCSS), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "writeToExcelWorksheet", exportOptions, missing(exportOptions), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "writeToExcelWorksheet", showRowGroupHeaders, missing(showRowGroupHeaders), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       }
       if (!requireNamespace("openxlsx", quietly = TRUE)) {
         stop("PivotTable$writeToExcelWorksheet():  The openxlsx package is needed to write the pivot table to an Excel file.  Please install it.", call. = FALSE)
@@ -1702,7 +2146,7 @@ PivotTable <- R6::R6Class("PivotTable",
                                                   leftMostColumnNumber=leftMostColumnNumber,
                                                   outputHeadingsAs=outputHeadingsAs, outputValuesAs=outputValuesAs,
                                                   applyStyles=applyStyles, mapStylesFromCSS=mapStylesFromCSS,
-                                                  exportOptions=exportOptions)
+                                                  exportOptions=exportOptions, showRowGroupHeaders=showRowGroupHeaders)
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$writeToExcelWorksheet", "Written to worksheet.")
     },
     trace = function(methodName, desc, detailList=NULL) {
@@ -1773,6 +2217,23 @@ PivotTable <- R6::R6Class("PivotTable",
     data = function(value) { return(private$p_data) },
     rowGroup = function(value) { return(invisible(private$p_rowGroup ))},
     columnGroup = function(value) { return(invisible(private$p_columnGroup ))},
+    topColumnGroups = function(value) {
+      return(private$p_columnGroup$childGroups)
+    },
+    leafColumnGroups = function(value) {
+      leafGroups = list()
+      grps <- private$p_columnGroup$getLeafGroups(leafGroups)
+      return(invisible(grps))
+    },
+    topRowGroups = function(value) {
+      return(private$p_rowGroup$childGroups)
+    },
+    leafRowGroups = function(value) {
+      leafGroups = list()
+      grps <- private$p_rowGroup$getLeafGroups(leafGroups)
+      return(invisible(grps))
+    },
+    rowGrpHeaders = function() { return(invisible(private$p_rowGrpHeaders ))},
     calculationGroups = function(value) { return(invisible(private$p_calculationGroups)) },
     calculationsPosition = function(value) {
       if(missing(value)) { return(invisible(private$p_calculationsPosition)) }
@@ -1840,6 +2301,36 @@ PivotTable <- R6::R6Class("PivotTable",
         return(invisible())
       }
     },
+    mergeEmptyRowSpace = function(value) {
+      if(missing(value)) return(invisible(private$p_mergeEmptyRowSpace))
+      else {
+        if(private$p_argumentCheckMode > 0) {
+          checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "mergeEmptyRowSpace", value, missing(value), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character", allowedValues=c("doNotMerge", "dataGroupsOnly", "cellsOnly", "dataGroupsAndCellsAs1", "dataGroupsAndCellsAs2"))
+        }
+        private$p_mergeEmptyRowSpace <- value
+        return(invisible())
+      }
+    },
+    mergeEmptyColumnSpace = function(value) {
+      if(missing(value)) return(invisible(private$p_mergeEmptyColumnSpace))
+      else {
+        if(private$p_argumentCheckMode > 0) {
+          checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "mergeEmptyColumnSpace", value, missing(value), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character", allowedValues=c("doNotMerge", "dataGroupsOnly", "cellsOnly", "dataGroupsAndCellsAs1", "dataGroupsAndCellsAs2"))
+        }
+        private$p_mergeEmptyColumnSpace <- value
+        return(invisible())
+      }
+    },
+    mergeEmptySpaceDirection = function(value) {
+      if(missing(value)) return(invisible(private$p_mergeEmptySpaceDirection))
+      else {
+        if(private$p_argumentCheckMode > 0) {
+          checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "mergeEmptySpaceDirection", value, missing(value), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character", allowedValues=c("row", "column"))
+        }
+        private$p_mergeEmptySpaceDirection <- value
+        return(invisible())
+      }
+    },
     allTimings = function(value) {
       descriptions <- sapply(private$p_timings, function(x) { return(ifelse(is.null(x$desc), NA, x$desc)) })
       user <- sapply(private$p_timings, function(x) { return(ifelse(is.null(x$time["user.self"]), NA, x$time["user.self"])) })
@@ -1857,10 +2348,12 @@ PivotTable <- R6::R6Class("PivotTable",
     p_argumentCheckMode = 4,
     p_traceEnabled = FALSE,
     p_processingLibrary = NULL,
+    p_lastInstanceId = NULL,
     p_data = NULL,
     p_styles = NULL,
     p_rowGroup = NULL,
     p_columnGroup = NULL,
+    p_rowGrpHeaders = NULL,
     p_calculationsPosition = NULL,
     p_calculationGroups = NULL,
     p_calculationsSet = FALSE,
@@ -1869,6 +2362,9 @@ PivotTable <- R6::R6Class("PivotTable",
     p_cells = NULL,
     p_lastCellBatchInfo = NULL,
     p_fixedWidthSized = FALSE,
+    p_mergeEmptyRowSpace = "dataGroupsAndCellsAs2",
+    p_mergeEmptyColumnSpace = "dataGroupsAndCellsAs2",
+    p_mergeEmptySpaceDirection = "row",
     p_htmlRenderer = NULL,
     p_latexRenderer = NULL,
     p_openxlsxRenderer = NULL,

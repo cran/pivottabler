@@ -36,9 +36,11 @@ getPvtStyleDeclarations <- function(pvtStyle=NULL) {
 #' @param exportOptions Options specifying how values are exported.
 #' @param compatibility Compatibility options specified when creating the
 #'   basictabler table.
+#' @param showRowGroupHeaders Show captions at the top of the columns that
+#' comprise the row groups (i.e. in the top left root of then pivot table).
 #' @return a basictabler table.
 
-convertPvtTblToBasicTbl <- function(pvt=NULL, exportOptions=NULL, compatibility=NULL) {
+convertPvtTblToBasicTbl <- function(pvt=NULL, exportOptions=NULL, compatibility=NULL, showRowGroupHeaders=FALSE) {
   # pre-reqs
   if (!requireNamespace("basictabler", quietly = TRUE)) {
     stop("convertPvtTblToBasicTbl():  The basictabler package is needed convert a pivot tabler to a basic table.  Please install the basictabler package.", call. = FALSE)
@@ -71,6 +73,10 @@ convertPvtTblToBasicTbl <- function(pvt=NULL, exportOptions=NULL, compatibility=
     btStyles$colHeaderStyle <- pvt$styles$colHeaderStyle
     btStyles$cellStyle <- pvt$styles$cellStyle
     btStyles$totalStyle <- pvt$styles$totalStyle
+    # the following don't exist as properties of the btStyles object
+    outlineRowHeaderStyle <- pvt$styles$outlineRowHeaderStyle
+    outlineColHeaderStyle <- pvt$styles$outlineColHeaderStyle
+    outlineCellStyle <- pvt$styles$outlineCellStyle
   }
   btbl$theme <- btStyles
   # get the data groups:  these are the leaf level groups
@@ -89,6 +95,8 @@ convertPvtTblToBasicTbl <- function(pvt=NULL, exportOptions=NULL, compatibility=
   # ...cells:
   rowCount <- pvt$cells$rowCount
   columnCount <- pvt$cells$columnCount
+  # ... merges
+  rowMerges <- pvt$getMerges(axis="row")
   # extend the table
   btbl$cells$extendCells(columnGroupLevelCount + rowCount, rowGroupLevelCount + columnCount)
   # special case of no rows and no columns, return a blank empty table
@@ -104,8 +112,25 @@ convertPvtTblToBasicTbl <- function(pvt=NULL, exportOptions=NULL, compatibility=
   bc <- 0 # this is reset to 1 on each new row
   # render the column headings, with a large blank cell at the start over the row headings
   if(insertDummyColumnHeading) {
+    # rendering the column headings (special case of no column groups existing)
     if(isBasicTblrZeroPt3) {
-      btbl$cells$setBlankCell(r=1, c=1, cellType="root", visible=TRUE, rowSpan=columnGroupLevelCount, colSpan=rowGroupLevelCount, asNBSP=TRUE)
+      if((showRowGroupHeaders==TRUE)&&(rowGroupLevelCount>0)) {
+        rowGrpHeaders <- pvt$rowGrpHeaders
+        for(c in 1:rowGroupLevelCount) {
+          rowGrpHeader <- NULL
+          if((0<c)&&(c<=length(rowGrpHeaders))) rowGrpHeader <- rowGrpHeaders[[c]]
+          if(is.null(rowGrpHeader)) {
+            btbl$cells$setBlankCell(r=1, c=c, cellType="root", visible=TRUE, rowSpan=columnGroupLevelCount, colSpan=1, asNBSP=TRUE)
+          }
+          else {
+            btbl$cells$setCell(r=1, c=c, cellType="root", visible=TRUE, rowSpan=columnGroupLevelCount, colSpan=1,
+                               rawValue=rowGrpHeader, formattedValue=rowGrpHeader, baseStyleName=btStyles$rootStyle)
+          }
+        }
+      }
+      else {
+        btbl$cells$setBlankCell(r=1, c=1, cellType="root", visible=TRUE, rowSpan=columnGroupLevelCount, colSpan=rowGroupLevelCount, asNBSP=TRUE)
+      }
       btbl$cells$setBlankCell(r=1, c=2, cellType="columnHeader", visible=TRUE, asNBSP=TRUE)
     }
     else {
@@ -115,10 +140,30 @@ convertPvtTblToBasicTbl <- function(pvt=NULL, exportOptions=NULL, compatibility=
     br <- 1
   }
   else {
+    # rendering the column headings (normal scenario)
     for(r in 1:columnGroupLevelCount) {
       br <- br + 1
-      if(r==1) { # generate the large top-left blank cell
-        if(isBasicTblrZeroPt3) { btbl$cells$setBlankCell(r=1, c=1, cellType="root", visible=TRUE, rowSpan=columnGroupLevelCount, colSpan=rowGroupLevelCount, asNBSP=TRUE) }
+      if(r==1) {
+        # generate the large top-left blank cell or cells
+        if(isBasicTblrZeroPt3) {
+          if((showRowGroupHeaders==TRUE)&&(rowGroupLevelCount>0)) {
+            rowGrpHeaders <- pvt$rowGrpHeaders
+            for(c in 1:rowGroupLevelCount) {
+              rowGrpHeader <- NULL
+              if((0<c)&&(c<=length(rowGrpHeaders))) rowGrpHeader <- rowGrpHeaders[[c]]
+              if(is.null(rowGrpHeader)) {
+                btbl$cells$setBlankCell(r=1, c=c, cellType="root", visible=TRUE, rowSpan=columnGroupLevelCount, colSpan=1, asNBSP=TRUE)
+              }
+              else {
+                btbl$cells$setCell(r=1, c=c, cellType="root", visible=TRUE, rowSpan=columnGroupLevelCount, colSpan=1,
+                                   rawValue=rowGrpHeader, formattedValue=rowGrpHeader, baseStyleName=btStyles$rootStyle)
+              }
+            }
+          }
+          else {
+            btbl$cells$setBlankCell(r=1, c=1, cellType="root", visible=TRUE, rowSpan=columnGroupLevelCount, colSpan=rowGroupLevelCount, asNBSP=TRUE)
+          }
+        }
         else { btbl$cells$setBlankCell(r=1, c=1, cellType="root", visible=TRUE, rowSpan=columnGroupLevelCount, colSpan=rowGroupLevelCount) }
       }
       bc <- rowGroupLevelCount
@@ -138,6 +183,8 @@ convertPvtTblToBasicTbl <- function(pvt=NULL, exportOptions=NULL, compatibility=
   for(r in 1:rowCount) {
     bc <- 0
     br <- br + 1
+    rowMerge <- rowMerges[[r]]
+    rg <- NULL
     # render the row headings
     if(insertDummyRowHeading) {
       bc <- bc + 1
@@ -148,27 +195,74 @@ convertPvtTblToBasicTbl <- function(pvt=NULL, exportOptions=NULL, compatibility=
       # get the leaf row group, then render any parent data groups that haven't yet been rendered
       rg <- rowGroups[[r]]
       ancrgs <- rg$getAncestorGroups(includeCurrentGroup=TRUE)
-      for(c in (length(ancrgs)-1):1) { # 2 (not 1) since the top ancestor is parentPivot private$rowGroup, which is just a container
+      for(c in (length(ancrgs)-1):1) { # start iterating at last item minus 1, which is first visible level in the pivot (level number=1)
         ancg <- ancrgs[[c]]
         bc <- bc + 1
-        if(ancg$isRendered==FALSE) {
-          btbl$cells$setCell(r=br, c=bc, cellType="rowHeader", visible=TRUE, rowSpan=length(ancg$leafGroups),
-                             rawValue=ancg$sortValue, formattedValue=exportValueAs(ancg$sortValue, ancg$caption, exportOptions, blankValue=""),
-                             baseStyleName=ancg$baseStyleName, styleDeclarations=getPvtStyleDeclarations(ancg$style))
-          ancg$isRendered <- TRUE
+        if(ancg$isRendered) next
+        rowGroupLevelNumber <- rowGroupLevelCount - c + 1
+        # merge info
+        rowMrgColumnSpan <- NULL
+        lastDataGroupInRow <- FALSE
+        if(rowMerge$merge && rowMerge$mergeGroups && (rowGroupLevelNumber==rowMerge$mergeGroupsFromLevel)) {
+          rowMrgColumnSpan <- rowMerge$mergeGroupSpan
+          lastDataGroupInRow <- TRUE
+        }
+        # style info
+        rhs <- NULL
+        if(ancg$isOutline) rhs <- outlineRowHeaderStyle
+        if(!is.null(ancg$baseStyleName)) rhs <- ancg$baseStyleName
+        # render headers
+        btbl$cells$setCell(r=br, c=bc, cellType="rowHeader", visible=TRUE, rowSpan=length(ancg$leafGroups), colSpan=rowMrgColumnSpan,
+                           rawValue=ancg$sortValue, formattedValue=exportValueAs(ancg$sortValue, ancg$caption, exportOptions, blankValue=""),
+                           baseStyleName=rhs, styleDeclarations=getPvtStyleDeclarations(ancg$style))
+        ancg$isRendered <- TRUE
+        if(lastDataGroupInRow) {
+          bc <- rowGroupLevelCount # needed in the event cells are written below
+          break
         }
       }
     }
     # render the cell values
-    for(c in 1:columnCount) {
-      cell <- pvt$cells$getCell(r, c)
-      cellType <- "cell"
-      if(cell$isTotal) cellType <- "total"
-      cllstyl <- NULL
-      bc <- bc + 1
-      btbl$cells$setCell(r=br, c=bc, cellType=cellType, visible=TRUE,
-                         rawValue=cell$rawValue, formattedValue=exportValueAs(cell$rawValue, cell$formattedValue, exportOptions, blankValue=""),
-                         baseStyleName=cell$baseStyleName, styleDeclarations=getPvtStyleDeclarations(cell$style))
+    if(!(rowMerge$merge && isTRUE(rowMerge$skipCells))) {
+      isOutlineCells <- FALSE
+      rgCellBaseStyleName <- NULL
+      rgCellStyle <- NULL
+      if(!is.null(rg)) {
+        isOutlineCells <- rg$isOutline
+        rgCellBaseStyleName <- rg$cellBaseStyleName
+        rgCellStyle <- rg$cellStyle
+      }
+      if(rowMerge$mergeCells) {
+        # special case of all the cells being merged
+        cs <- NULL
+        if(!is.null(rgCellBaseStyleName)) cs <-  rgCellBaseStyleName
+        else if(isOutlineCells && !is.null(outlineCellStyle)) cs <- outlineCellStyle
+        sd <- NULL
+        if(!is.null(rgCellStyle)) sd <- rgCellStyle
+        bc <- bc + 1
+        btbl$cells$setCell(r=br, c=bc, cellType="cell", visible=TRUE,
+                           rawValue="", formattedValue="", colSpan=columnCount,
+                           baseStyleName=cs, styleDeclarations=getPvtStyleDeclarations(sd))
+      }
+      else {
+        # normal scenario
+        for(c in 1:columnCount) {
+          cell <- pvt$cells$getCell(r, c)
+          cellType <- "cell"
+          if(cell$isTotal) cellType <- "total"
+          cs <- NULL
+          if(!is.null(cell$baseStyleName)) cs <-  cell$baseStyleName
+          else if(!is.null(rgCellBaseStyleName)) cs <-  rgCellBaseStyleName
+          else if(isOutlineCells && (!is.null(outlineCellStyle))) cs <- outlineCellStyle
+          sd <- NULL
+          if(!is.null(cell$style)) sd <- cell$style
+          else if(!is.null(rgCellStyle)) sd <- rgCellStyle
+          bc <- bc + 1
+          btbl$cells$setCell(r=br, c=bc, cellType=cellType, visible=TRUE,
+                             rawValue=cell$rawValue, formattedValue=exportValueAs(cell$rawValue, cell$formattedValue, exportOptions, blankValue=""),
+                             baseStyleName=cs, styleDeclarations=getPvtStyleDeclarations(sd))
+        }
+      }
     }
   }
   return(invisible(btbl))

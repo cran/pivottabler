@@ -5,9 +5,6 @@
 \alias{PivotTable}
 \title{A class that defines a pivot table.}
 \format{\code{\link{R6Class}} object.}
-\usage{
-PivotTable
-}
 \value{
 Object of \code{\link{R6Class}} with properties and methods that
   define a pivot table.
@@ -83,44 +80,69 @@ constructing the pivot table, where the elapsed time > 0.1 seconds.}
   compatibility=NULL, traceEnabled=FALSE, traceFile=NULL)}}{Create a new
   pivot table, optionally specifying styling and enabling debug logging.}
 
+  \item{\code{getNextInstanceId()}}{Return a unique object identifier.}
   \item{\code{addData(df, dataName)}}{Add a data frame with the specified
   name to the pivot table.}
   \item{\code{getTopColumnGroups()}}{Get the very top column PivotDataGroup
   that sits at the top of the parent-child hierarchy.}
   \item{\code{getLeafColumnGroups()}}{Get the PivotDataGroups at the bottom
   of the column heading parent-child hierarchy.}
+  \item{\code{addColumnGroup(variableName, filterType="ALL", values=NULL,
+  doNotExpand=FALSE, isEmpty=FALSE, isOutline=FALSE, caption=NULL,
+  isTotal=FALSE, isLevelSubTotal=FALSE, isLevelTotal=FALSE,
+  calculationGroupName=NULL, calculationName=NULL,
+  baseStyleName=NULL, styleDeclarations=NULL,
+  insertAtIndex=NULL, insertBeforeGroup=NULL, insertAfterGroup=NULL,
+  mergeEmptySpace=NULL, cellBaseStyleName=NULL,
+  cellStyleDeclarations=NULL, sortAnchor=NULL, resetCells=TRUE)}}{
+  Add a new top-level column heading data group to the pivot table.}
   \item{\code{addColumnDataGroups(variableName, atLevel, fromData=TRUE,
-  dataName, dataSortOrder="asc", dataFormat, onlyCombinationsThatExist=TRUE,
+  dataName, dataSortOrder="asc", dataFormat, dataFmtFuncArgs,
+  onlyCombinationsThatExist=TRUE,
   explicitListOfValues, calculationGroupName, expandExistingTotals=FALSE,
   addTotal=TRUE, visualTotals=FALSE, totalPosition="after",
   totalCaption="Total", preGroupData=TRUE, baseStyleName=NULL,
   styleDeclarations=NULL)}}{Generate new column heading data
   groups based on the distinct values in a data frame or using explicitly
   specified data values.}
-  \item{\code{normaliseColumnGroups() }}{Normalise the column heading data
-  group hierarchy so that all branches have the same number of levels -
-  accomplished by adding empty child data groups where needed.}
+  \item{\code{normaliseColumnGroups(resetCells=TRUE) }}{Normalise the
+  column heading data group hierarchy so that all branches have the same
+  number of levels - accomplished by adding empty child data groups where
+  needed.}
   \item{\code{sortColumnDataGroups(levelNumber=1, orderBy="calculation",
-  sortOrder="desc", calculationGroupName="default", calculationName)}}{Sort
+  sortOrder="desc", calculationGroupName="default", calculationName,
+  fromIndex=NULL, toIndex=NULL, resetCells=TRUE)}}{Sort
   the column heading data groups either by the data group data value, caption
   or based on calculation result values.}
   \item{\code{getTopRowGroups()}}{Get the left-most row PivotDataGroup that
   sits at the top of the parent-child hierarchy.}
   \item{\code{getLeafRowGroups()}}{Get the PivotDataGroups at the bottom of
   the row heading parent-child hierarchy.}
+  \item{\code{addRowGroup(variableName, filterType="ALL", values=NULL,
+  doNotExpand=FALSE, isEmpty=FALSE, isOutline=FALSE, caption=NULL,
+  isTotal=FALSE, isLevelSubTotal=FALSE, isLevelTotal=FALSE,
+  calculationGroupName=NULL, calculationName=NULL,
+  baseStyleName=NULL, styleDeclarations=NULL,
+  insertAtIndex=NULL, insertBeforeGroup=NULL, insertAfterGroup=NULL,
+  mergeEmptySpace=NULL, cellBaseStyleName=NULL,
+  cellStyleDeclarations=NULL, sortAnchor=NULL, resetCells=TRUE)}}{
+  Add a new top-level row heading data group to the pivot table.}
   \item{\code{addRowDataGroups(variableName, atLevel, fromData=TRUE,
-  dataName, dataSortOrder="asc", dataFormat, onlyCombinationsThatExist=TRUE,
+  dataName, dataSortOrder="asc", dataFormat, dataFmtFuncArgs,
+  onlyCombinationsThatExist=TRUE,
   explicitListOfValues, calculationGroupName, expandExistingTotals=FALSE,
   addTotal=TRUE, visualTotals=FALSE, totalPosition="after",
   totalCaption="Total", preGroupData=TRUE, baseStyleName=NULL,
-  styleDeclarations=NULL)}}{Generate new row heading data
+  styleDeclarations=NULL, header=NULL, outlineBefore=NULL,
+  outlineAfter=NULL)}}{Generate new row heading data
   groups based on the distinct values in a data frame or using explicitly
   specified data values.}
-  \item{\code{normaliseRowGroups()}}{Normalise the row heading data group
-  hierarchy so that all branches have the same number of levels - accomplished
-  by adding empty child data groups where needed.}
+  \item{\code{normaliseRowGroups(resetCells=TRUE)}}{Normalise the row heading
+  data group hierarchy so that all branches have the same number of
+  levels - accomplished by adding empty child data groups where needed.}
   \item{\code{sortRowDataGroups(levelNumber=1, orderBy="calculation",
-  sortOrder="desc", calculationGroupName="default", calculationName)}}{Sort
+  sortOrder="desc", calculationGroupName="default", calculationName,
+  fromIndex=NULL, toIndex=NULL, resetCells=TRUE)}}{Sort
   the row heading data groups either by the data group data value, caption or
   based on calculation result values.}
   \item{\code{addCalculationGroup(calculationGroupName)}}{Create a new
@@ -163,37 +185,48 @@ constructing the pivot table, where the elapsed time > 0.1 seconds.}
   evaluateCells() in sequence.}
   \item{\code{findRowDataGroups(matchMode="simple", variableNames=NULL,
   variableValues=NULL, totals="include", calculationNames=NULL,
-  includeDescendantGroups=FALSE)}}{Find row data groups matching the
-  specified criteria.}
+  includeDescendantGroups=FALSE, emptyGroups="exclude",
+  outlineGroups="exclude")}}{Find row data
+  groups matching the specified criteria.}
   \item{\code{findColumnDataGroups(matchMode="simple", variableNames=NULL,
   variableValues=NULL, totals="include", calculationNames=NULL,
-  includeDescendantGroups=FALSE)}}{Find column data groups matching the
-  specified criteria.}
+  includeDescendantGroups=FALSE, emptyGroups="exclude",
+  outlineGroups="exclude")}}{Find column
+  data groups matching the specified criteria.}
   \item{\code{getCells(specifyCellsAsList=FALSE, rowNumbers=NULL,
-  columnNumbers=NULL, cellCoordinates=NULL)}}{Retrieve cells by a combination
-  of row and/or column numbers.}
+  columnNumbers=NULL, cellCoordinates=NULL, excludeEmptyCells=TRUE)}}{
+  Retrieve cells by a combination of row and/or column numbers.}
   \item{\code{findCells(variableNames=NULL, variableValues=NULL,
   totals="include", calculationNames=NULL, minValue=NULL, maxValue=NULL,
-  exactValues=NULL, includeNull=TRUE, includeNA=TRUE)}}{Find cells in the
+  exactValues=NULL, includeNull=TRUE, includeNA=TRUE,
+  emptyCells="exclude", outlineCells="exclude")}}{Find cells in the
   body of the pivot table matching the specified criteria.}
-  \item{\code{print(asCharacter=FALSE)}}{Either print the pivot table to the
-  console or retrieve it as a character value.}
+  \item{\code{print(asCharacter=FALSE, showRowGroupHeaders=TRUE)}}{Either
+  print the pivot table to the console or retrieve it as a character value.}
   \item{\code{asMatrix(includeHeaders=TRUE, repeatHeaders=FALSE,
-  rawValue=FALSE)}}{Gets the pivot table as a matrix, with or without
-  headings.}
+  rawValue=FALSE)}}{Gets the pivot table as a character matrix, with the
+  pivot table row/column headings within the body of the matrix.}
+  \item{\code{asDataMatrix = function(includeHeaders=TRUE, rawValue=TRUE,
+  separator=" ")}}{Gets the pivot table as a matrix, with the pivot table
+  row/column headings set as the row/column names in the matrix.}
   \item{\code{asDataFrame(separator=" ")}}{Gets the pivot table as a data
   frame, combining multiple levels of headings with the specified separator.}
   \item{\code{asTidyDataFrame(includeGroupCaptions=TRUE,
-  includeGroupValues=TRUE, separator=" ")}}{Gets the pivot table as a tidy
-  data frame, where each cell in the body of the pivot table becomes one row
-  in the data frame.}
+  includeGroupValues=TRUE, separator=" ", excludeEmptyCells=TRUE)}}{Gets the
+  pivot table as a tidy data frame, where each cell in the body of the pivot
+  table becomes one row in the data frame.}
+  \item{\code{asBasicTable = function(exportOptions=NULL, compatibility=NULL,
+  showRowGroupHeaders=FALSE))}}{Generates a basictabler table (from the
+  basictabler R package) which allows further custom manipulation of the
+  pivot table.}
   \item{\code{getCss(styleNamePrefix)}}{Get the CSS declarations for the
   entire pivot table.}
   \item{\code{getHtml(styleNamePrefix, includeHeaderValues=FALSE,
   includeRCFilters=FALSE, includeCalculationFilters=FALSE,
   includeWorkingData=FALSE, includeEvaluationFilters=FALSE,
   includeCalculationNames=FALSE, includeRawValue=FALSE,
-  includeTotalInfo=FALSE, exportOptions=NULL)}}{Get
+  includeTotalInfo=FALSE, exportOptions=NULL,
+  showRowGroupHeaders=FALSE)}}{Get
   the HTML representation of the pivot table,
   specifying the CSS style name prefix to use and whether additional debug
   information should be included in the pivot table.}
@@ -202,13 +235,14 @@ constructing the pivot table, where the elapsed time > 0.1 seconds.}
   includeCalculationFilters=FALSE, includeWorkingData=FALSE,
   includeEvaluationFilters=FALSE, includeCalculationNames=FALSE,
   includeRawValue=FALSE, includeTotalInfo=FALSE,
-  exportOptions=NULL)}}{Save the HTML
+  exportOptions=NULL, showRowGroupHeaders=FALSE)}}{Save the HTML
   representation of the pivot table to a file.}
   \item{\code{renderPivot(width, height, styleNamePrefix,
   includeHeaderValues=FALSE, includeRCFilters=FALSE,
   includeCalculationFilters=FALSE, includeWorkingData=FALSE,
   includeEvaluationFilters=FALSE, includeCalculationNames=FALSE,
-  includeRawValue=FALSE, includeTotalInfo=FALSE, exportOptions=NULL)}}{
+  includeRawValue=FALSE, includeTotalInfo=FALSE,
+  exportOptions=NULL, showRowGroupHeaders=FALSE)}}{
   Render the pivot table as a htmlwidget.}
   \item{\code{getLatex(caption=NULL, label=NULL, fromRow=NULL, toRow=NULL,
   fromColumn=NULL, toColumn=NULL, boldHeadings=FALSE,
@@ -242,4 +276,3 @@ pt$defineCalculation(calculationName="TotalTrains",
 summariseExpression="n()")
 pt$renderPivot()
 }
-\keyword{datasets}

@@ -23,6 +23,8 @@
 #'   cell.
 #' @field calculationGroupName The name of the calculation group that owns the
 #'   above calculation.
+#' @field isEmpty Indicates whether this cell contains no data (e.g. if it is
+#'   part of a header / outline row).
 #' @field rowFilters The data filters applied to this cell from the row
 #'   headings.
 #' @field columnFilters The data filters applied to this cell from the column
@@ -53,6 +55,8 @@
 #'   \item{\code{new(...)}}{Create a new pivot table cell, specifying the field
 #'   values documented above.}
 #'
+#'   \item{\code{setStyling(styleDeclarations=NULL))}}{Used to set style
+#'   declarations.}
 #'   \item{\code{getCopy())}}{Get a copy of this cell.}
 #'   \item{\code{asList())}}{Get a list representation of this cell}
 #'   \item{\code{asJSON()}}{Get a JSON representation of this cell}
@@ -62,7 +66,7 @@ PivotCell <- R6::R6Class("PivotCell",
   public = list(
    initialize = function(parentPivot, rowNumber=NULL, columnNumber=NULL,
                          calculationName=NULL, calculationGroupName=NULL,
-                         rowFilters=NULL, columnFilters=NULL, rowColFilters=NULL,
+                         isEmpty=FALSE, rowFilters=NULL, columnFilters=NULL, rowColFilters=NULL,
                          rowLeafGroup=NULL, columnLeafGroup=NULL) {
      if(parentPivot$argumentCheckMode > 0) {
        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCell", "initialize", parentPivot, missing(parentPivot), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotTable")
@@ -70,6 +74,7 @@ PivotCell <- R6::R6Class("PivotCell",
        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCell", "initialize", columnNumber, missing(columnNumber), allowMissing=FALSE, allowNull=FALSE, allowedClasses=c("integer", "numeric"))
        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCell", "initialize", calculationName, missing(calculationName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCell", "initialize", calculationGroupName, missing(calculationGroupName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
+       checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCell", "initialize", isEmpty, missing(isEmpty), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCell", "initialize", rowFilters, missing(rowFilters), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotFilters")
        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCell", "initialize", columnFilters, missing(columnFilters), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotFilters")
        checkArgument(parentPivot$argumentCheckMode, FALSE, "PivotCell", "initialize", rowColFilters, missing(rowColFilters), allowMissing=TRUE, allowNull=TRUE, allowedClasses="PivotFilters")
@@ -79,10 +84,12 @@ PivotCell <- R6::R6Class("PivotCell",
      private$p_parentPivot <- parentPivot
      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCell$new", "Creating new PivotCell",
                                    list(rowNumber=rowNumber, columnNumber=columnNumber))
+     private$p_instanceId <- parentPivot$getNextInstanceId()
      private$p_rowNumber <- rowNumber
      private$p_columnNumber <- columnNumber
      private$p_calculationName <- calculationName
      private$p_calculationGroupName <- calculationGroupName
+     private$p_isEmpty <- isEmpty
      private$p_rowFilters <- rowFilters
      private$p_columnFilters <- columnFilters
      private$p_rowColFilters <- rowColFilters
@@ -92,6 +99,16 @@ PivotCell <- R6::R6Class("PivotCell",
      private$p_rowLeafGroup <- rowLeafGroup
      private$p_columnLeafGroup <- columnLeafGroup
      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCell$new", "Created new PivotCell")
+   },
+   setStyling = function(styleDeclarations=NULL) {
+      if(private$p_parentPivot$argumentCheckMode > 0) {
+         checkArgument(private$p_parentPivot$argumentCheckMode, FALSE, "PivotCell", "setStyling", styleDeclarations, missing(styleDeclarations), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", allowedListElementClasses=c("character", "integer", "numeric"))
+      }
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCell$setStyling", "Setting style declarations...", list(styleDeclarations))
+      if(is.null(styleDeclarations)) private$p_style = NULL
+      else if(is.null(private$p_style)) private$p_style = private$p_parentPivot$createInlineStyle(declarations=styleDeclarations)
+      else private$p_style$setPropertyValues(styleDeclarations)
+      if(private$p_parentPivot$traceEnabled==TRUE) private$p_parentPivot$trace("PivotCell$setStyling", "Set style declarations.")
    },
    getCopy = function() {
      copy <- list()
@@ -127,6 +144,7 @@ PivotCell <- R6::R6Class("PivotCell",
        column=private$p_columnNumber,
        calculationName=private$p_calculationName,
        calculationGroupName=private$p_calculationGroupName,
+       isEmpty=private$p_isEmpty,
        rowColFilters=fstr1,
        rowFilters=fstr2,
        columnFilters=fstr3,
@@ -142,10 +160,12 @@ PivotCell <- R6::R6Class("PivotCell",
    asJSON = function() { return(jsonlite::toJSON(asList())) }
   ),
   active = list(
+   instanceId = function(value) { return(invisible(private$p_instanceId)) },
    rowNumber = function(value) { return(invisible(private$p_rowNumber)) },
    columnNumber = function(value) { return(invisible(private$p_columnNumber)) },
    calculationName = function(value) { return(invisible(private$p_calculationName)) },
    calculationGroupName = function(value) { return(invisible(private$p_calculationGroupName)) },
+   isEmpty = function(value) { return(invisible(private$p_isEmpty)) },
    rowFilters = function(value) { return(invisible(private$p_rowFilters)) },
    columnFilters = function(value) { return(invisible(private$p_columnFilters)) },
    rowColFilters = function(value) { return(invisible(private$p_rowColFilters)) },
@@ -225,10 +245,12 @@ PivotCell <- R6::R6Class("PivotCell",
   ),
   private = list(
     p_parentPivot = NULL,             # an object ref (the single pivot instance)
+    p_instanceId = NULL,              # a unique identifier (unique across all row/column groups and cells) to allow "grp1 is grp2" type comparisons
     p_rowNumber = NULL,               # an integer
     p_columnNumber = NULL,            # an integer
     p_calculationName = NULL,         # a string
     p_calculationGroupName = NULL,    # a string
+    p_isEmpty = NULL,                 # a logical value that indicates whether this cell is a header/separator (e.g. as used in the outline layout)
     p_rowFilters = NULL,              # an object ref (shared across this row)
     p_columnFilters = NULL,           # an object ref (shared across this column)
     p_rowColFilters = NULL,           # an object ref (unique to this cell)

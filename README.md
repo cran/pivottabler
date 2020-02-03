@@ -19,6 +19,8 @@ Pivot tables can be converted to a standard R matrix or data frame. Pivot tables
 
 `pivottabler` is a companion package to the `basictabler` package. `pivottabler` is focussed on generating pivot tables and can aggregate data. `basictabler` does not aggregate data but offers more control of table structure.
 
+For more detailed information see <http://www.pivottabler.org.uk/articles>.
+
 ### Installation
 
 You can install:
@@ -141,6 +143,23 @@ pt$renderPivot()
 
 ![<http://cbailiss.me.uk/pivottablerreadmeimgs/example2.png>](http://cbailiss.me.uk/pivottablerreadmeimgs/example2.png)
 
+Outline layout is an alternative way of rendering the row groups, e.g. for the same pivot table as above:
+
+``` r
+library(pivottabler)
+pt <- PivotTable$new()
+pt$addData(bhmtrains) 
+pt$addColumnDataGroups("TrainCategory") 
+pt$addRowDataGroups("TOC", 
+                    outlineBefore=list(isEmpty=FALSE, groupStyleDeclarations=list(color="blue")), 
+                    outlineTotal=list(isEmpty=FALSE, groupStyleDeclarations=list(color="blue"))) 
+pt$addRowDataGroups("PowerType", addTotal=FALSE) 
+pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
+pt$renderPivot()
+```
+
+![<http://cbailiss.me.uk/pivottablerreadmeimgs/example7.png>](http://cbailiss.me.uk/pivottablerreadmeimgs/example7.png)
+
 #### Multiple Calculations
 
 Multiple calculations are supported. Calculations can be based on other calculations in the pivot table. Calculations can be hidden - e.g. to hide calculations that only exist to provide values to other calculations.
@@ -245,16 +264,9 @@ In the screenshot above, Gridlines have been made invisible to make the styling 
 
 ### More Information
 
-More complex pivot tables can also be created, e.g. with irregular layouts, using multiple data frames, using multiple calculations and/or custom R calculation functions. See the package vignettes for more details:
+More complex pivot tables can also be created, e.g. with irregular layouts, using multiple data frames, using multiple calculations and/or custom R calculation functions.
 
-``` r
-# to see a list of available package vignettes:
-vignette(package="pivottabler")
-# to open a specific vignette
-vignette(topic="v01-introduction", package="pivottabler")
-```
-
-The vignettes can also be read on CRAN at: <https://cran.r-project.org/package=pivottabler>
+See <http://www.pivottabler.org.uk/articles> for more detailed information.
 
 ### More Examples
 

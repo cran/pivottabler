@@ -5,9 +5,6 @@
 \alias{PivotCell}
 \title{A class that represents a cell in a pivot table}
 \format{\code{\link{R6Class}} object.}
-\usage{
-PivotCell
-}
 \value{
 Object of \code{\link{R6Class}} with properties and methods that
   define a single pivot table cell
@@ -36,6 +33,9 @@ cell.}
 
 \item{\code{calculationGroupName}}{The name of the calculation group that owns the
 above calculation.}
+
+\item{\code{isEmpty}}{Indicates whether this cell contains no data (e.g. if it is
+part of a header / outline row).}
 
 \item{\code{rowFilters}}{The data filters applied to this cell from the row
 headings.}
@@ -79,6 +79,8 @@ for this cell.}
   \item{\code{new(...)}}{Create a new pivot table cell, specifying the field
   values documented above.}
 
+  \item{\code{setStyling(styleDeclarations=NULL))}}{Used to set style
+  declarations.}
   \item{\code{getCopy())}}{Get a copy of this cell.}
   \item{\code{asList())}}{Get a list representation of this cell}
   \item{\code{asJSON()}}{Get a JSON representation of this cell}
@@ -89,4 +91,3 @@ for this cell.}
 # This class should only be created by the pivot table.
 # It is not intended to be created outside of the pivot table.
 }
-\keyword{datasets}

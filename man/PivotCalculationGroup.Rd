@@ -5,9 +5,6 @@
 \alias{PivotCalculationGroup}
 \title{A class that defines a group of calculations.}
 \format{\code{\link{R6Class}} object.}
-\usage{
-PivotCalculationGroup
-}
 \value{
 Object of \code{\link{R6Class}} with properties and methods that
   define a group of calculations.
@@ -38,7 +35,8 @@ Do not have spaces in this name.}
   \item{\code{getCalculation(calculationName=NULL)}}{Get the calculation with
   the specified name.}
   \item{\code{defineCalculation(calculationName=NULL, caption=NULL,
-  visible=TRUE, displayOrder=NULL, filters=NULL, format=NULL, dataName=NULL,
+  visible=TRUE, displayOrder=NULL, filters=NULL, format=NULL,
+  fmtFuncArgs=NULL, dataName=NULL,
   type="summary", executionOrder=NULL, valueName=NULL,
   summariseExpression=NULL, calculationExpression=NULL,
   calculationFunction=NULL, basedOn=NULL, noDataValue=NULL,
@@ -58,4 +56,3 @@ Do not have spaces in this name.}
 # This class should only be created by the pivot table.
 # It is not intended to be created outside of the pivot table.
 }
-\keyword{datasets}

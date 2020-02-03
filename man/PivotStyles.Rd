@@ -5,9 +5,6 @@
 \alias{PivotStyles}
 \title{A class that defines a collection of styles.}
 \format{\code{\link{R6Class}} object.}
-\usage{
-PivotStyles
-}
 \value{
 Object of \code{\link{R6Class}} with properties and methods that
   define styles/a theme for a pivot table.
@@ -38,8 +35,17 @@ table.}
 \item{\code{colHeaderStyle}}{The name of the style for the column headers in the
 pivot table.}
 
+\item{\code{outlineRowHeaderStyle}}{The name of the style for the outline row
+headers in the pivot table.}
+
+\item{\code{outlineColHeaderStyle}}{The name of the style for the outline column
+headers in the pivot table.}
+
 \item{\code{cellStyle}}{The name of the cell style for the non-total cells in the
 body of the pivot table.}
+
+\item{\code{outlineCellStyle}}{The name of the cell style for the non-total
+outline cells in the body of the pivot table.}
 
 \item{\code{totalStyle}}{The name of the cell style for the total cells in the pivot
 table.}
@@ -84,4 +90,3 @@ pivotStyles$addStyle(styleName="MyNewStyle", list(
     "background-color"="#F2F2F2"
   ))
 }
-\keyword{datasets}

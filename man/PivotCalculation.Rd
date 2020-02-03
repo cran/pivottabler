@@ -5,9 +5,6 @@
 \alias{PivotCalculation}
 \title{A class that defines a calculation.}
 \format{\code{\link{R6Class}} object.}
-\usage{
-PivotCalculation
-}
 \value{
 Object of \code{\link{R6Class}} with properties and methods that
   define a single pivot table calculation.
@@ -38,6 +35,9 @@ flexibility (and/or/replace).  See the Calculations vignette for details.}
 
 \item{\code{format}}{A character, list or custom function to format the calculation
 result.}
+
+\item{\code{fmtFuncArgs}}{A list that specifies any additional arguments to pass to a
+a custom format function.}
 
 \item{\code{dataName}}{Specifies which data frame in the pivot table is used for
 this calculation.}
@@ -85,4 +85,3 @@ table if no  data exists for a particular cell.}
 # This class should only be created by the pivot table.
 # It is not intended to be created outside of the pivot table.
 }
-\keyword{datasets}
