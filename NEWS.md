@@ -1,10 +1,61 @@
+pivottabler 1.4.0
+=================
+
+Overview
+--------
+
+This release includes one potential breaking change and many small enhancements across various parts of the package.
+
+Reminder:  The package now only contains one introductory vignette (due to the constraints on CRAN).
+The full set of 15+ vignettes can be found at:  http://www.pivottabler.org.uk/articles/ 
+
+Breaking Changes
+----------------
+
+**Row group and column group captions for blank values**
+
+When generating HTML, previous versions of the package would not output any caption for data groups with a blank null (e.g. NULL).  This could lead to rows collapsing to a few pixels in height (if all of the cells on the row also had no value).  Starting with v1.4.0, a non-breaking space character is emitted instead (HTML &amp;nbsp;), in the same way that other parts of the pivot table sometimes also emit a non-breaking space character.   This should make minimal difference to the visual appearance of the table, however it may cause issues for users who require the previous behaviour.  The previous behaviour is still available by specifying `compatibility=list(noDataGroupNBSP=TRUE)` as an argument when creating the pivot table, either in `PivotTable$new()` or one of the quick pivot functions such as `qpvt()`.
+
+A future version of the package will likely include an option to prevent all non-breaking space characters from being emitted and more correctly use CSS style rules instead to control minimum data group heights/widths. 
+
+Documentation Changes
+---------------------
+
+* The code documentation for `pivottabler` has been re-written to use the new R6 documentation capabilities in `roxygen2`.  As a result the documentation is now more detailed than in previous versions, e.g. arguments in object method calls are now properly documented.  Nonetheless, the easiest way to learn the package is using the vignettes.  
+* The new "Navigating a Pivot Table" vignette provides more detailed information about low-level methods for navigating in code over the different parts of a pivot table.  Several new methods have also been added that are described in this vignette:  `pt$getLeafColumnGroup()`, `pt$getLeafRowGroup()`, `pt$getCell()`, `pt$getColumnGroupsByLevel()`, `pt$getRowGroupsByLevel()`, `pt$columnGroupLevelCount` and `pt$rowGroupLevelCount`.
+* The "Irregular Layout" vignette has been expanded to provide additional information to help with building custom pivot tables.
+
+Improvements
+----------------
+
+* Defaults can now be set using `pt$setDefault()` for the following parameters of `pt$addColumnDataGroups()` and `pt$addRowDataGroups()`: `addTotal`, `expandExistingTotals`, `visualTotals`, `totalPosition`, `totalCaption`, `outlineBefore`, `outlineAfter` and `outlineTotal`.  
+* The captions of data groups added to pivot tables using `pt$addColumnDataGroups()` and `pt$addRowDataGroups()`can now be specified using the new `caption` argument.  See the "Data Groups" vignette for details.
+* Custom sort orders can be specified for data groups.  See the "Data Groups" vignette for details.
+* Empty rows/columns can be found using the new functions `pt$getEmptyRows()` and `pt$getEmptyColumns()`.  See the "Custom Layout Changes" section of the "Irregular Layout" vignette for details. 
+* The `pt$findRowDataGroups()` and `pt$findColumnDataGroups()` functions gain additional parameters: `atLevels`, `minChildCount`, `maxChildCount` and `outlineLinkedGroupExists`.  See the "Finding and Formatting" vignette for details.
+* When deleting data groups using `group$removeGroup()`, it is now possible to also remove the related groups such as the outline group header row (aka. outline before) and outline group footer row (aka. outline after) using the new argument `removedRelatedOutlineGroups=TRUE`.
+* Specific rows and/or columns can be removed from pivot tables using new functions such as `pt$removeRow(3)` and `pt$removeRows(c(2, 4))`.  See the "Custom Layout Changes" section of the "Irregular Layout" vignette for details. 
+* `pt$addRowDataGroups()` gains two new arguments `onlyAddGroupIf` and `onlyAddOutlineChildGroupIf` which enable hierarchies with a variable number of levels to be used on rows in a pivot table in outline layout.  See the "Regular Layout" vignette for details.  Thanks to @MarcoPortmann for the usage scenario.
+* When exporting to a data frame, it is now possible to also export the row groups as columns (instead of only row names) using `pt$asDataFrame(rowGroupsAsColumns=TRUE)`.  Thanks to @ismailmuller for the suggestion (#29).
+* When exporting to a data frame, the handling of cell values that are not integer/numeric can be specified using the `forceNumeric` argument. `TRUE` will convert any values that are not integer/numeric to NA.
+* Row group headers, visible when specifying `pt$renderPivot(showRowGroupHeaders=TRUE)`, are now set automatically to the variable name when calling `pt$addRowDataGroups(...)`.  The name can be overridden using `pt$addRowDataGroups(..., header="...")`.
+* Additional arguments can now be passed to custom calculation functions using the `calcFuncArgs` argument.  See the "Calculations" vignette for details.  Thanks to @MarcoPortmann for the suggestion (#31 and #32).
+* It is now possible to pre-calculate totals/aggregate data cells when using calculation method 4 ("Showing a value").  See the "Calculations" vignette for details.  This closes a long-standing gap with this calculation method. (#2).
+
+Deprecated
+----------------
+
+The following can still be used but now emits a deprecation warning:
+
+* The `getLevelNumber()` method on data groups has been replaced with the `levelNumber` property.
+
 pivottabler 1.3.1
 =================
 
 This release includes two small bug fixes only:
 
-* Pivot tables with nothing on the rows axis fail to convert to a data frame using pt$asDataFrame() (issue #30).
-* Pivot tables with nothing on rows and/or columns sometimes fail to convert to a matrix using pt$asMatrix() or pt$asDataMatrix().
+* Pivot tables with nothing on the rows axis fail to convert to a data frame using `pt$asDataFrame()` (issue #30).
+* Pivot tables with nothing on rows and/or columns sometimes fail to convert to a matrix using `pt$asMatrix()` or `pt$asDataMatrix()`.
 
 
 pivottabler 1.3.0
@@ -17,7 +68,7 @@ This release introduces a new layout type - outline layout - that can make large
 
 Several small improvements mean that irregular pivot tables (e.g. two pivot tables in one) are now easier to construct.
 
-The package vignettes have grown too large be hosted on CRAN.  They have moved to:  http://www.pivottabler.org.uk/articles/ 
+The package vignettes have grown too large be hosted on CRAN.  They have been moved to:  http://www.pivottabler.org.uk/articles/ 
 
 Improvements
 ----------------
@@ -30,7 +81,7 @@ Improvements
    * Several other options that are described in the "Irregular Layout" vignette.
 * Headings for the row data groups (i.e. headings for the first column / first few columns) in a pivot table can now be specified.  See the "Pivot tables as standard tables (row group headings)" section in the "Data Groups" vignette for details.  The new `showRowGroupHeaders` argument can be used with `pt$renderPivot()`, `pt$getHtml()`, `pt$saveHtml()`, `pt$writeToExcelWorksheet()` and `pt$asBasicTable()`.
 * New function `pt$asDataMatrix()` provides a cleaner way to convert a pivot table to a matrix, where the row/column headings in the pivot table become the row/column headings in the matrix.  See the "Outputs" vignette for details.
-* New function `setStyling()` provides an alternative method to set style declarations on data group headers and cells.  See the "Irregular Layout" vignette for an example.
+* New function `setStyling()` provides an alternative method to set style declarations on data group headers and cells.  See the "Finding and Formatting" or "Irregular Layout" vignettes for examples.
 * Additional arguments can now be passed to custom functions used to format calculation values.  See the `fmtFuncArgs` parameter in the "Calculations" vignette for details.
 * Additional arguments can now be passed to custom functions used to format data group values.  See the `fmtFuncArgs` parameter in the "Data Groups" vignette for details.
 

@@ -76,7 +76,7 @@ for(i in 1:nrow(scenarios)) {
 
     library(pivottabler)
     pt <- PivotTable$new(processingLibrary=processingLibrary, evaluationMode=evaluationMode,
-                         compatibility=list(totalStyleIsCellStyle=TRUE, explicitHeaderSpansOfOne=TRUE))
+                         compatibility=list(totalStyleIsCellStyle=TRUE, explicitHeaderSpansOfOne=TRUE, noDataGroupNBSP=TRUE))
     pt$addData(bhmtrains)
     pt$addColumnDataGroups("TrainCategory")
     pt$addColumnDataGroups("PowerType")
@@ -112,7 +112,7 @@ for(i in 1:nrow(scenarios)) {
 
     library(pivottabler)
     pt <- PivotTable$new(processingLibrary=processingLibrary, evaluationMode=evaluationMode,
-                         compatibility=list(totalStyleIsCellStyle=TRUE, explicitHeaderSpansOfOne=TRUE))
+                         compatibility=list(totalStyleIsCellStyle=TRUE, explicitHeaderSpansOfOne=TRUE, noDataGroupNBSP=TRUE))
     pt$addData(bhmtrains)
     pt$addColumnDataGroups("TrainCategory")
     pt$addColumnDataGroups("PowerType")
@@ -139,7 +139,7 @@ for(i in 1:nrow(scenarios)) {
     library(dplyr)
     library(pivottabler)
     data <- filter(bhmtrains, (Status=="A")|(Status=="C"))
-    pt <- PivotTable$new(processingLibrary=processingLibrary, evaluationMode=evaluationMode)
+    pt <- PivotTable$new(processingLibrary=processingLibrary, evaluationMode=evaluationMode, compatibility=list(noDataGroupNBSP=TRUE))
     pt$addData(data)
     pt$addColumnDataGroups("PowerType", addTotal=FALSE)
     pt$addColumnDataGroups("Status", addTotal=FALSE)
@@ -167,7 +167,7 @@ for(i in 1:nrow(scenarios)) {
 
     library(pivottabler)
     pt <- PivotTable$new(processingLibrary=processingLibrary, evaluationMode=evaluationMode,
-                         compatibility=list(totalStyleIsCellStyle=TRUE, explicitHeaderSpansOfOne=TRUE))
+                         compatibility=list(totalStyleIsCellStyle=TRUE, explicitHeaderSpansOfOne=TRUE, noDataGroupNBSP=TRUE))
     pt$addData(bhmtrains)
     pt$addColumnDataGroups("TrainCategory")
     pt$addColumnDataGroups("PowerType")
@@ -176,10 +176,13 @@ for(i in 1:nrow(scenarios)) {
     pt$evaluatePivot()
     # sum(pt$asDataFrame(), na.rm=TRUE)
     # prepStr(paste(as.character(pt$asDataFrame()), sep=" ", collapse=" "))
+    # prepStr(paste(as.character(pt$asDataFrame(stringsAsFactors=FALSE, rowGroupsAsColumns=TRUE)), sep=" ", collapse=" "))
     text <- "c(3079, 22133, 5638, 2137, 32987) c(NA, NA, 8849, 6457, 15306) c(NA, 732, NA, NA, 732) c(3079, 22865, 14487, 8594, 49025) c(830, 63, 5591, NA, 6484) c(NA, NA, 28201, NA, 28201) c(830, 63, 33792, NA, 34685) c(3909, 22928, 48279, 8594, 83710)"
+    text2 <- "c(\"Arriva Trains Wales\", \"CrossCountry\", \"London Midland\", \"Virgin Trains\", \"Total\") c(3079, 22133, 5638, 2137, 32987) c(NA, NA, 8849, 6457, 15306) c(NA, 732, NA, NA, 732) c(3079, 22865, 14487, 8594, 49025) c(830, 63, 5591, NA, 6484) c(NA, NA, 28201, NA, 28201) c(830, 63, 33792, NA, 34685) c(3909, 22928, 48279, 8594, 83710)"
 
     expect_equal(sum(pt$asDataFrame(), na.rm=TRUE), 502260)
     expect_identical(paste(as.character(pt$asDataFrame()), sep=" ", collapse=" "), text)
+    expect_identical(paste(as.character(pt$asDataFrame(stringsAsFactors=FALSE, rowGroupsAsColumns=TRUE)), sep=" ", collapse=" "), text2)
   })
 }
 
@@ -196,7 +199,7 @@ for(i in 1:nrow(scenarios)) {
 
     library(pivottabler)
     pt <- PivotTable$new(processingLibrary=processingLibrary, evaluationMode=evaluationMode,
-                         compatibility=list(totalStyleIsCellStyle=TRUE, explicitHeaderSpansOfOne=TRUE))
+                         compatibility=list(totalStyleIsCellStyle=TRUE, explicitHeaderSpansOfOne=TRUE, noDataGroupNBSP=TRUE))
     pt$addData(bhmtrains)
     pt$addColumnDataGroups("TrainCategory")
     pt$addColumnDataGroups("PowerType")
@@ -279,7 +282,7 @@ if (requireNamespace("lubridate", quietly = TRUE) &&
                        GbttDate=if_else(is.na(GbttArrival), GbttDeparture, GbttArrival),
                        GbttMonth=make_date(year=year(GbttDate), month=month(GbttDate), day=1))
 
-      pt <- PivotTable$new(processingLibrary=processingLibrary, evaluationMode=evaluationMode)
+      pt <- PivotTable$new(processingLibrary=processingLibrary, evaluationMode=evaluationMode, compatibility=list(noDataGroupNBSP=TRUE))
       pt$addData(trains)
       pt$addColumnDataGroups("GbttMonth", dataFormat=list(format="%B %Y"))
       pt$addColumnDataGroups("PowerType")
@@ -335,7 +338,8 @@ if (requireNamespace("basictabler", quietly = TRUE) &&
       library(pivottabler)
       library(basictabler)
 
-      pt <- qpvt(bhmtrains, "TOC", "TrainCategory", "n()")
+      # html is only the same if the compatibility option is set
+      pt <- qpvt(bhmtrains, "TOC", "TrainCategory", "n()", compatibility=list(noDataGroupNBSP=TRUE))
       pthtml <- as.character(pt$getHtml())
       ptcss <- as.character(pt$getCss())
 
@@ -391,7 +395,7 @@ if (requireNamespace("lubridate", quietly = TRUE) &&
                        GbttMonth=make_date(year=year(GbttDate), month=month(GbttDate), day=1))
       trains <- filter(trains, GbttMonth>=make_date(year=2017, month=1, day=1))
 
-      pt <- PivotTable$new(processingLibrary=processingLibrary, evaluationMode=evaluationMode)
+      pt <- PivotTable$new(processingLibrary=processingLibrary, evaluationMode=evaluationMode, compatibility=list(noDataGroupNBSP=TRUE))
       pt$addData(trains)
       pt$addColumnDataGroups("GbttMonth", dataFormat=list(format="%B %Y"))
       pt$addColumnDataGroups("PowerType")

@@ -74,13 +74,13 @@ for(i in 1:nrow(scenarios)) {
   test_that(description, {
 
     library(pivottabler)
-    pt <- PivotTable$new(processingLibrary=processingLibrary, evaluationMode=evaluationMode)
+    pt <- PivotTable$new(processingLibrary=processingLibrary, evaluationMode=evaluationMode, compatibility=list(noDataGroupNBSP=TRUE))
     pt$addData(bhmtrains)
     pt$addColumnDataGroups("TrainCategory")
     pt$addRowDataGroups("TOC")
     pt$addRowDataGroups("PowerType")
     pt$addRowDataGroups("SchedSpeedMPH")
-    grpLevelCheck <- pt$addRowDataGroups("Status", atLevel=1)[[1]]$getLevelNumber()
+    grpLevelCheck <- pt$addRowDataGroups("Status", atLevel=1)[[1]]$levelNumber
     pt$defineCalculation(calculationName="TotalTrains", summariseExpression=countFunction)
     pt$evaluatePivot()
     # pt$renderPivot()
@@ -106,13 +106,13 @@ for(i in 1:nrow(scenarios)) {
   test_that(description, {
 
     library(pivottabler)
-    pt <- PivotTable$new(processingLibrary=processingLibrary, evaluationMode=evaluationMode)
+    pt <- PivotTable$new(processingLibrary=processingLibrary, evaluationMode=evaluationMode, compatibility=list(noDataGroupNBSP=TRUE))
     pt$addData(bhmtrains)
     pt$addColumnDataGroups("TrainCategory")
     pt$addRowDataGroups("TOC")
     pt$addRowDataGroups("PowerType")
     pt$addRowDataGroups("SchedSpeedMPH")
-    grpLevelCheck <- pt$addRowDataGroups("Status", atLevel=2)[[1]]$getLevelNumber()
+    grpLevelCheck <- pt$addRowDataGroups("Status", atLevel=2)[[1]]$levelNumber
     pt$defineCalculation(calculationName="TotalTrains", summariseExpression=countFunction)
     pt$evaluatePivot()
     # pt$renderPivot()
@@ -139,13 +139,13 @@ for(i in 1:nrow(scenarios)) {
   test_that(description, {
 
     library(pivottabler)
-    pt <- PivotTable$new(processingLibrary=processingLibrary, evaluationMode=evaluationMode)
+    pt <- PivotTable$new(processingLibrary=processingLibrary, evaluationMode=evaluationMode, compatibility=list(noDataGroupNBSP=TRUE))
     pt$addData(bhmtrains)
     pt$addColumnDataGroups("TrainCategory")
     pt$addRowDataGroups("TOC")
     pt$addRowDataGroups("PowerType")
     pt$addRowDataGroups("SchedSpeedMPH")
-    grpLevelCheck <- pt$addRowDataGroups("Status", atLevel=4)[[1]]$getLevelNumber()
+    grpLevelCheck <- pt$addRowDataGroups("Status", atLevel=4)[[1]]$levelNumber
     pt$defineCalculation(calculationName="TotalTrains", summariseExpression=countFunction)
     pt$evaluatePivot()
     # pt$renderPivot()
@@ -172,13 +172,13 @@ for(i in 1:nrow(scenarios)) {
   test_that(description, {
 
     library(pivottabler)
-    pt <- PivotTable$new(processingLibrary=processingLibrary, evaluationMode=evaluationMode)
+    pt <- PivotTable$new(processingLibrary=processingLibrary, evaluationMode=evaluationMode, compatibility=list(noDataGroupNBSP=TRUE))
     pt$addData(bhmtrains)
     pt$addColumnDataGroups("TrainCategory")
     pt$addRowDataGroups("TOC")
     pt$addRowDataGroups("PowerType")
     pt$addRowDataGroups("SchedSpeedMPH")
-    grpLevelCheck <- pt$addRowDataGroups("Status", atLevel=5)[[1]]$getLevelNumber()
+    grpLevelCheck <- pt$addRowDataGroups("Status", atLevel=5)[[1]]$levelNumber
     pt$defineCalculation(calculationName="TotalTrains", summariseExpression=countFunction)
     pt$evaluatePivot()
     # pt$renderPivot()

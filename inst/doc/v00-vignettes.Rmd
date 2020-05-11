@@ -4,7 +4,7 @@ author: "Chris Bailiss"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{pivottabler Vignettes}
+  %\VignetteIndexEntry{Create Pivot Tables in R}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -391,6 +391,8 @@ Various examples of using the `pivottabler` package are shown below. Please see 
 ![](intro-22.png)
 
 ![](intro-23.png)
+
+![](intro-32.png)
 
 ### Results as a Matrix
 
