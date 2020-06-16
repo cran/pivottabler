@@ -85,8 +85,11 @@ the calculations are rendered.}
 \item{\code{batchInfo}}{Diagnostic information describing the batches used in the
 last pivot table evaluation.}
 
-\item{\code{cells}}{A list where each element represents one row in the pivot table.
-Each row is itself a list, where each list element is a `PivotCell` object.}
+\item{\code{cells}}{A `PivotCells` object that contains all of the cells in the pivot
+table.}
+
+\item{\code{allCells}}{A list of all of the cells in the pivot table, where each element
+in the list is a 'PivotCell' object.}
 
 \item{\code{rowCount}}{The number of rows in the pivot table, excluding headings.}
 
@@ -167,6 +170,7 @@ of significant pivot table operations (i.e. where elapsed>0.1).}
 \item \href{#method-addStyle}{\code{PivotTable$addStyle()}}
 \item \href{#method-createInlineStyle}{\code{PivotTable$createInlineStyle()}}
 \item \href{#method-setStyling}{\code{PivotTable$setStyling()}}
+\item \href{#method-mapStyling}{\code{PivotTable$mapStyling()}}
 \item \href{#method-generateCellStructure}{\code{PivotTable$generateCellStructure()}}
 \item \href{#method-resetCells}{\code{PivotTable$resetCells()}}
 \item \href{#method-evaluateCells}{\code{PivotTable$evaluateCells()}}
@@ -242,20 +246,20 @@ Must be one of "auto" (which today is dplyr), "dplyr" or "data.table".}
 Must be one of "auto", "none", "minimal", "basic", "balanced" (default)
 or "full".}
 
-\item{\code{theme}}{A theme to use to style the pivot table. Either:
-(1) The name of a built in theme, or
-(2) A list of simple style settings, or
-(3) A `PivotStyles` object containing a full set of styles.
+\item{\code{theme}}{A theme to use to style the pivot table. Either:\cr
+(1) The name of a built in theme, or\cr
+(2) A list of simple style settings, or\cr
+(3) A `PivotStyles` object containing a full set of styles.\cr
 See the "Styling" vignette for many examples.}
 
 \item{\code{replaceExistingStyles}}{Default `FALSE` to retain existing styles in
 the styles collection and add specified styles as new custom styles.
 Specify `TRUE` to update the definitions of existing styles.}
 
-\item{\code{tableStyle}}{Styling to apply to the table.  Either:
-(1) The name of a built in style, or
-(2) A list of CSS style declarations, e.g.
-`list("font-weight"="bold", "color"="#0000FF")`, or
+\item{\code{tableStyle}}{Styling to apply to the table.  Either:\cr
+(1) The name of a built in style, or\cr
+(2) A list of CSS style declarations, e.g.\cr
+`list("font-weight"="bold", "color"="#0000FF")`, or\cr
 (3) A `PivotStyle` object.}
 
 \item{\code{headingStyle}}{Styling to apply to the headings.
@@ -302,9 +306,9 @@ Defaults can be set for the following arguments of
 `pt$addRowDataGroups()` and `pt$addColumnDataGroups()`:
 `logical` values: `addTotal`, `expandExistingTotals`, `visualTotals`.
 `character` values:  `totalPosition`, `totalCaption`.
-`list` or `logical` values:  `outlineBefore`, `outlineAfter`, `outlineTotal`.
-Errors are generated for default values that could not be set.
-Warnings are generated for attempts to set defaults that aren't supported.
+`list` or `logical` values:  `outlineBefore`, `outlineAfter`, `outlineTotal`.\cr
+Errors are generated for default values that could not be set.\cr
+Warnings are generated for attempts to set defaults that aren't supported.\cr
 See the "A1. Appendix" vignette for more details.
 }
 
@@ -484,19 +488,28 @@ No return value.
 \if{html}{\out{<a id="method-getColumnGroupsByLevel"></a>}}
 \if{latex}{\out{\hypertarget{method-getColumnGroupsByLevel}{}}}
 \subsection{Method \code{getColumnGroupsByLevel()}}{
-Retrieve the data groups at the specified level in the column groups hierarchy.
+Retrieve the data groups at the specified level or levels in the column
+groups hierarchy.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PivotTable$getColumnGroupsByLevel(level = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{PivotTable$getColumnGroupsByLevel(level = NULL, collapse = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{level}}{An integer specifying the level number.
+\item{\code{level}}{An integer value or vector specifying one or more level numbers.
 Level 1 represents the first visible level of data groups.}
+
+\item{\code{collapse}}{A logical value specifying whether the return value should be
+simplified.  See details.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+If `level` is a vector:  If `collapse` is `FALSE`, then a list of lists is
+returned, if `collapse` is `TRUE`, then a single combined list is returned.
+}
+
 \subsection{Returns}{
 A list containing `PivotDataGroup` objects.
 }
@@ -533,7 +546,8 @@ A list containing `PivotDataGroup` objects.
 \if{html}{\out{<a id="method-getLeafColumnGroup"></a>}}
 \if{latex}{\out{\hypertarget{method-getLeafColumnGroup}{}}}
 \subsection{Method \code{getLeafColumnGroup()}}{
-Retrieve the leaf-level data group associated with a specific column.
+Retrieve the leaf-level data group associated with a specific column or
+columns.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{PivotTable$getLeafColumnGroup(c = NULL)}\if{html}{\out{</div>}}
 }
@@ -541,12 +555,12 @@ Retrieve the leaf-level data group associated with a specific column.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{c}}{An integer column number.}
+\item{\code{c}}{An integer column number or an integer vector of column numbers.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A `PivotDataGroup` object.
+A `PivotDataGroup` object or a list of `PivotDataGroup` objects.
 }
 }
 \if{html}{\out{<hr>}}
@@ -564,6 +578,7 @@ is specified.
   doNotExpand = FALSE,
   isEmpty = FALSE,
   isOutline = FALSE,
+  styleAsOutline = FALSE,
   captionTemplate = "{value}",
   caption = NULL,
   isTotal = FALSE,
@@ -591,10 +606,10 @@ is specified.
 variable in the data frame that the group relates to and will filter.}
 
 \item{\code{filterType}}{Must be one of "ALL", "VALUES", or "NONE" to specify
-the filter type:
-ALL means no filtering is applied.
+the filter type:\cr
+ALL means no filtering is applied.\cr
 VALUEs is the typical value used to specify that `variableName` is
-filtered to only `values`.
+filtered to only `values`.\cr
 NONE means no data will match this data group.}
 
 \item{\code{values}}{A vector that specifies the filter values applied to
@@ -611,6 +626,10 @@ it is part of a header or outline row)}
 
 \item{\code{isOutline}}{Default value `FALSE` - specify `TRUE` to mark
 that this data group is an outline group.}
+
+\item{\code{styleAsOutline}}{Default value `FALSE` - specify `TRUE` to style
+this data group as an outline group.  Only applicable when
+`isOutline` is `TRUE`.}
 
 \item{\code{captionTemplate}}{A character value that specifies the template
 for the data group caption, default "{values}".}
@@ -789,15 +808,15 @@ style, expressed as a list, e.g. `list("font-weight"=bold")`.}
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
-There are broadly three different ways to call `addColumnDataGroups()`:
+There are broadly three different ways to call `addColumnDataGroups()`:\cr
 (1) dataName=name, fromData=TRUE, onlyCombinationsThatExist=TRUE - which
 considers the ancestors of each existing data group to generate only those
-combinations of values that exist in the data frame.
+combinations of values that exist in the data frame.\cr
 (2) dataName=name, fromData=TRUE, onlyCombinationsThatExist=FALSE - which
 ignores the ancestors of each existing data group and simply adds every
 distinct value of the specified variable under every existing data group,
 which can result in combinations of values in the pivot table that don't
-exist in the data frame (i.e. blank rows/columns in the pivot table).
+exist in the data frame (i.e. blank rows/columns in the pivot table).\cr
 (3) fromData=FALSE, explicitListOfValues=list(...) - simply adds every
 value from the specified list under every existing data group.
 }
@@ -858,12 +877,12 @@ level 1 (default) sorts the data groups at level 1 of the hierarchy
 (which is the first visible level of data groups).}
 
 \item{\code{orderBy}}{Must be either "value", "caption", "calculation",
-"customByValue" or "customByCaption".
-"value" sorts by the raw (i.e. unformatted) group value.
-"caption" sorts by the formatted character group caption.
-"calculation" sorts using one of the calculations defined in the pivot table.
+"customByValue" or "customByCaption".\cr
+"value" sorts by the raw (i.e. unformatted) group value.\cr
+"caption" sorts by the formatted character group caption.\cr
+"calculation" sorts using one of the calculations defined in the pivot table.\cr
 "customValue" sorts by the raw (i.e. unformatted) group value according to
-the specified custom sort order.
+the specified custom sort order.\cr
 "customCaption" sorts by the formatted character group caption according to
 the specified custom sort order.}
 
@@ -895,19 +914,28 @@ No return value.
 \if{html}{\out{<a id="method-getRowGroupsByLevel"></a>}}
 \if{latex}{\out{\hypertarget{method-getRowGroupsByLevel}{}}}
 \subsection{Method \code{getRowGroupsByLevel()}}{
-Retrieve the data groups at the specified level in the row groups hierarchy.
+Retrieve the data groups at the specified level or levels in the row groups
+hierarchy.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PivotTable$getRowGroupsByLevel(level = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{PivotTable$getRowGroupsByLevel(level = NULL, collapse = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{level}}{An integer specifying the level number.
+\item{\code{level}}{An integer value or vector specifying one or more level numbers.
 Level 1 represents the first visible level of data groups.}
+
+\item{\code{collapse}}{A logical value specifying whether the return value should be
+simplified.  See details.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+If `level` is a vector:  If `collapse` is `FALSE`, then a list of lists is
+returned, if `collapse` is `TRUE`, then a single combined list is returned.
+}
+
 \subsection{Returns}{
 A list containing `PivotDataGroup` objects.
 }
@@ -944,7 +972,7 @@ A list containing `PivotDataGroup` objects.
 \if{html}{\out{<a id="method-getLeafRowGroup"></a>}}
 \if{latex}{\out{\hypertarget{method-getLeafRowGroup}{}}}
 \subsection{Method \code{getLeafRowGroup()}}{
-Retrieve the leaf-level data group associated with a specific row.
+Retrieve the leaf-level data group associated with a specific row or rows.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{PivotTable$getLeafRowGroup(r = NULL)}\if{html}{\out{</div>}}
 }
@@ -952,12 +980,12 @@ Retrieve the leaf-level data group associated with a specific row.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{r}}{An integer row number.}
+\item{\code{r}}{An integer row number or an integer vector of row numbers.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A `PivotDataGroup` object.
+A `PivotDataGroup` object or a list of `PivotDataGroup` objects.
 }
 }
 \if{html}{\out{<hr>}}
@@ -975,6 +1003,7 @@ is specified.
   doNotExpand = FALSE,
   isEmpty = FALSE,
   isOutline = FALSE,
+  styleAsOutline = FALSE,
   captionTemplate = "{value}",
   caption = NULL,
   isTotal = FALSE,
@@ -1002,10 +1031,10 @@ is specified.
 variable in the data frame that the group relates to and will filter.}
 
 \item{\code{filterType}}{Must be one of "ALL", "VALUES", or "NONE" to specify
-the filter type:
-ALL means no filtering is applied.
+the filter type:\cr
+ALL means no filtering is applied.\cr
 VALUEs is the typical value used to specify that `variableName` is
-filtered to only `values`.
+filtered to only `values`.\cr
 NONE means no data will match this data group.}
 
 \item{\code{values}}{A vector that specifies the filter values applied to
@@ -1022,6 +1051,10 @@ it is part of a header or outline row)}
 
 \item{\code{isOutline}}{Default value `FALSE` - specify `TRUE` to mark
 that this data group is an outline group.}
+
+\item{\code{styleAsOutline}}{Default value `FALSE` - specify `TRUE` to style
+this data group as an outline group.  Only applicable when
+`isOutline` is `TRUE`.}
 
 \item{\code{captionTemplate}}{A character value that specifies the template
 for the data group caption, default "{values}".}
@@ -1230,15 +1263,15 @@ See the "Regular Layout" vignette for an example.}
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
-There are broadly three different ways to call `addRowDataGroups()`:
+There are broadly three different ways to call `addRowDataGroups()`:\cr
 (1) dataName=name, fromData=TRUE, onlyCombinationsThatExist=TRUE - which
 considers the ancestors of each existing data group to generate only those
-combinations of values that exist in the data frame.
+combinations of values that exist in the data frame.\cr
 (2) dataName=name, fromData=TRUE, onlyCombinationsThatExist=FALSE - which
 ignores the ancestors of each existing data group and simply adds every
 distinct value of the specified variable under every existing data group,
 which can result in combinations of values in the pivot table that don't
-exist in the data frame (i.e. blank rows/columns in the pivot table).
+exist in the data frame (i.e. blank rows/columns in the pivot table).\cr
 (3) fromData=FALSE, explicitListOfValues=list(...) - simply adds every
 value from the specified list under every existing data group.
 }
@@ -1299,12 +1332,12 @@ level 1 (default) sorts the data groups at level 1 of the hierarchy
 (which is the first visible level of data groups).}
 
 \item{\code{orderBy}}{Must be either "value", "caption", "calculation",
-"customByValue" or "customByCaption".
-"value" sorts by the raw (i.e. unformatted) group value.
-"caption" sorts by the formatted character group caption.
+"customByValue" or "customByCaption".\cr
+"value" sorts by the raw (i.e. unformatted) group value.\cr
+"caption" sorts by the formatted character group caption.\cr
 "calculation" sorts using one of the calculations defined in the pivot table.
 "customValue" sorts by the raw (i.e. unformatted) group value according to
-the specified custom sort order.
+the specified custom sort order.\cr
 "customCaption" sorts by the formatted character group caption according to
 the specified custom sort order.}
 
@@ -1643,13 +1676,15 @@ The newly created `PivotStyle` object.
 \if{html}{\out{<a id="method-setStyling"></a>}}
 \if{latex}{\out{\hypertarget{method-setStyling}{}}}
 \subsection{Method \code{setStyling()}}{
-Apply styling to part of a pivot table.
+Apply styling to a set of data groups or cells in a pivot table.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{PivotTable$setStyling(
   rFrom = NULL,
   cFrom = NULL,
   rTo = NULL,
   cTo = NULL,
+  rowNumbers = NULL,
+  columnNumbers = NULL,
   groups = NULL,
   cells = NULL,
   baseStyleName = NULL,
@@ -1673,6 +1708,12 @@ changes.}
 \item{\code{cTo}}{An integer column number that specifies the end column for the
 styling changes.}
 
+\item{\code{rowNumbers}}{An integer vector that specifies the row numbers for the
+styling changes.}
+
+\item{\code{columnNumbers}}{An integer vector that specifies the column numbers for
+the styling changes.}
+
 \item{\code{groups}}{A list containing `PivotDataGroup` objects.}
 
 \item{\code{cells}}{A list containing `PivotCell` objects.}
@@ -1687,14 +1728,115 @@ e.g. `list("font-weight"="bold", "color"="#0000FF")`}
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
-There are three ways to specify the part of a pivot table to apply styling
-to:
-(1) By specifying a list of data groups using the `groups` argument.
-(2) By specifying a list of cells using the `cells` argument.
-(3) By specifying a rectangular cell range using `rFrom`, `cFrom`, `rTo`
-and `cTo`.
-See the "Finding and Formatting" vignette for more information and many
-examples.
+There are five ways to specify the part(s) of a pivot table to apply
+styling to:\cr
+(1) By specifying a list of data groups using the `groups` argument.\cr
+(2) By specifying a list of cells using the `cells` argument.\cr
+(3) By specifying a single cell using the `rFrom` and `cFrom` arguments.\cr
+(4) By specifying a rectangular cell range using the `rFrom`, `cFrom`,
+`rTo` and `cTo` arguments.\cr
+(5) By specifying a vector of rowNumbers and/or columnNumbers.  If both
+rowNumbers and columnNumbers are specified, then the cells at the
+intersection of the specified row numbers and column numbers are styled.\cr
+If both rFrom/rTo and rowNumbers are specified, then rFrom/rTo constrain
+the row numbers specified in rowNumbers.\cr
+If both cFrom/cTo and columnNumbers are specified, then cFrom/cTo constrain
+the column numbers specified in columnNumbers.\cr
+See the "Styling" and Finding and Formatting" vignettes for more
+information and many examples.
+}
+
+\subsection{Returns}{
+No return value.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-mapStyling"></a>}}
+\if{latex}{\out{\hypertarget{method-mapStyling}{}}}
+\subsection{Method \code{mapStyling()}}{
+Apply styling to pivot table cells based on the value of each cell.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PivotTable$mapStyling(
+  styleProperty = NULL,
+  cells = NULL,
+  valueType = "text",
+  mapType = "range",
+  mappings = NULL,
+  styleLowerValues = FALSE,
+  styleHigherValues = TRUE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{styleProperty}}{The name of the style property to set on the specified
+cells, e.g. background-color.}
+
+\item{\code{cells}}{A list containing `PivotCell` objects.}
+
+\item{\code{valueType}}{The type of style value to be set.  Must be one of:
+"text", "character", "number", "numeric", "color" or "colour".\cr
+"text" and "character" are equivalent.  "number" and "numeric" are equivalent.
+"color" and "colour" are equivalent.}
+
+\item{\code{mapType}}{The type of mapping to be performed.  The following mapping
+types are supported:\cr
+(1) "value" = a 1:1 mapping which maps each specified "from" value to the
+corresponding "to" value, e.g. 100 -> "green".\cr
+(2) "logic" = each from value is logical criteria.  See details.\cr
+(3) "range" = values between each pair of "from" values are mapped to the
+corresponding "to" value, e.g. values in the range 80-100 -> "green" (more
+specifically values greater than or equal to 80 and less than 100).\cr
+(4) "continuous" = rescales values between each pair of "from" values into
+the range of the corresponding pair of "to" values, e.g. if the "from" range
+is 80-100 and the corresponding "to" range is 0.8-1, then 90 -> 0.9.\cr
+"continuous" cannot be used with valueType="text"/"character".}
+
+\item{\code{mappings}}{The mappings to be applied, specified in one of the following
+three forms:\cr
+(1) a list containing pairs of values, e.g.
+`list(0, "red", 0.4, "yellow", 0.8, "green")`.\cr
+(2) a list containing "from" and "to" vectors/lists, e.g.
+`list(from=c(0, 0.4, 0.8), to=c("red", "yellow", "green"))`.\cr
+(3) a custom mapping function that will be invoked once per cell, e.g.
+`function(v, cell) { if(isTRUE(v>0.8)) return("green") }`.\cr
+Mappings must be specified in ascending order when valueType="range" or
+valueType="continuous".\cr
+If a custom mapping function is specified, then the valueType and mapType
+parameters are ignored.}
+
+\item{\code{styleLowerValues}}{A logical value, default FALSE, that specifies
+whether values less than the lowest specified "from" value should be styled
+using the style specified for the lowest "from" value.  Only applies when
+valueType="range" or valueType="continuous".}
+
+\item{\code{styleHigherValues}}{A logical value, default TRUE, that specifies
+whether values greater than the highest specified "from" value should be styled
+using the style specified for the highest "from" value.  Only applies when
+valueType="range" or valueType="continuous".}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+`mapStyling()` is typically used to conditionally apply styling to cells
+based on the value of each individual cell, e.g. cells with values less
+than a specified number could be coloured red.\cr
+mapType="logic" maps values matching specified logical criteria to
+specific "to" values.  The logical criteria can be any of the following
+forms (the first matching mapping is used):\cr
+(1) a specific value, e.g. 12.\cr
+(2) a specific value equality condition, e.g. "v==12", where v
+represents the cell value.\cr
+(3) a value range expression using the following abbreviated form:
+"value1<=v<value2", e.g. "10<=v<15".  Only "<" or "<=" can be used
+in these value range expressions.\cr
+(4) a standard R logical expression, e.g.
+"10<=v && v<15".\cr
+Basic R functions that test the value can also be
+used, e.g. is.na(v).\cr
+See the "Styling" and Finding and Formatting" vignettes for more
+information and many examples.
 }
 
 \subsection{Returns}{
@@ -1767,7 +1909,7 @@ Calculate the cell values in the body of the pivot table.
 \subsection{Details}{
 This generally only needs to be called explicitly if specific pivot cells
 need to be further processed (e.g. formatted) before the pivot table is
-rendered.
+rendered.\cr
 This method is a wrapper for calling `normaliseColumnGroups()`,
 `normaliseRowGroups()`, `generateCellStructure()` and `evaluateCells()`
 in sequence.
@@ -1795,22 +1937,24 @@ Find row data groups that match specified criteria.
   emptyGroups = "exclude",
   outlineGroups = "exclude",
   outlineLinkedGroupExists = NULL,
-  includeDescendantGroups = FALSE
+  includeDescendantGroups = FALSE,
+  rowNumbers = NULL,
+  cells = NULL
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{matchMode}}{Either "simple" (default) or "combinations".
+\item{\code{matchMode}}{Either "simple" (default) or "combinations".\cr
 "simple" is used when matching only one variable-value, multiple
-variable-value combinations are effectively logical "OR".
+variable-value combinations are effectively logical "OR".\cr
 "combinations" is used when matching for combinations of variable
 values, multiple variable-value combinations are effectively
 logical "AND".  A child group is viewed as having the variable-value
-filters of itself and it's parent/ancestors, e.g.
+filters of itself and it's parent/ancestors, e.g.\cr
 `list("TrainCategory"="Express Passenger", "PowerType"="DMU")`,
-would return the "DMU" data group underneath "Express Passenger".
+would return the "DMU" data group underneath "Express Passenger".\cr
 See the "Finding and Formatting" vignette for graphical examples.}
 
 \item{\code{variableNames}}{A character vector specifying the name/names of the
@@ -1819,10 +1963,10 @@ irregular layouts, since in regular pivot tables every cell is related
 to every variable.}
 
 \item{\code{variableValues}}{A list specifying the variable names and values to find,
-e.g. `variableValues=list("PowerType"=c("DMU", "HST"))`.
-Specify "**" as the variable value to match totals for the specified variable.
-Specify "!*" as the variable value to match non-totals for the specified variable.
-NB: The totals/non-totals criteria above won’t work when visual totals are used.}
+e.g. `variableValues=list("PowerType"=c("DMU", "HST"))`.\cr
+Specify "**" as the variable value to match totals for the specified variable.\cr
+Specify "!*" as the variable value to match non-totals for the specified variable.\cr
+NB: The totals/non-totals criteria above won’t work when visual totals are used.\cr}
 
 \item{\code{totals}}{A word that specifies how totals are matched (overrides the finer
 settings above) - must be one of "include" (default), "exclude" or "only".}
@@ -1849,6 +1993,12 @@ outline child group no longer exists.}
 
 \item{\code{includeDescendantGroups}}{Default `FALSE`.  Specify true to also return
 all descendants of data groups that match the specified criteria.}
+
+\item{\code{rowNumbers}}{An integer vector specifying row numbers that constrains
+the data groups to be found.}
+
+\item{\code{cells}}{A `PivotCell` object or a list of `PivotCell` objects to specify
+one or more cells that must intersect the data groups.}
 }
 \if{html}{\out{</div>}}
 }
@@ -1872,22 +2022,24 @@ Find column data groups that match specified criteria.
   minChildCount = NULL,
   maxChildCount = NULL,
   emptyGroups = "exclude",
-  includeDescendantGroups = FALSE
+  includeDescendantGroups = FALSE,
+  columnNumbers = NULL,
+  cells = NULL
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{matchMode}}{Either "simple" (default) or "combinations".
-"simple" is used when matching only one variable-value, multiple
-variable-value combinations are effectively logical "OR".
+\item{\code{matchMode}}{Either "simple" (default) or "combinations".\cr
+"simple" is used when matching only one variable-value - multiple
+variable-value combinations are effectively logical "OR".\cr
 "combinations" is used when matching for combinations of variable
-values, multiple variable-value combinations are effectively
+values - multiple variable-value combinations are effectively
 logical "AND".  A child group is viewed as having the variable-value
-filters of itself and it's parent/ancestors, e.g.
+filters of itself and it's parent/ancestors, e.g.\cr
 `list("TrainCategory"="Express Passenger", "PowerType"="DMU")`,
-would return the "DMU" data group underneath "Express Passenger".
+would return the "DMU" data group underneath "Express Passenger".\cr
 See the "Finding and Formatting" vignette for graphical examples.}
 
 \item{\code{variableNames}}{A character vector specifying the name/names of the
@@ -1896,9 +2048,9 @@ irregular layouts, since in regular pivot tables every cell is related
 to every variable.}
 
 \item{\code{variableValues}}{A list specifying the variable names and values to find,
-e.g. `variableValues=list("PowerType"=c("DMU", "HST"))`.
-Specify "**" as the variable value to match totals for the specified variable.
-Specify "!*" as the variable value to match non-totals for the specified variable.
+e.g. `variableValues=list("PowerType"=c("DMU", "HST"))`.\cr
+Specify "**" as the variable value to match totals for the specified variable.\cr
+Specify "!*" as the variable value to match non-totals for the specified variable.\cr
 NB: The totals/non-totals criteria above won’t work when visual totals are used.}
 
 \item{\code{totals}}{A word that specifies how totals are matched (overrides the finer
@@ -1919,6 +2071,12 @@ must be one of "include", "exclude" (default) or "only".}
 
 \item{\code{includeDescendantGroups}}{Default `FALSE`.  Specify true to also return
 all descendants of data groups that match the specified criteria.}
+
+\item{\code{columnNumbers}}{An integer vector specifying column numbers that constrains
+the data groups to be found.}
+
+\item{\code{cells}}{A `PivotCell` object or a list of `PivotCell` objects to specify
+one or more cells that must intersect the data groups.}
 }
 \if{html}{\out{</div>}}
 }
@@ -2035,7 +2193,11 @@ See the "Finding and Formatting" vignette for graphical examples.
   rowNumbers = NULL,
   columnNumbers = NULL,
   cellCoordinates = NULL,
-  excludeEmptyCells = TRUE
+  excludeEmptyCells = FALSE,
+  groups = NULL,
+  rowGroups = NULL,
+  columnGroups = NULL,
+  matchMode = "simple"
 )}\if{html}{\out{</div>}}
 }
 
@@ -2048,38 +2210,65 @@ Default `TRUE`. More information is provided in the details section.}
 \item{\code{rowNumbers}}{A vector of row numbers that specify the rows or
 cells to retrieve.}
 
-\item{\code{columnNumbers}}{A vector of row numbers that specify the columns
+\item{\code{columnNumbers}}{A vector of column numbers that specify the columns
 or cells to retrieve.}
 
 \item{\code{cellCoordinates}}{A list of two-element vectors that specify the
 coordinates of cells to retrieve.  Ignored when `specifyCellsAsList=FALSE`.}
 
-\item{\code{excludeEmptyCells}}{`TRUE` (default) to also search empty cells.}
+\item{\code{excludeEmptyCells}}{Default `FALSE`.  Specify `TRUE` to exclude empty
+cells.}
+
+\item{\code{groups}}{A `PivotDataGroup` object or a list of `PivotDataGroup`
+objects on either the rows or columns axes.  The cells to be retrieved
+must be related to at least one of these groups.}
+
+\item{\code{rowGroups}}{A `PivotDataGroup` object or a list of `PivotDataGroup`
+objects on the rows axis.  The cells to be retrieved must be related to
+at least one of these row groups.  If both `rowGroups` and `columnGroups`
+are specified, then the cells to be retrieved must be related to at least
+one of the specified row groups and one of the specified column groups.}
+
+\item{\code{columnGroups}}{A `PivotDataGroup` object or a list of `PivotDataGroup`
+objects on the columns axis.  The cells to be retrieved must be related to
+at least one of these column groups.  If both `rowGroups` and `columnGroups`
+are specified, then the cells to be retrieved must be related to at least
+one of the specified row groups and one of the specified column groups.}
+
+\item{\code{matchMode}}{Either "simple" (default) or "combinations":\cr
+"simple" specifies that row and column arguments are considered separately
+(logical OR), e.g. rowNumbers=1 and columnNumbers=2 will match all cells in
+row 1 and all cells in column 2.\cr
+"combinations" specifies that row and column arguments are considered together
+(logical AND), e.g. rowNumbers=1 and columnNumbers=2 will match only the
+cell single at location (1, 2).\cr
+Arguments `rowNumbers`, `columnNumbers`, `rowGroups` and `columnGroups` are
+affected by the match mode.  All other arguments are not.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
-when `specifyCellsAsList=TRUE` (the default):
+when `specifyCellsAsList=TRUE` (the default):\cr
 Get one or more rows by specifying the row numbers as a vector as
 the rowNumbers argument and leaving the columnNumbers argument set
-to the default value of `NULL`, or
+to the default value of `NULL`, or\cr
 Get one or more columns by specifying the column numbers as a vector
 as the columnNumbers argument and leaving the rowNumbers argument
-set to the default value of `NULL`, or
+set to the default value of `NULL`, or\cr
 Get one or more individual cells by specifying the cellCoordinates
 argument as a list of vectors of length 2, where each element in the
-list is the row and column number of one cell,
+list is the row and column number of one cell,\cr
 e.g. `list(c(1, 2), c(3, 4))` specifies two cells, the first located
-at row 1, column 2 and the second located at row 3, column 4.
-When `specifyCellsAsList=FALSE`:
+at row 1, column 2 and the second located at row 3, column 4.\cr
+When `specifyCellsAsList=FALSE`:\cr
 Get one or more rows by specifying the row numbers as a vector as the
 rowNumbers argument and leaving the columnNumbers argument set to the
-default value of `NULL`, or
+default value of `NULL`, or\cr
 Get one or more columns by specifying the column numbers as a vector
 as the columnNumbers argument and leaving the rowNumbers argument set
-to the default value of `NULL`, or
+to the default value of `NULL`, or\cr
 Get one or more cells by specifying the row and column numbers as vectors
-for the rowNumbers and columnNumbers arguments, or
+for the rowNumbers and columnNumbers arguments, or\cr
 a mixture of the above, where for entire rows/columns the element in the
 other vector is set to `NA`, e.g. to retrieve whole rows, specify the row
 numbers as the rowNumbers but set the corresponding elements in the
@@ -2105,10 +2294,19 @@ See the "Finding and Formatting" vignette for graphical examples.
   minValue = NULL,
   maxValue = NULL,
   exactValues = NULL,
+  valueRanges = NULL,
   includeNull = TRUE,
   includeNA = TRUE,
-  emptyCells = "exclude",
-  outlineCells = "exclude"
+  emptyCells = "include",
+  outlineCells = "exclude",
+  rowNumbers = NULL,
+  columnNumbers = NULL,
+  cellCoordinates = NULL,
+  groups = NULL,
+  rowGroups = NULL,
+  columnGroups = NULL,
+  rowColumnMatchMode = "simple",
+  cells = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -2121,9 +2319,9 @@ irregular layouts, since in regular pivot tables every cell is related
 to every variable.}
 
 \item{\code{variableValues}}{A list specifying the variable names and values to find,
-e.g. `variableValues=list("PowerType"=c("DMU", "HST"))`.
-Specify "**" as the variable value to match totals for the specified variable.
-Specify "!*" as the variable value to match non-totals for the specified variable.
+e.g. `variableValues=list("PowerType"=c("DMU", "HST"))`.\cr
+Specify "**" as the variable value to match totals for the specified variable.\cr
+Specify "!*" as the variable value to match non-totals for the specified variable.\cr
 NB: The totals/non-totals criteria above won’t work when visual totals are used.}
 
 \item{\code{totals}}{A word that specifies how totals are matched (overrides the finer
@@ -2138,6 +2336,10 @@ calculations to find.}
 
 \item{\code{exactValues}}{A vector or list specifying a set of allowed values.}
 
+\item{\code{valueRanges}}{A vector specifying one or more value range expressions which
+the cell values must match.  If multiple value range expressions are specified,
+then the cell value must match any of one the specified expressions.  See details.}
+
 \item{\code{includeNull}}{specify TRUE to include `NULL` in the matched cells,
 FALSE to exclude `NULL` values.}
 
@@ -2145,13 +2347,66 @@ FALSE to exclude `NULL` values.}
 FALSE to exclude `NA` values.}
 
 \item{\code{emptyCells}}{A word that specifies how empty cells are matched -
-must be one of "include", "exclude" (default) or "only".}
+must be one of "include" (default), "exclude" or "only".}
 
 \item{\code{outlineCells}}{A word that specifies how outline cells are matched -
 must be one of "include", "exclude" (default) or "only".}
+
+\item{\code{rowNumbers}}{A vector of row numbers that specify the rows or
+cells to constrain the search.}
+
+\item{\code{columnNumbers}}{A vector of column numbers that specify the columns
+or cells to constrain the search.}
+
+\item{\code{cellCoordinates}}{A list of two-element vectors that specify the
+coordinates of cells to constrain the search.}
+
+\item{\code{groups}}{A `PivotDataGroup` object or a list of `PivotDataGroup`
+objects on either the rows or columns axes.  The cells to be searched
+must be related to at least one of these groups.}
+
+\item{\code{rowGroups}}{A `PivotDataGroup` object or a list of `PivotDataGroup`
+objects on the rows axis.  The cells to be searched must be related to
+at least one of these row groups.  If both `rowGroups` and `columnGroups`
+are specified, then the cells to be searched must be related to at least
+one of the specified row groups and one of the specified column groups.}
+
+\item{\code{columnGroups}}{A `PivotDataGroup` object or a list of `PivotDataGroup`
+objects on the columns axis.  The cells to be searched must be related to
+at least one of these column groups.  If both `rowGroups` and `columnGroups`
+are specified, then the cells to be searched must be related to at least
+one of the specified row groups and one of the specified column groups.}
+
+\item{\code{rowColumnMatchMode}}{Either "simple" (default) or "combinations":\cr
+"simple" specifies that row and column arguments are considered separately
+(logical OR), e.g. rowNumbers=1 and columnNumbers=2 will match all cells in
+row 1 and all cells in column 2.\cr
+"combinations" specifies that row and column arguments are considered together
+(logical AND), e.g. rowNumbers=1 and columnNumbers=2 will match only the
+cell single at location (1, 2).\cr
+Arguments `rowNumbers`, `columnNumbers`, `rowGroups` and `columnGroups` are
+affected by the match mode.  All other arguments are not.}
+
+\item{\code{cells}}{A `PivotCell` object or a list of `PivotCell`
+objects to constrain the scope of the search.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+The valueRanges parameter can be any of the following
+forms:\cr
+(1) a specific value, e.g. 12.\cr
+(2) a specific value equality condition, e.g. "v==12", where v
+represents the cell value.\cr
+(3) a value range expression using the following abbreviated form:
+"value1<=v<value2", e.g. "10<=v<15".  Only "<" or "<=" can be used
+in these value range expressions.\cr
+(4) a standard R logical expression, e.g.
+"10<=v && v<15".\cr
+Basic R functions that test the value can also be
+used, e.g. is.na(v).\cr
+}
+
 \subsection{Returns}{
 A list of `PivotCell` objects.
 }
@@ -2160,42 +2415,61 @@ A list of `PivotCell` objects.
 \if{html}{\out{<a id="method-findGroupColumnNumbers"></a>}}
 \if{latex}{\out{\hypertarget{method-findGroupColumnNumbers}{}}}
 \subsection{Method \code{findGroupColumnNumbers()}}{
-Find the column numbers associated with a specific data group.
+Find the column numbers associated with a specific data group or
+groups.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PivotTable$findGroupColumnNumbers(group = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{PivotTable$findGroupColumnNumbers(group = NULL, collapse = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{group}}{A `PivotDataGroup` in the column data groups (i.e. a
-column heading).}
+column heading) or a list of column data groups.}
+
+\item{\code{collapse}}{A logical value specifying whether the return value should be
+simplified.  See details.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+If `group` is a list:  If `collapse` is `FALSE`, then a list of vectors is
+returned, if `collapse` is `TRUE`, then a single combined vector is returned.
+}
+
 \subsection{Returns}{
-A vector of column numbers related to the specified group.
+Either a vector of column numbers related to the single specified group
+or a list of vectors containing column numbers related to the specified groups.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-findGroupRowNumbers"></a>}}
 \if{latex}{\out{\hypertarget{method-findGroupRowNumbers}{}}}
 \subsection{Method \code{findGroupRowNumbers()}}{
-Find the row numbers associated with a specific data group.
+Find the row numbers associated with a specific data group or groups.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PivotTable$findGroupRowNumbers(group = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{PivotTable$findGroupRowNumbers(group = NULL, collapse = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{group}}{A `PivotDataGroup` in the row data groups (i.e. a
-row heading).}
+row heading) or a list of row data groups.}
+
+\item{\code{collapse}}{A logical value specifying whether the return value should be
+simplified.  See details.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+If `group` is a list:  If `collapse` is `FALSE`, then a list of vectors is
+returned, if `collapse` is `TRUE`, then a single combined vector is returned.
+}
+
 \subsection{Returns}{
-A vector of row numbers related to the specified group.
+Either a vector of row numbers related to the single specified group
+or a list of vectors containing row numbers related to the specified groups.
 }
 }
 \if{html}{\out{<hr>}}
@@ -2484,7 +2758,7 @@ as columns in the data frame.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{PivotTable$asDataFrame(
   separator = " ",
-  stringsAsFactors = default.stringsAsFactors(),
+  stringsAsFactors = NULL,
   forceNumeric = FALSE,
   rowGroupsAsColumns = FALSE
 )}\if{html}{\out{</div>}}
@@ -2497,7 +2771,8 @@ as columns in the data frame.
 group captions where multiple levels exist in the data group hierarchy.}
 
 \item{\code{stringsAsFactors}}{Specify `TRUE`to convert strings to factors,
-default `default.stringsAsFactors()`.}
+default is currently `default.stringsAsFactors()`, though this will change
+to `FALSE` in a future version.}
 
 \item{\code{forceNumeric}}{Specify `TRUE` to force the conversion of cell values
 to a numeric value, default `FALSE`.}
@@ -2526,7 +2801,7 @@ the pivot table becomes one row in the data frame.
   includeGroupCaptions = TRUE,
   includeGroupValues = TRUE,
   separator = " ",
-  stringsAsFactors = default.stringsAsFactors(),
+  stringsAsFactors = NULL,
   excludeEmptyCells = TRUE
 )}\if{html}{\out{</div>}}
 }
@@ -2544,7 +2819,8 @@ values as columns in the data frame.}
 filter values where multiple values exist in a filter.}
 
 \item{\code{stringsAsFactors}}{Specify `TRUE`to convert strings to factors,
-default `default.stringsAsFactors()`.}
+default is currently `default.stringsAsFactors()`, though this will change
+to `FALSE` in a future version.}
 
 \item{\code{excludeEmptyCells}}{Specify `FALSE` to also include rows for
 empty cells in the data frame, default `TRUE`.}

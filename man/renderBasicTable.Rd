@@ -4,14 +4,26 @@
 \alias{renderBasicTable}
 \title{Output a table into a package vignette.}
 \usage{
-renderBasicTable(matrix = NULL, stylePrefix = NULL, rowNamesAsHeader = FALSE)
+renderBasicTable(
+  matrix = NULL,
+  stylePrefix = NULL,
+  columnNamesAsHeader = FALSE,
+  rowNamesAsHeader = FALSE,
+  columnAlignment = "right"
+)
 }
 \arguments{
 \item{matrix}{Tabular data to render.}
 
 \item{stylePrefix}{Text prefix for CSS style declarations.}
 
+\item{columnNamesAsHeader}{Include column names in output (if FALSE, the
+first row from the matrix is used as the column headings).}
+
 \item{rowNamesAsHeader}{Include row names in output.}
+
+\item{columnAlignment}{A character vector specifying the horizontal alignment
+of each column.}
 }
 \value{
 A basic table rendered as a HTML widget.

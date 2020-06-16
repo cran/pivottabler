@@ -10,7 +10,6 @@
 #' @importFrom data.table data.table is.data.table
 #' @import htmlwidgets
 #' @import htmltools
-#' @import jsonlite
 #' @export
 #' @format \code{\link{R6Class}} object.
 #' @examples
@@ -36,18 +35,18 @@ PivotTable <- R6::R6Class("PivotTable",
     #' @param argumentCheckMode The level of argument checking to perform.
     #' Must be one of "auto", "none", "minimal", "basic", "balanced" (default)
     #' or "full".
-    #' @param theme A theme to use to style the pivot table. Either:
-    #' (1) The name of a built in theme, or
-    #' (2) A list of simple style settings, or
-    #' (3) A `PivotStyles` object containing a full set of styles.
+    #' @param theme A theme to use to style the pivot table. Either:\cr
+    #' (1) The name of a built in theme, or\cr
+    #' (2) A list of simple style settings, or\cr
+    #' (3) A `PivotStyles` object containing a full set of styles.\cr
     #' See the "Styling" vignette for many examples.
     #' @param replaceExistingStyles Default `FALSE` to retain existing styles in
     #' the styles collection and add specified styles as new custom styles.
     #' Specify `TRUE` to update the definitions of existing styles.
-    #' @param tableStyle Styling to apply to the table.  Either:
-    #' (1) The name of a built in style, or
-    #' (2) A list of CSS style declarations, e.g.
-    #' `list("font-weight"="bold", "color"="#0000FF")`, or
+    #' @param tableStyle Styling to apply to the table.  Either:\cr
+    #' (1) The name of a built in style, or\cr
+    #' (2) A list of CSS style declarations, e.g.\cr
+    #' `list("font-weight"="bold", "color"="#0000FF")`, or\cr
     #' (3) A `PivotStyle` object.
     #' @param headingStyle Styling to apply to the headings.
     #' See the `tableStyle` argument for details.
@@ -136,7 +135,7 @@ PivotTable <- R6::R6Class("PivotTable",
       else {
         if("PivotStyles" %in% class(theme)) { private$p_styles <- theme }
         else if("list" %in% class(theme)) {
-          private$p_styles <- getSimpleColoredTheme(parentPivot=self, themeName="coloredTheme", colors=theme, fontName=theme$fontName)
+          private$p_styles <- getSimpleColoredTheme(parentPivot=self, themeName="coloredTheme", theme=theme)
         }
         else if("character" %in% class(theme)) {
           if(tolower(trimws(theme))=="none") { theme <- "blank" }
@@ -239,9 +238,9 @@ PivotTable <- R6::R6Class("PivotTable",
     #' `pt$addRowDataGroups()` and `pt$addColumnDataGroups()`:
     #' `logical` values: `addTotal`, `expandExistingTotals`, `visualTotals`.
     #' `character` values:  `totalPosition`, `totalCaption`.
-    #' `list` or `logical` values:  `outlineBefore`, `outlineAfter`, `outlineTotal`.
-    #' Errors are generated for default values that could not be set.
-    #' Warnings are generated for attempts to set defaults that aren't supported.
+    #' `list` or `logical` values:  `outlineBefore`, `outlineAfter`, `outlineTotal`.\cr
+    #' Errors are generated for default values that could not be set.\cr
+    #' Warnings are generated for attempts to set defaults that aren't supported.\cr
     #' See the "A1. Appendix" vignette for more details.
     #' @return No return value.
     setDefault = function(...) {
@@ -407,15 +406,29 @@ PivotTable <- R6::R6Class("PivotTable",
     },
 
     #' @description
-    #' Retrieve the data groups at the specified level in the column groups hierarchy.
-    #' @param level An integer specifying the level number.
+    #' Retrieve the data groups at the specified level or levels in the column
+    #' groups hierarchy.
+    #' @param level An integer value or vector specifying one or more level numbers.
     #' Level 1 represents the first visible level of data groups.
+    #' @param collapse A logical value specifying whether the return value should be
+    #' simplified.  See details.
+    #' @details
+    #' If `level` is a vector:  If `collapse` is `FALSE`, then a list of lists is
+    #' returned, if `collapse` is `TRUE`, then a single combined list is returned.
     #' @return A list containing `PivotDataGroup` objects.
-    getColumnGroupsByLevel = function(level=NULL) {
+    getColumnGroupsByLevel = function(level=NULL, collapse=FALSE) {
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getColumnGroupsByLevel", "Getting level column groups...")
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getColumnGroupsByLevel", level, missing(level), allowMissing=FALSE, allowNull=FALSE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getColumnGroupsByLevel", collapse, missing(collapse), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       }
+      # multiple levels
+      if(length(level)>1) {
+        fx <- function(x) { return(self$getColumnGroupsByLevel(level=x)) }
+        if(isTRUE(collapse)) { return(invisible(unlist(lapply(level, fx)))) }
+        else { return(invisible(lapply(level, fx))) }
+      }
+      # single level
       if(level<1) stop("PivotTable$getColumnGroupsByLevel():  level must be greater than or equal to one.", call. = FALSE)
       levelCount <- self$columnGroupLevelCount
       if(level>levelCount) stop(paste0("PivotTable$getColumnGroupsByLevel():  level must be less than or equal to ", levelCount, "."), call. = FALSE)
@@ -450,13 +463,19 @@ PivotTable <- R6::R6Class("PivotTable",
     },
 
     #' @description
-    #' Retrieve the leaf-level data group associated with a specific column.
-    #' @param c An integer column number.
-    #' @return A `PivotDataGroup` object.
+    #' Retrieve the leaf-level data group associated with a specific column or
+    #' columns.
+    #' @param c An integer column number or an integer vector of column numbers.
+    #' @return A `PivotDataGroup` object or a list of `PivotDataGroup` objects.
     getLeafColumnGroup = function(c=NULL) {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getLeafColumnGroup", c, missing(c), allowMissing=FALSE, allowNull=FALSE, allowedClasses=c("integer", "numeric"))
       }
+      # multiple columns
+      if(length(c)>1) {
+        return(invisible(lapply(c, self$getLeafColumnGroup)))
+      }
+      # single column
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getLeafColumnGroup", "Getting leaf level column group...")
       if((private$p_evaluated)&&(!is.null(private$p_cells))) {
         # retrieve directly from the cells instance
@@ -479,10 +498,10 @@ PivotTable <- R6::R6Class("PivotTable",
     #' @param variableName A character value that specifies the name of the
     #' variable in the data frame that the group relates to and will filter.
     #' @param filterType Must be one of "ALL", "VALUES", or "NONE" to specify
-    #' the filter type:
-    #' ALL means no filtering is applied.
+    #' the filter type:\cr
+    #' ALL means no filtering is applied.\cr
     #' VALUEs is the typical value used to specify that `variableName` is
-    #' filtered to only `values`.
+    #' filtered to only `values`.\cr
     #' NONE means no data will match this data group.
     #' @param values A vector that specifies the filter values applied to
     #' `variableName` to select the data to match this row/column in the pivot
@@ -495,6 +514,9 @@ PivotTable <- R6::R6Class("PivotTable",
     #' it is part of a header or outline row)
     #' @param isOutline Default value `FALSE` - specify `TRUE` to mark
     #' that this data group is an outline group.
+    #' @param styleAsOutline Default value `FALSE` - specify `TRUE` to style
+    #' this data group as an outline group.  Only applicable when
+    #' `isOutline` is `TRUE`.
     #' @param captionTemplate A character value that specifies the template
     #' for the data group caption, default "{values}".
     #' @param caption Effectively a hard-coded caption that overrides the
@@ -535,7 +557,7 @@ PivotTable <- R6::R6Class("PivotTable",
     #' it is next rendered.
     #' @return The new `PivotDataGroup` object.
     addColumnGroup = function(variableName=NULL, filterType="ALL", values=NULL,
-                             doNotExpand=FALSE, isEmpty=FALSE, isOutline=FALSE,
+                             doNotExpand=FALSE, isEmpty=FALSE, isOutline=FALSE, styleAsOutline=FALSE,
                              captionTemplate="{value}", caption=NULL,
                              isTotal=FALSE, isLevelSubTotal=FALSE, isLevelTotal=FALSE,
                              calculationGroupName=NULL, calculationName=NULL,
@@ -550,6 +572,7 @@ PivotTable <- R6::R6Class("PivotTable",
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", doNotExpand, missing(doNotExpand), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", isEmpty, missing(isEmpty), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", isOutline, missing(isOutline), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", styleAsOutline, missing(styleAsOutline), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", captionTemplate, missing(captionTemplate), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", caption, missing(caption), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("character", "integer", "numeric"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addColumnGroup", isTotal, missing(isTotal), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
@@ -570,15 +593,19 @@ PivotTable <- R6::R6Class("PivotTable",
       }
       if(private$p_argumentCheckMode==TRUE) private$p_traceEnabled("PivotTable$addColumnGroup", "Adding column group...",
                                                                    list(captionTemplate=captionTemplate, caption=caption,
-                                                                        doNotExpand=doNotExpand, isEmpty=isEmpty, isOutline=isOutline, isTotal=isTotal,
+                                                                        doNotExpand=doNotExpand, isEmpty=isEmpty, isOutline=isOutline, styleAsOutline=styleAsOutline,
+                                                                        isTotal=isTotal, isLevelSubTotal=isLevelSubTotal, isLevelTotal=isLevelTotal,
                                                                         variableName=variableName, values=values,
                                                                         calculationGroupName=calculationGroupName, calculationName=calculationName,
                                                                         baseStyleName=baseStyleName, styleDeclarations=styleDeclarations,
                                                                         mergeEmptySpace=mergeEmptySpace, cellBaseStyleName=cellBaseStyleName,
                                                                         cellStyleDeclarations=cellStyleDeclarations, sortAnchor=sortAnchor,
                                                                         resetCells=resetCells))
+      # default to style as outline if not specified
+      if(isOutline && missing(styleAsOutline)) styleAsOutline <- TRUE
+      # add the group
       grp <- private$p_columnGroup$addChildGroup(variableName=variableName, filterType=filterType, values=values,
-                                                 doNotExpand=doNotExpand, isEmpty=isEmpty, isOutline=isOutline,
+                                                 doNotExpand=doNotExpand, isEmpty=isEmpty, isOutline=isOutline, styleAsOutline=styleAsOutline,
                                                  captionTemplate=captionTemplate, caption=caption,
                                                  isTotal=isTotal, isLevelSubTotal=isLevelSubTotal, isLevelTotal=isLevelTotal,
                                                  calculationGroupName=calculationGroupName, calculationName=calculationName,
@@ -596,15 +623,15 @@ PivotTable <- R6::R6Class("PivotTable",
     #' column or using explicitly specified data values.
     #' See the "Data Groups" vignette for example usage.
     #' @details
-    #' There are broadly three different ways to call `addColumnDataGroups()`:
+    #' There are broadly three different ways to call `addColumnDataGroups()`:\cr
     #' (1) dataName=name, fromData=TRUE, onlyCombinationsThatExist=TRUE - which
     #' considers the ancestors of each existing data group to generate only those
-    #' combinations of values that exist in the data frame.
+    #' combinations of values that exist in the data frame.\cr
     #' (2) dataName=name, fromData=TRUE, onlyCombinationsThatExist=FALSE - which
     #' ignores the ancestors of each existing data group and simply adds every
     #' distinct value of the specified variable under every existing data group,
     #' which can result in combinations of values in the pivot table that don't
-    #' exist in the data frame (i.e. blank rows/columns in the pivot table).
+    #' exist in the data frame (i.e. blank rows/columns in the pivot table).\cr
     #' (3) fromData=FALSE, explicitListOfValues=list(...) - simply adds every
     #' value from the specified list under every existing data group.
     #' @param variableName The name of the related column in the data frame(s) of
@@ -740,12 +767,12 @@ PivotTable <- R6::R6Class("PivotTable",
     #' level 1 (default) sorts the data groups at level 1 of the hierarchy
     #' (which is the first visible level of data groups).
     #' @param orderBy Must be either "value", "caption", "calculation",
-    #' "customByValue" or "customByCaption".
-    #' "value" sorts by the raw (i.e. unformatted) group value.
-    #' "caption" sorts by the formatted character group caption.
-    #' "calculation" sorts using one of the calculations defined in the pivot table.
+    #' "customByValue" or "customByCaption".\cr
+    #' "value" sorts by the raw (i.e. unformatted) group value.\cr
+    #' "caption" sorts by the formatted character group caption.\cr
+    #' "calculation" sorts using one of the calculations defined in the pivot table.\cr
     #' "customValue" sorts by the raw (i.e. unformatted) group value according to
-    #' the specified custom sort order.
+    #' the specified custom sort order.\cr
     #' "customCaption" sorts by the formatted character group caption according to
     #' the specified custom sort order.
     #' @param customOrder A vector values sorted into the desired order.
@@ -789,15 +816,29 @@ PivotTable <- R6::R6Class("PivotTable",
     },
 
     #' @description
-    #' Retrieve the data groups at the specified level in the row groups hierarchy.
-    #' @param level An integer specifying the level number.
+    #' Retrieve the data groups at the specified level or levels in the row groups
+    #' hierarchy.
+    #' @param level An integer value or vector specifying one or more level numbers.
     #' Level 1 represents the first visible level of data groups.
+    #' @param collapse A logical value specifying whether the return value should be
+    #' simplified.  See details.
+    #' @details
+    #' If `level` is a vector:  If `collapse` is `FALSE`, then a list of lists is
+    #' returned, if `collapse` is `TRUE`, then a single combined list is returned.
     #' @return A list containing `PivotDataGroup` objects.
-    getRowGroupsByLevel = function(level=NULL) {
+    getRowGroupsByLevel = function(level=NULL, collapse=FALSE) {
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getRowGroupsByLevel", "Getting level row groups...")
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getRowGroupsByLevel", level, missing(level), allowMissing=FALSE, allowNull=FALSE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getRowGroupsByLevel", collapse, missing(collapse), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       }
+      # multiple levels
+      if(length(level)>1) {
+        fx <- function(x) { return(self$getRowGroupsByLevel(level=x)) }
+        if(isTRUE(collapse)) { return(invisible(unlist(lapply(level, fx)))) }
+        else { return(invisible(lapply(level, fx))) }
+      }
+      # single level
       if(level<1) stop("PivotTable$getRowGroupsByLevel():  level must be greater than or equal to one.", call. = FALSE)
       levelCount <- self$rowGroupLevelCount
       if(level>levelCount) stop(paste0("PivotTable$getRowGroupsByLevel():  level must be less than or equal to ", levelCount, "."), call. = FALSE)
@@ -832,13 +873,18 @@ PivotTable <- R6::R6Class("PivotTable",
     },
 
     #' @description
-    #' Retrieve the leaf-level data group associated with a specific row.
-    #' @param r An integer row number.
-    #' @return A `PivotDataGroup` object.
+    #' Retrieve the leaf-level data group associated with a specific row or rows.
+    #' @param r An integer row number or an integer vector of row numbers.
+    #' @return A `PivotDataGroup` object or a list of `PivotDataGroup` objects.
     getLeafRowGroup = function(r=NULL) {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getLeafRowGroup", r, missing(r), allowMissing=FALSE, allowNull=FALSE, allowedClasses=c("integer", "numeric"))
       }
+      # multiple rows
+      if(length(r)>1) {
+        return(invisible(lapply(r, self$getLeafRowGroup)))
+      }
+      # single row
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getLeafRowGroup", "Getting leaf level row group...")
       if((private$p_evaluated)&&(!is.null(private$p_cells))) {
         # retrieve directly from the cells instance
@@ -861,10 +907,10 @@ PivotTable <- R6::R6Class("PivotTable",
     #' @param variableName A character value that specifies the name of the
     #' variable in the data frame that the group relates to and will filter.
     #' @param filterType Must be one of "ALL", "VALUES", or "NONE" to specify
-    #' the filter type:
-    #' ALL means no filtering is applied.
+    #' the filter type:\cr
+    #' ALL means no filtering is applied.\cr
     #' VALUEs is the typical value used to specify that `variableName` is
-    #' filtered to only `values`.
+    #' filtered to only `values`.\cr
     #' NONE means no data will match this data group.
     #' @param values A vector that specifies the filter values applied to
     #' `variableName` to select the data to match this row/column in the pivot
@@ -877,6 +923,9 @@ PivotTable <- R6::R6Class("PivotTable",
     #' it is part of a header or outline row)
     #' @param isOutline Default value `FALSE` - specify `TRUE` to mark
     #' that this data group is an outline group.
+    #' @param styleAsOutline Default value `FALSE` - specify `TRUE` to style
+    #' this data group as an outline group.  Only applicable when
+    #' `isOutline` is `TRUE`.
     #' @param captionTemplate A character value that specifies the template
     #' for the data group caption, default "{values}".
     #' @param caption Effectively a hard-coded caption that overrides the
@@ -919,7 +968,7 @@ PivotTable <- R6::R6Class("PivotTable",
     #' it is next rendered.
     #' @return The new `PivotDataGroup` object.
     addRowGroup = function(variableName=NULL, filterType="ALL", values=NULL,
-                           doNotExpand=FALSE, isEmpty=FALSE, isOutline=FALSE,
+                           doNotExpand=FALSE, isEmpty=FALSE, isOutline=FALSE, styleAsOutline=FALSE,
                            captionTemplate="{value}", caption=NULL,
                            isTotal=FALSE, isLevelSubTotal=FALSE, isLevelTotal=FALSE,
                            calculationGroupName=NULL, calculationName=NULL,
@@ -934,6 +983,7 @@ PivotTable <- R6::R6Class("PivotTable",
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", doNotExpand, missing(doNotExpand), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", isEmpty, missing(isEmpty), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", isOutline, missing(isOutline), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", styleAsOutline, missing(styleAsOutline), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", captionTemplate, missing(captionTemplate), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", caption, missing(caption), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("character", "integer", "numeric"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "addRowGroup", isTotal, missing(isTotal), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
@@ -954,15 +1004,19 @@ PivotTable <- R6::R6Class("PivotTable",
       }
       if(private$p_argumentCheckMode==TRUE) private$p_traceEnabled("PivotTable$addRowGroup", "Adding row group...",
                                                                    list(captionTemplate=captionTemplate, caption=caption,
-                                                                        doNotExpand=doNotExpand, isEmpty=isEmpty, isOutline=isOutline, isTotal=isTotal,
+                                                                        doNotExpand=doNotExpand, isEmpty=isEmpty, isOutline=isOutline, styleAsOutline=styleAsOutline,
+                                                                        isTotal=isTotal, isLevelSubTotal=isLevelSubTotal, isLevelTotal=isLevelTotal,
                                                                         variableName=variableName, values=values,
                                                                         calculationGroupName=calculationGroupName, calculationName=calculationName,
                                                                         baseStyleName=baseStyleName, styleDeclarations=styleDeclarations,
                                                                         mergeEmptySpace=mergeEmptySpace, cellBaseStyleName=cellBaseStyleName,
                                                                         cellStyleDeclarations=cellStyleDeclarations, sortAnchor=sortAnchor,
                                                                         resetCells=resetCells))
+      # default to style as outline if not specified
+      if(isOutline && missing(styleAsOutline)) styleAsOutline <- TRUE
+      # add the group
       grp <- private$p_rowGroup$addChildGroup(variableName=variableName, filterType=filterType, values=values,
-                                              doNotExpand=doNotExpand, isEmpty=isEmpty, isOutline=isOutline,
+                                              doNotExpand=doNotExpand, isEmpty=isEmpty, isOutline=isOutline, styleAsOutline=styleAsOutline,
                                               captionTemplate=captionTemplate, caption=caption,
                                               isTotal=isTotal, isLevelSubTotal=isLevelSubTotal, isLevelTotal=isLevelTotal,
                                               calculationGroupName=calculationGroupName, calculationName=calculationName,
@@ -980,15 +1034,15 @@ PivotTable <- R6::R6Class("PivotTable",
     #' column or using explicitly specified data values.
     #' See the "Data Groups" vignette for example usage.
     #' @details
-    #' There are broadly three different ways to call `addRowDataGroups()`:
+    #' There are broadly three different ways to call `addRowDataGroups()`:\cr
     #' (1) dataName=name, fromData=TRUE, onlyCombinationsThatExist=TRUE - which
     #' considers the ancestors of each existing data group to generate only those
-    #' combinations of values that exist in the data frame.
+    #' combinations of values that exist in the data frame.\cr
     #' (2) dataName=name, fromData=TRUE, onlyCombinationsThatExist=FALSE - which
     #' ignores the ancestors of each existing data group and simply adds every
     #' distinct value of the specified variable under every existing data group,
     #' which can result in combinations of values in the pivot table that don't
-    #' exist in the data frame (i.e. blank rows/columns in the pivot table).
+    #' exist in the data frame (i.e. blank rows/columns in the pivot table).\cr
     #' (3) fromData=FALSE, explicitListOfValues=list(...) - simply adds every
     #' value from the specified list under every existing data group.
     #' @param variableName The name of the related column in the data frame(s) of
@@ -1170,12 +1224,12 @@ PivotTable <- R6::R6Class("PivotTable",
     #' level 1 (default) sorts the data groups at level 1 of the hierarchy
     #' (which is the first visible level of data groups).
     #' @param orderBy Must be either "value", "caption", "calculation",
-    #' "customByValue" or "customByCaption".
-    #' "value" sorts by the raw (i.e. unformatted) group value.
-    #' "caption" sorts by the formatted character group caption.
+    #' "customByValue" or "customByCaption".\cr
+    #' "value" sorts by the raw (i.e. unformatted) group value.\cr
+    #' "caption" sorts by the formatted character group caption.\cr
     #' "calculation" sorts using one of the calculations defined in the pivot table.
     #' "customValue" sorts by the raw (i.e. unformatted) group value according to
-    #' the specified custom sort order.
+    #' the specified custom sort order.\cr
     #' "customCaption" sorts by the formatted character group caption according to
     #' the specified custom sort order.
     #' @param customOrder A vector values sorted into the desired order.
@@ -1508,16 +1562,24 @@ PivotTable <- R6::R6Class("PivotTable",
     },
 
     #' @description
-    #' Apply styling to part of a pivot table.
+    #' Apply styling to a set of data groups or cells in a pivot table.
     #' @details
-    #' There are three ways to specify the part of a pivot table to apply styling
-    #' to:
-    #' (1) By specifying a list of data groups using the `groups` argument.
-    #' (2) By specifying a list of cells using the `cells` argument.
-    #' (3) By specifying a rectangular cell range using `rFrom`, `cFrom`, `rTo`
-    #' and `cTo`.
-    #' See the "Finding and Formatting" vignette for more information and many
-    #' examples.
+    #' There are five ways to specify the part(s) of a pivot table to apply
+    #' styling to:\cr
+    #' (1) By specifying a list of data groups using the `groups` argument.\cr
+    #' (2) By specifying a list of cells using the `cells` argument.\cr
+    #' (3) By specifying a single cell using the `rFrom` and `cFrom` arguments.\cr
+    #' (4) By specifying a rectangular cell range using the `rFrom`, `cFrom`,
+    #' `rTo` and `cTo` arguments.\cr
+    #' (5) By specifying a vector of rowNumbers and/or columnNumbers.  If both
+    #' rowNumbers and columnNumbers are specified, then the cells at the
+    #' intersection of the specified row numbers and column numbers are styled.\cr
+    #' If both rFrom/rTo and rowNumbers are specified, then rFrom/rTo constrain
+    #' the row numbers specified in rowNumbers.\cr
+    #' If both cFrom/cTo and columnNumbers are specified, then cFrom/cTo constrain
+    #' the column numbers specified in columnNumbers.\cr
+    #' See the "Styling" and Finding and Formatting" vignettes for more
+    #' information and many examples.
     #' @param rFrom An integer row number that specifies the start row for the
     #' styling changes.
     #' @param cFrom An integer column number that specifies the start column for the
@@ -1526,6 +1588,10 @@ PivotTable <- R6::R6Class("PivotTable",
     #' changes.
     #' @param cTo An integer column number that specifies the end column for the
     #' styling changes.
+    #' @param rowNumbers An integer vector that specifies the row numbers for the
+    #' styling changes.
+    #' @param columnNumbers An integer vector that specifies the column numbers for
+    #' the styling changes.
     #' @param groups A list containing `PivotDataGroup` objects.
     #' @param cells A list containing `PivotCell` objects.
     #' @param baseStyleName The name of a style to apply.
@@ -1533,12 +1599,15 @@ PivotTable <- R6::R6Class("PivotTable",
     #' @param declarations CSS style declarations to apply in the form of a list,
     #' e.g. `list("font-weight"="bold", "color"="#0000FF")`
     #' @return No return value.
-    setStyling = function(rFrom=NULL, cFrom=NULL, rTo=NULL, cTo=NULL, groups=NULL, cells=NULL, baseStyleName=NULL, style=NULL, declarations=NULL) {
+    setStyling = function(rFrom=NULL, cFrom=NULL, rTo=NULL, cTo=NULL, rowNumbers=NULL, columnNumbers=NULL,
+                          groups=NULL, cells=NULL, baseStyleName=NULL, style=NULL, declarations=NULL) {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setStyling", rFrom, missing(rFrom), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setStyling", cFrom, missing(cFrom), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setStyling", rTo, missing(rTo), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setStyling", cTo, missing(cTo), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setStyling", rowNumbers, missing(rowNumbers), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setStyling", columnNumbers, missing(columnNumbers), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setStyling", groups, missing(groups), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("list", "PivotDataGroup"), allowedListElementClasses="PivotDataGroup")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setStyling", cells, missing(cells), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("list", "PivotCell"), allowedListElementClasses="PivotCell")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "setStyling", baseStyleName, missing(baseStyleName), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
@@ -1547,6 +1616,7 @@ PivotTable <- R6::R6Class("PivotTable",
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$setStyling", "Setting styling...")
       if(missing(baseStyleName)&&missing(style)&&missing(declarations)) { stop("PivotTable$setStyling():  Please specify at least one of baseStyleName, style or declarations.", call. = FALSE) }
+      # style a group or list of groups
       if(!is.null(groups)) {
         if("PivotDataGroup" %in% class(groups)) {
           groups <- list(groups)
@@ -1565,6 +1635,7 @@ PivotTable <- R6::R6Class("PivotTable",
           }
         }
       }
+      # style a cell or list of cells
       if(!is.null(cells)) {
         if("PivotCell" %in% class(cells)) {
           cells <- list(cells)
@@ -1583,13 +1654,59 @@ PivotTable <- R6::R6Class("PivotTable",
           }
         }
       }
-      if((!is.null(rFrom))&&(!is.null(cFrom))) {
-        if(is.null(rTo)) rTo <- rFrom
-        if(is.null(cTo)) cTo <- cFrom
-        if(rTo<rFrom) { stop("PivotTable$setStyling():  rTo must be greater than or equal to rFrom.", call. = FALSE) }
-        if(cTo<cFrom) { stop("PivotTable$setStyling():  cTo must be greater than or equal to cFrom.", call. = FALSE) }
-        for(r in rFrom:rTo) {
-          for(c in cFrom:cTo) {
+      # styling cells by coordinates...
+      styleCells <- FALSE
+      rowCount <- self$rowCount
+      columnCount <- self$columnCount
+      ## switch to use the option legacy coordinates (this ignores the rowNumbers and columnNumbers parameters)
+      if(isTRUE(private$p_compatibility$legacySetStylingRowColumnNumbers)) {
+        if((!is.null(rFrom))&&(!is.null(cFrom))) {
+          if(is.null(rTo)) rTo <- rFrom
+          if(is.null(cTo)) cTo <- cFrom
+          if(rTo<rFrom) { stop("PivotTable$setStyling():  rTo must be greater than or equal to rFrom.", call. = FALSE) }
+          if(cTo<cFrom) { stop("PivotTable$setStyling():  cTo must be greater than or equal to cFrom.", call. = FALSE) }
+          rowNumbers <- rFrom:rTo
+          columnNumbers <- cFrom:cTo
+          styleCells <- TRUE
+        }
+      }
+      else {
+        ## check if a single cell has been specified
+        if((length(rowNumbers)==0)&&(length(columnNumbers)==0)&&
+           (!is.null(rFrom))&&(!is.null(cFrom))&&(is.null(rTo))&&(is.null(cTo))) {
+          rowNumbers <- rFrom
+          columnNumbers <- cFrom
+        }
+        else
+        {
+          # specifying a range of cells
+          if((length(rowNumbers)>0)||(!is.null(rFrom))||(!is.null(rTo))) {
+            if(length(rowNumbers)==0) rowNumbers <- 1:max(rowCount, 1)
+            if(!is.null(rFrom)) rowNumbers <- rowNumbers[rowNumbers >= min(rFrom)]
+            if(!is.null(rTo)) rowNumbers <- rowNumbers[rowNumbers <= max(rTo)]
+          }
+          if((length(columnNumbers)>0)||(!is.null(cFrom))||(!is.null(cTo))) {
+            if(length(columnNumbers)==0) columnNumbers <- 1:max(columnCount, 1)
+            if(!is.null(cFrom)) columnNumbers <- columnNumbers[columnNumbers >= min(cFrom)]
+            if(!is.null(cTo)) columnNumbers <- columnNumbers[columnNumbers <= max(cTo)]
+          }
+        }
+        styleCells <- (length(rowNumbers)>0)||(length(columnNumbers)>0)
+      }
+      if(styleCells==TRUE) {
+        if(!private$p_evaluated) stop("PivotTable$setStyling():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
+        if(is.null(private$p_cells)) stop("PivotTable$setStyling():  No cells exist in the pivot table.", call. = FALSE)
+        # set defaults for other axes
+        if((length(rowNumbers)==0)&&(length(columnNumbers)>0)) rowNumbers <- 1:rowCount
+        if((length(rowNumbers)>0)&&(length(columnNumbers)==0)) columnNumbers <- 1:columnCount
+        # silently remove invalid row/column numbers
+        if(min(rowNumbers)<1) rowNumbers <- rowNumbers[rowNumbers >= 1]
+        if(max(rowNumbers)>rowCount) rowNumbers <- rowNumbers[rowNumbers <= rowCount]
+        if(min(columnNumbers)<1) columnNumbers <- columnNumbers[columnNumbers >= 1]
+        if(max(columnNumbers)>columnCount) columnNumbers <- columnNumbers[columnNumbers <= columnCount]
+        # style cells
+        for(r in rowNumbers) {
+          for(c in columnNumbers) {
             cell <- self$cells$getCell(r, c)
             if(!is.null(cell)) {
               if(!missing(baseStyleName)) { cell$baseStyleName <- baseStyleName }
@@ -1603,6 +1720,369 @@ PivotTable <- R6::R6Class("PivotTable",
         }
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$setStyling", "Set styling.")
+    },
+
+    # mapType=value only allows fixed "from" values (either just a number or v==number): it maps discrete "from" values to discrete "to" values
+    # mapType=range allows "from" as a number or as a range specified with "v": it matches values into "from" ranges, the "to" values are discrete
+    # mapType=continuous only allows fixed "from" values (just a number or v==number): it rescales "from" numbers into continuous "to" values
+    # allowed usage:
+    # valueType=text, mapType=value:        0, "normal", 1, "bold", etc.
+    # valueType=text, mapType=logic:        v==0, "normal", 1<v<=2, "bold", etc.
+    # valueType=text, mapType=range:        0, "normal", 1, "bold", etc                styleLowerValues=FALSE, styleHigherValues=TRUE
+    # valueType=number: supports the above, plus:
+    # valueType=number, mapType=continuous: 0, 10, 1, 20, etc                          styleLowerValues=FALSE, styleHigherValues=TRUE
+    # valueType=color:  supports the above, but the continuous option looks like:
+    # valueType=color, mapType=continuous:  0, red, 1, yellow, etc                     styleLowerValues=FALSE, styleHigherValues=TRUE
+    # Note in documentation that these methods are primarily for numerical data.  Parts may work for dates (e.g. mapType=value and range) ...
+    # ... but other bits won't, e.g. v>=as.Date("2020-05-22"), or variables, e.g. v>=x where x is a local variable outside of the pivot table (but the name could collide with a local variable inside the pivot table function).
+
+    #' @description
+    #' Apply styling to pivot table cells based on the value of each cell.
+    #' @details
+    #' `mapStyling()` is typically used to conditionally apply styling to cells
+    #' based on the value of each individual cell, e.g. cells with values less
+    #' than a specified number could be coloured red.\cr
+    #' mapType="logic" maps values matching specified logical criteria to
+    #' specific "to" values.  The logical criteria can be any of the following
+    #' forms (the first matching mapping is used):\cr
+    #' (1) a specific value, e.g. 12.\cr
+    #' (2) a specific value equality condition, e.g. "v==12", where v
+    #' represents the cell value.\cr
+    #' (3) a value range expression using the following abbreviated form:
+    #' "value1<=v<value2", e.g. "10<=v<15".  Only "<" or "<=" can be used
+    #' in these value range expressions.\cr
+    #' (4) a standard R logical expression, e.g.
+    #' "10<=v && v<15".\cr
+    #' Basic R functions that test the value can also be
+    #' used, e.g. is.na(v).\cr
+    #' See the "Styling" and Finding and Formatting" vignettes for more
+    #' information and many examples.
+    #' @param styleProperty The name of the style property to set on the specified
+    #' cells, e.g. background-color.
+    #' @param cells A list containing `PivotCell` objects.
+    #' @param valueType The type of style value to be set.  Must be one of:
+    #' "text", "character", "number", "numeric", "color" or "colour".\cr
+    #' "text" and "character" are equivalent.  "number" and "numeric" are equivalent.
+    #' "color" and "colour" are equivalent.
+    #' @param mapType The type of mapping to be performed.  The following mapping
+    #' types are supported:\cr
+    #' (1) "value" = a 1:1 mapping which maps each specified "from" value to the
+    #' corresponding "to" value, e.g. 100 -> "green".\cr
+    #' (2) "logic" = each from value is logical criteria.  See details.\cr
+    #' (3) "range" = values between each pair of "from" values are mapped to the
+    #' corresponding "to" value, e.g. values in the range 80-100 -> "green" (more
+    #' specifically values greater than or equal to 80 and less than 100).\cr
+    #' (4) "continuous" = rescales values between each pair of "from" values into
+    #' the range of the corresponding pair of "to" values, e.g. if the "from" range
+    #' is 80-100 and the corresponding "to" range is 0.8-1, then 90 -> 0.9.\cr
+    #' "continuous" cannot be used with valueType="text"/"character".
+    #' @param mappings The mappings to be applied, specified in one of the following
+    #' three forms:\cr
+    #' (1) a list containing pairs of values, e.g.
+    #' `list(0, "red", 0.4, "yellow", 0.8, "green")`.\cr
+    #' (2) a list containing "from" and "to" vectors/lists, e.g.
+    #' `list(from=c(0, 0.4, 0.8), to=c("red", "yellow", "green"))`.\cr
+    #' (3) a custom mapping function that will be invoked once per cell, e.g.
+    #' `function(v, cell) { if(isTRUE(v>0.8)) return("green") }`.\cr
+    #' Mappings must be specified in ascending order when valueType="range" or
+    #' valueType="continuous".\cr
+    #' If a custom mapping function is specified, then the valueType and mapType
+    #' parameters are ignored.
+    #' @param styleLowerValues A logical value, default FALSE, that specifies
+    #' whether values less than the lowest specified "from" value should be styled
+    #' using the style specified for the lowest "from" value.  Only applies when
+    #' valueType="range" or valueType="continuous".
+    #' @param styleHigherValues A logical value, default TRUE, that specifies
+    #' whether values greater than the highest specified "from" value should be styled
+    #' using the style specified for the highest "from" value.  Only applies when
+    #' valueType="range" or valueType="continuous".
+    #' @return No return value.
+    mapStyling = function(styleProperty=NULL, cells=NULL, valueType="text", mapType="range", mappings=NULL, styleLowerValues=FALSE, styleHigherValues=TRUE) {
+      if(private$p_argumentCheckMode > 0) {
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "mapStyling", styleProperty, missing(styleProperty), allowMissing=FALSE, allowNull=FALSE, allowedClasses="character")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "mapStyling", cells, missing(cells), allowMissing=FALSE, allowNull=FALSE, allowedClasses=c("PivotCell", "list"), allowedListElementClasses="PivotCell")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "mapStyling", valueType, missing(valueType), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("character", "text", "numeric", "number", "color", "colour"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "mapStyling", mapType, missing(mapType), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("value", "range", "logic", "continuous"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "mapStyling", mappings, missing(mappings), allowMissing=TRUE, allowNull=FALSE, allowedClasses=c("character", "list", "function"), allowedListElementClasses=c("character", "integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "mapStyling", styleLowerValues, missing(styleLowerValues), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "mapStyling", styleHigherValues, missing(styleHigherValues), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+      }
+      if(private$p_traceEnabled==TRUE) self$trace("PivotTable$mapStyling", "Mapping styling...")
+      # prep parameters
+      if("PivotCell" %in% class(cells)) cells <- list(cells)
+      if(mapType=="numeric") mapType <- "number"
+      if(mapType=="character") mapType <- "text"
+      if("character" %in% class(mappings)) mappings <- as.list(mappings)
+      if(valueType=="colour") valueType <- "color"
+      # special case of a mapping function - this ignores the valueType and mapType arguments
+      if("function" %in% class(mappings)) {
+        for(cell in cells) {
+          value <- cell$rawValue
+          mappedValue <- mappings(value, cell)
+          if((length(mappedValue)>0)&&(!is.na(mappedValue))) {
+            declarations <- list()
+            declarations[[styleProperty]] <- mappedValue
+            self$setStyling(cells=cell, declarations=declarations)
+          }
+        }
+        if(private$p_traceEnabled==TRUE) self$trace("PivotTable$mapStyling", "Mapped styling.")
+        return(invisible())
+      }
+      # general or special case?
+      if((length(mappings)==2)&&(length(intersect(names(mappings), c("from", "to")))==2)) {
+        # special case of a two element list (from, to)
+        if(length(intersect(class(mappings$from), c("character", "integer", "numeric", "list")))==0) {
+          stop("PivotTable$mapStyling():  The 'from' values must be either character, integer, numeric or a list.", call. = FALSE)
+        }
+        # build the maps list
+        maps <- list()
+        mapCount <- min(length(mappings$from), length(mappings$to))
+        m <- 1
+        mMax <- mapCount
+        for(m in 1:mMax) {
+          if("list" %in% class(mappings$from)) vre <- mappings$from[[m]]
+          else vre <- mappings$from[m]
+          if("list" %in% class(mappings$to)) value <- mappings$to[[m]]
+          else value <- mappings$to[m]
+          nextVre <- NULL
+          nextValue <- NULL
+          if((m+1)<=mMax){
+            if("list" %in% class(mappings$from)) nextVre <- mappings$from[[m+1]]
+            else nextVre <- mappings$from[m+1]
+            if("list" %in% class(mappings$to)) nextValue <- mappings$to[[m+1]]
+            else nextValue <- mappings$to[m+1]
+          }
+          maps[[length(maps)+1]] <- list(vre=vre, value=value, nextVre=nextVre, nextValue=nextValue)
+        }
+      }
+      else {
+        # general case of a longer list of mappings
+        # check some mappings, return if none
+        if(length(mappings)<2) {
+          if(private$p_traceEnabled==TRUE) self$trace("PivotTable$mapStyling", "Mapped styling.")
+          return(invisible())
+        }
+        # process the mappings into value pairs
+        # every map has two values: vre (value range expression) = the "from" value, value = the "to" value
+        # "from" here means the raw value (or range of raw values) that we are mapping from, i.e. the input of the mapping
+        # "to" here means the result value, i.e. the output of the mapping
+        # mapType=range and mapType=continuous also have: rangeStart, rangeEnd, where vre->rangeStart and nextVre->rangeEnd
+        # valueType=color with mapType=continuous also has:
+        maps <- list()
+        mapCount <- length(mappings)
+        m <- 1
+        mMax <- mapCount
+        while(m<mMax) {
+          vre <- mappings[[m]]
+          value <- NULL
+          if((m+1)<=length(mappings)) value <- mappings[[m+1]]
+          nextVre <- NULL
+          if((m+2)<=length(mappings)) nextVre <- mappings[[m+2]]
+          nextValue <- NULL
+          if((m+3)<=length(mappings)) nextValue <- mappings[[m+3]]
+          maps[[length(maps)+1]] <- list(vre=vre, value=value, nextVre=nextVre, nextValue=nextValue)
+          # message("vre=", vre, " value=", value, " nextVre=", nextVre, " nextValue=", nextValue)
+          m <- m+2
+        }
+      }
+      # check/prepare maps
+      if(mapType=="value") {
+        for(m in 1:length(maps)) {
+          map <- maps[[m]]
+          if((is.null(map$vre))||(length(map$vre)==0)) stop("PivotTable$mapStyling():  The 'from' value for a mapping cannot be null or blank.", call. = FALSE)
+          if(vreIsSingleValue(map$vre)) {
+            # write the single value back into the mapping to minimise repeated parsing
+            maps[[m]]$vre <- vreGetSingleValue(map$vre)
+          }
+          else {
+            stop(paste0("PivotTable$mapStyling():  The 'from' value for a mapping must be a single numerical value - invalid value ", map$vre), call. = FALSE)
+          }
+          if((is.null(map$value))||(length(map$value)==0)) stop("PivotTable$mapStyling():  The 'to' value for a mapping cannot be null or blank.", call. = FALSE)
+        }
+      }
+      else if(mapType=="logic") {
+        for(m in 1:length(maps)) {
+          map <- maps[[m]]
+          if((is.null(map$vre))||(length(map$vre)==0)) stop("PivotTable$mapStyling():  The 'from' criteria for a mapping cannot be null or blank.", call. = FALSE)
+          if((is.null(map$value))||(length(map$value)==0)) stop("PivotTable$mapStyling():  The 'to' value for a mapping cannot be null or blank.", call. = FALSE)
+          testResult <- vreIsMatch(map$vre, 0, testOnly=TRUE)
+        }
+      }
+      else if(mapType=="range") {
+        for(m in 1:length(maps)) {
+          map <- maps[[m]]
+          # basic map checks
+          if((is.null(map$vre))||(length(map$vre)==0)) stop("PivotTable$mapStyling():  The 'from' value for a mapping cannot be null or blank.", call. = FALSE)
+          if(!vreIsSingleValue(map$vre)) stop("PivotTable$mapStyling():  Only single-value 'from' values can be be used with a range mapping.", call. = FALSE)
+          if(((is.null(map$value))||(length(map$value)==0))&&(m<length(maps))) {
+            # the last value of a range mapping can be null, e.g. mappings=list(0, "red", 1000, "orange", 15000), note there is no colour for 15000
+            stop("PivotTable$mapStyling():  The 'to' value for a mapping cannot be null or blank (except for the last specified 'from' value).", call. = FALSE)
+          }
+          # store the numerical range as part of the mapping so they don't need to be parsed repeatedly
+          map$rangeStart <- vreGetSingleValue(map$vre)
+          if((!is.null(map$nextVre))&&(vreIsSingleValue(map$nextVre))) map$rangeEnd <- vreGetSingleValue(map$nextVre)
+          # check the "to" values
+          if(valueType=="number") {
+            if(!is.numeric(map$value)) stop(paste0("PivotTable$mapStyling():  The 'to' value '", map$value, "' must be numeric since valueType=number/numeric has been specified."), call. = FALSE)
+          }
+          else if(valueType=="color") {
+            testColor <- parseColor(map$value)
+            if(is.null(testColor)) stop(paste0("PivotTable$mapStyling():  The 'to' value '", map$value, "' must be a valid color/colour since valueType=color has been specified."), call. = FALSE)
+          }
+          # message(paste0("vre=", map$vre, " nextVre=", map$nextVre, " rangeStart=", map$rangeStart, " rangeEnd=", map$rangeEnd, " value=", map$value, " nextValue=", map$nextValue))
+          maps[[m]] <- map
+        }
+        # check the order of the mappings
+        fx <- function(x) { x$rangeStart }
+        if(!isTRUE(all.equal(1:length(maps),order(sapply(maps, fx))))) {
+          stop("PivotTable$mapStyling(): The 'from' values for range mappings must be specified in ascending order (lowest to highest).", call. = FALSE)
+        }
+      }
+      else if(mapType=="continuous") {
+        if(valueType=="text") stop("PivotTable$mapStyling():  Continuous mappings are not supported with text values.", call. = FALSE)
+        for(m in 1:length(maps)) {
+          map <- maps[[m]]
+          # basic map checks
+          if((is.null(map$vre))||(length(map$vre)==0)) stop("PivotTable$mapStyling():  The 'from' value for a mapping cannot be null or blank.", call. = FALSE)
+          if(!vreIsSingleValue(map$vre)) stop("PivotTable$mapStyling():  Only single-value 'from' values can be be used with a continuous mapping.", call. = FALSE)
+          if((is.null(map$value))||(length(map$value)==0)) stop("PivotTable$mapStyling():  The 'to' value for a mapping cannot be null or blank.", call. = FALSE)
+          # store the numerical range as part of the mapping so they don't need to be parsed repeatedly
+          map$rangeStart <- vreGetSingleValue(map$vre)
+          if((!is.null(map$nextVre))&&(vreIsSingleValue(map$nextVre))) map$rangeEnd <- vreGetSingleValue(map$nextVre)
+          # check the "to" values
+          if(valueType=="number") {
+            if(!is.numeric(map$value)) stop(paste0("PivotTable$mapStyling():  The 'to' value '", map$value, "' must be numeric since valueType=number/numeric has been specified."), call. = FALSE)
+          }
+          else if(valueType=="color") {
+            map$startColorHex <- parseColor(map$value)
+            if(is.null(map$startColorHex)) stop(paste0("PivotTable$mapStyling():  The 'to' value '", map$value, "' must be a valid color/colour since valueType=color/colour has been specified."), call. = FALSE)
+            map$startColorList <- vreHexToClr(map$startColorHex)
+            if(length(map$nextValue)>0) {
+              map$endColorHex <- parseColor(map$nextValue)
+              if(is.null(map$endColorHex)) stop(paste0("PivotTable$mapStyling():  The 'to' value '", map$nextValue, "' must be a valid color/colour since valueType=color/colour has been specified."), call. = FALSE)
+              map$endColorList <- vreHexToClr(map$endColorHex)
+            }
+          }
+          # message(paste0("vre=", map$vre, " nextVre=", map$nextVre, " rangeStart=", map$rangeStart, " rangeEnd=", map$rangeEnd, " value=", map$value, " nextValue=", map$nextValue))
+          maps[[m]] <- map
+        }
+        # check the order of the mappings
+        fx <- function(x) { x$rangeStart }
+        if(!isTRUE(all.equal(1:length(maps),order(sapply(maps, fx))))) {
+          stop("PivotTable$mapStyling(): The 'from' values for continuous mappings must be specified in ascending order (lowest to highest).", call. = FALSE)
+        }
+      }
+      # map values
+      mMax <- length(maps)
+      if(mapType=="value") {
+        for(cell in cells) {
+          value <- cell$rawValue
+          for(map in maps) {
+            if(vreIsEqual(map$vre, value)) {
+              declarations <- list()
+              declarations[[styleProperty]] <- map$value
+              self$setStyling(cells=cell, declarations=declarations)
+              break # jump to next cell
+            }
+          }
+        }
+      }
+      else if(mapType=="logic") {
+        for(cell in cells) {
+          value <- cell$rawValue
+          for(map in maps) {
+            if(vreIsMatch(map$vre, value)) {
+              declarations <- list()
+              declarations[[styleProperty]] <- map$value
+              self$setStyling(cells=cell, declarations=declarations)
+              break # jump to next cell
+            }
+          }
+        }
+      }
+      else if(mapType=="range") {
+        for(cell in cells) {
+          cellStyleSet <- FALSE
+          value <- cell$rawValue
+          for(map in maps) {
+            if(length(map$rangeStart)==0) next
+            if(length(map$rangeEnd)==0) next
+            if(length(map$value)==0) next
+            if(isTRUE(map$rangeStart <= value && value < map$rangeEnd)) {
+              declarations <- list()
+              declarations[[styleProperty]] <- map$value
+              self$setStyling(cells=cell, declarations=declarations)
+              cellStyleSet <- TRUE
+              break # jump to next cell
+            }
+          }
+          # if this cell has been processed, jump to the next cell
+          if(cellStyleSet==TRUE) next
+          # none of the mappings have matched...
+          # ...style the same as the first mapping?
+          map <- maps[[1]]
+          if(styleLowerValues && (length(map$rangeStart)>0) && isTRUE(value < map$rangeStart) && (length(map$value)>0)) {
+            declarations <- list()
+            declarations[[styleProperty]] <- map$value
+            self$setStyling(cells=cell, declarations=declarations)
+          }
+          # ...style the same as the last mapping?
+          map <- maps[[mMax]]
+          if(styleHigherValues && (length(map$rangeStart)>0) && isTRUE(value > map$rangeStart) && (length(map$value)>0)) {
+            declarations <- list()
+            declarations[[styleProperty]] <- map$value
+            self$setStyling(cells=cell, declarations=declarations)
+          }
+        }
+      }
+      else if(mapType=="continuous") {
+        for(cell in cells) {
+          cellStyleSet <- FALSE
+          value <- cell$rawValue
+          for(map in maps) {
+            if(length(map$rangeStart)==0) next
+            if(length(map$rangeEnd)==0) next
+            if(length(map$value)==0) next
+            if(length(map$nextValue)==0) next
+            if(isTRUE(map$rangeStart <= value && value < map$rangeEnd)) {
+              if(valueType=="number") {
+                value <- vreScaleNumber(map$value, map$nextValue, map$rangeStart, map$rangeEnd, value)
+                cellStyleSet <- TRUE
+              }
+              else if(valueType=="color") {
+                # message(paste0("startColorHex=", map$startColorHex, " endColorHex=", map$endColorHex, " rangeStart=", map$rangeStart, " rangeEnd=", map$rangeEnd, " value=", value))
+                value <- vreScale2Colours(map$startColorList, map$endColorList, map$rangeStart, map$rangeEnd, value)
+                cellStyleSet <- TRUE
+              }
+              if((length(value)>0)&&(!is.na(value))) {
+                declarations <- list()
+                declarations[[styleProperty]] <- value
+                self$setStyling(cells=cell, declarations=declarations)
+                break # jump to next cell
+              }
+            }
+          }
+          # if this cell has been processed, jump to the next cell
+          if(cellStyleSet==TRUE) next
+          # none of the mappings have matched...
+          # ...style the same as the first mapping?
+          map <- maps[[1]]
+          if(styleLowerValues && (length(map$rangeStart)>0) && isTRUE(value < map$rangeStart) && (length(map$value)>0)) {
+            declarations <- list()
+            declarations[[styleProperty]] <- map$startColorHex
+            self$setStyling(cells=cell, declarations=declarations)
+          }
+          # ...style the same as the last mapping?
+          map <- maps[[mMax]]
+          if(styleHigherValues && (length(map$rangeStart)>0) && isTRUE(value > map$rangeStart) && (length(map$value)>0)) {
+            declarations <- list()
+            declarations[[styleProperty]] <- map$startColorHex
+            self$setStyling(cells=cell, declarations=declarations)
+          }
+        }
+      }
+      if(private$p_traceEnabled==TRUE) self$trace("PivotTable$mapStyling", "Mapped styling.")
+      return(invisible())
     },
 
     #' @description
@@ -1773,12 +2253,14 @@ PivotTable <- R6::R6Class("PivotTable",
                                     rowColFilters=rowColFilters, rowFilters=rowFilters[[r]], columnFilters=columnFilters[[c]],
                                     rowLeafGroup=rowGrps[[r]], columnLeafGroup=columnGrps[[c]])
               # set the style for the cell
+              # note:  the logic for inherited styles from the data groups is taken care of in the renderers
+              #        i.e. the cell only stores the additional/overriding styles for the cell (not all of the inherited styles)
               if((!is.null(calcGrpNme))&&(!is.null(calcNme))) {
                 calcn <- calcGrpsLookup[[calcGrpNme]][[calcNme]]
                 if(!is.null(calcn)) {
                   if(!is.null(calcn$cellBaseStyleName)) cell$baseStyleName <- calcn$cellBaseStyleName
                   if(!is.null(calcn$cellStyleDeclarations))
-                    cell$style <- pt$createInlineStyle(baseStyleName=calcn$cellBaseStyleName, declarations=calcn$cellStyleDeclarations)
+                    cell$style <- self$createInlineStyle(baseStyleName=calcn$cellBaseStyleName, declarations=calcn$cellStyleDeclarations)
                 }
               }
               # add the cell to the pivot table
@@ -1864,7 +2346,7 @@ PivotTable <- R6::R6Class("PivotTable",
     #' @details
     #' This generally only needs to be called explicitly if specific pivot cells
     #' need to be further processed (e.g. formatted) before the pivot table is
-    #' rendered.
+    #' rendered.\cr
     #' This method is a wrapper for calling `normaliseColumnGroups()`,
     #' `normaliseRowGroups()`, `generateCellStructure()` and `evaluateCells()`
     #' in sequence.
@@ -1881,25 +2363,25 @@ PivotTable <- R6::R6Class("PivotTable",
 
     #' @description
     #' Find row data groups that match specified criteria.
-    #' @param matchMode Either "simple" (default) or "combinations".
+    #' @param matchMode Either "simple" (default) or "combinations".\cr
     #' "simple" is used when matching only one variable-value, multiple
-    #' variable-value combinations are effectively logical "OR".
+    #' variable-value combinations are effectively logical "OR".\cr
     #' "combinations" is used when matching for combinations of variable
     #' values, multiple variable-value combinations are effectively
     #' logical "AND".  A child group is viewed as having the variable-value
-    #' filters of itself and it's parent/ancestors, e.g.
+    #' filters of itself and it's parent/ancestors, e.g.\cr
     #' `list("TrainCategory"="Express Passenger", "PowerType"="DMU")`,
-    #' would return the "DMU" data group underneath "Express Passenger".
+    #' would return the "DMU" data group underneath "Express Passenger".\cr
     #' See the "Finding and Formatting" vignette for graphical examples.
     #' @param variableNames A character vector specifying the name/names of the
     #' variables to find.  This is useful generally only in pivot tables with
     #' irregular layouts, since in regular pivot tables every cell is related
     #' to every variable.
     #' @param variableValues A list specifying the variable names and values to find,
-    #' e.g. `variableValues=list("PowerType"=c("DMU", "HST"))`.
-    #' Specify "**" as the variable value to match totals for the specified variable.
-    #' Specify "!*" as the variable value to match non-totals for the specified variable.
-    #' NB: The totals/non-totals criteria above won’t work when visual totals are used.
+    #' e.g. `variableValues=list("PowerType"=c("DMU", "HST"))`.\cr
+    #' Specify "**" as the variable value to match totals for the specified variable.\cr
+    #' Specify "!*" as the variable value to match non-totals for the specified variable.\cr
+    #' NB: The totals/non-totals criteria above won’t work when visual totals are used.\cr
     #' @param totals A word that specifies how totals are matched (overrides the finer
     #' settings above) - must be one of "include" (default), "exclude" or "only".
     #' @param calculationNames A character vector specifying the name/names of the
@@ -1917,13 +2399,18 @@ PivotTable <- R6::R6Class("PivotTable",
     #' outline child group no longer exists.
     #' @param includeDescendantGroups Default `FALSE`.  Specify true to also return
     #' all descendants of data groups that match the specified criteria.
+    #' @param rowNumbers An integer vector specifying row numbers that constrains
+    #' the data groups to be found.
+    #' @param cells A `PivotCell` object or a list of `PivotCell` objects to specify
+    #' one or more cells that must intersect the data groups.
     #' @return A list of data groups matching the specified criteria.
     findRowDataGroups = function(matchMode="simple", variableNames=NULL, variableValues=NULL,
                                  totals="include", calculationNames=NULL,
                                  atLevels=NULL, minChildCount=NULL, maxChildCount=NULL,
                                  emptyGroups="exclude",
                                  outlineGroups="exclude", outlineLinkedGroupExists=NULL,
-                                 includeDescendantGroups=FALSE) {
+                                 includeDescendantGroups=FALSE,
+                                 rowNumbers=NULL, cells=NULL) {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findRowDataGroups", matchMode, missing(matchMode), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("simple", "combinations"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findRowDataGroups", variableNames, missing(variableNames), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
@@ -1937,38 +2424,64 @@ PivotTable <- R6::R6Class("PivotTable",
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findRowDataGroups", outlineGroups, missing(outlineGroups), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("include", "exclude", "only"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findRowDataGroups", outlineLinkedGroupExists, missing(outlineLinkedGroupExists), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findRowDataGroups", includeDescendantGroups, missing(includeDescendantGroups), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findRowDataGroups", rowNumbers, missing(rowNumbers), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findRowDataGroups", cells, missing(cells), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("PivotCell", "list"), allowedListElementClasses="PivotCell")
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$findRowDataGroups", "Finding row data groups...")
-      grps <- private$p_rowGroup$findDataGroups(matchMode=matchMode, variableNames=variableNames, variableValues=variableValues, totals=totals,
+      # find groups
+      grps1 <- private$p_rowGroup$findDataGroups(matchMode=matchMode, variableNames=variableNames, variableValues=variableValues, totals=totals,
                                                 calculationNames=calculationNames,
                                                 atLevels=atLevels, minChildCount=minChildCount, maxChildCount=maxChildCount,
                                                 emptyGroups=emptyGroups,
                                                 outlineGroups=outlineGroups, outlineLinkedGroupExists=outlineLinkedGroupExists,
-                                                includeDescendantGroups=includeDescendantGroups)
+                                                includeDescendantGroups=includeDescendantGroups, includeCurrentGroup=FALSE)
+      # additional constraints: this logic is not embedded in PivotDataGroup since it needs the row numbers
+      if("PivotCell" %in% class(cells)) cells <- list(cells)
+      grps2 <- list()
+      if((length(rowNumbers)>0)||(length(cells)>0)) {
+        if(!private$p_evaluated) stop("PivotTable$findRowDataGroups():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
+        if(is.null(private$p_cells)) stop("PivotTable$findRowDataGroups():  No cells exist to examine.", call. = FALSE)
+        if(length(cells)>0) {
+          fx <- function(x) { return(x$rowNumber) }
+          cellRowNumbers <- unique(sapply(cells, fx))
+          rowNumbers <- union(rowNumbers, cellRowNumbers)
+        }
+        if(length(rowNumbers)>0) {
+          for(grp in grps1) {
+            grpRowNumbers <- self$findGroupRowNumbers(group=grp)
+            if(length(intersect(rowNumbers, grpRowNumbers))>0) {
+              grps2[[length(grps2)+1]] <- grp
+            }
+          }
+        }
+      }
+      else {
+        grps2 <- grps1
+      }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$findRowDataGroups", "Found row data groups.")
-      return(invisible(grps))
+      return(invisible(grps2))
     },
 
     #' @description
     #' Find column data groups that match specified criteria.
-    #' @param matchMode Either "simple" (default) or "combinations".
-    #' "simple" is used when matching only one variable-value, multiple
-    #' variable-value combinations are effectively logical "OR".
+    #' @param matchMode Either "simple" (default) or "combinations".\cr
+    #' "simple" is used when matching only one variable-value - multiple
+    #' variable-value combinations are effectively logical "OR".\cr
     #' "combinations" is used when matching for combinations of variable
-    #' values, multiple variable-value combinations are effectively
+    #' values - multiple variable-value combinations are effectively
     #' logical "AND".  A child group is viewed as having the variable-value
-    #' filters of itself and it's parent/ancestors, e.g.
+    #' filters of itself and it's parent/ancestors, e.g.\cr
     #' `list("TrainCategory"="Express Passenger", "PowerType"="DMU")`,
-    #' would return the "DMU" data group underneath "Express Passenger".
+    #' would return the "DMU" data group underneath "Express Passenger".\cr
     #' See the "Finding and Formatting" vignette for graphical examples.
     #' @param variableNames A character vector specifying the name/names of the
     #' variables to find.  This is useful generally only in pivot tables with
     #' irregular layouts, since in regular pivot tables every cell is related
     #' to every variable.
     #' @param variableValues A list specifying the variable names and values to find,
-    #' e.g. `variableValues=list("PowerType"=c("DMU", "HST"))`.
-    #' Specify "**" as the variable value to match totals for the specified variable.
-    #' Specify "!*" as the variable value to match non-totals for the specified variable.
+    #' e.g. `variableValues=list("PowerType"=c("DMU", "HST"))`.\cr
+    #' Specify "**" as the variable value to match totals for the specified variable.\cr
+    #' Specify "!*" as the variable value to match non-totals for the specified variable.\cr
     #' NB: The totals/non-totals criteria above won’t work when visual totals are used.
     #' @param totals A word that specifies how totals are matched (overrides the finer
     #' settings above) - must be one of "include" (default), "exclude" or "only".
@@ -1982,11 +2495,16 @@ PivotTable <- R6::R6Class("PivotTable",
     #' must be one of "include", "exclude" (default) or "only".
     #' @param includeDescendantGroups Default `FALSE`.  Specify true to also return
     #' all descendants of data groups that match the specified criteria.
+    #' @param columnNumbers An integer vector specifying column numbers that constrains
+    #' the data groups to be found.
+    #' @param cells A `PivotCell` object or a list of `PivotCell` objects to specify
+    #' one or more cells that must intersect the data groups.
     #' @return A list of data groups matching the specified criteria.
     findColumnDataGroups = function(matchMode="simple", variableNames=NULL, variableValues=NULL,
                                     totals="include", calculationNames=NULL,
                                     atLevels=NULL, minChildCount=NULL, maxChildCount=NULL,
-                                    emptyGroups="exclude", includeDescendantGroups=FALSE) {
+                                    emptyGroups="exclude", includeDescendantGroups=FALSE,
+                                    columnNumbers=NULL, cells=NULL) {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findColumnDataGroups", matchMode, missing(matchMode), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("simple", "combinations"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findColumnDataGroups", variableNames, missing(variableNames), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
@@ -1998,15 +2516,41 @@ PivotTable <- R6::R6Class("PivotTable",
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findColumnDataGroups", maxChildCount, missing(maxChildCount), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer","numeric"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findColumnDataGroups", emptyGroups, missing(emptyGroups), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("include", "exclude", "only"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findColumnDataGroups", includeDescendantGroups, missing(includeDescendantGroups), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findColumnDataGroups", columnNumbers, missing(columnNumbers), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findColumnDataGroups", cells, missing(cells), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("PivotCell", "list"), allowedListElementClasses="PivotCell")
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$findColumnDataGroups", "Finding column data groups...")
-      grps <- private$p_columnGroup$findDataGroups(matchMode=matchMode, variableNames=variableNames, variableValues=variableValues, totals=totals,
+      # find groups
+      grps1 <- private$p_columnGroup$findDataGroups(matchMode=matchMode, variableNames=variableNames, variableValues=variableValues, totals=totals,
                                                    calculationNames=calculationNames,
                                                    atLevels=atLevels, minChildCount=minChildCount, maxChildCount=maxChildCount,
                                                    emptyGroups=emptyGroups, outlineGroups="exclude",
-                                                   includeDescendantGroups=includeDescendantGroups)
+                                                   includeDescendantGroups=includeDescendantGroups, includeCurrentGroup=FALSE)
+      # additional constraints: this logic is not embedded in PivotDataGroup since it needs the column numbers
+      if("PivotCell" %in% class(cells)) cells <- list(cells)
+      grps2 <- list()
+      if((length(columnNumbers)>0)||(length(cells)>0)) {
+        if(!private$p_evaluated) stop("PivotTable$findColumnDataGroups():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
+        if(is.null(private$p_cells)) stop("PivotTable$findColumnDataGroups():  No cells exist to examine.", call. = FALSE)
+        if(length(cells)>0) {
+          fx <- function(x) { return(x$columnNumber) }
+          cellColNumbers <- unique(sapply(cells, fx))
+          columnNumbers <- union(columnNumbers, cellColNumbers)
+        }
+        if(length(columnNumbers)>0) {
+          for(grp in grps1) {
+            grpColNumbers <- self$findGroupColumnNumbers(group=grp)
+            if(length(intersect(columnNumbers, grpColNumbers))>0) {
+              grps2[[length(grps2)+1]] <- grp
+            }
+          }
+        }
+      }
+      else {
+        grps2 <- grps1
+      }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$findColumnDataGroups", "Found column data groups.")
-      return(invisible(grps))
+      return(invisible(grps2))
     },
 
     #' @description
@@ -2028,7 +2572,7 @@ PivotTable <- R6::R6Class("PivotTable",
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getEmptyRows", "Getting empty rows...")
       if(!private$p_evaluated) stop("PivotTable$getEmptyRows():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
-      if(is.null(private$p_cells)) stop("PivotTable$getEmptyRows():  No cells exist to examine", call. = FALSE)
+      if(is.null(private$p_cells)) stop("PivotTable$getEmptyRows():  No cells exist to examine.", call. = FALSE)
       emptyRowNumbers <- vector("integer", 0)
       rowCount <- private$p_cells$rowCount
       columnCount <- private$p_cells$columnCount
@@ -2073,7 +2617,7 @@ PivotTable <- R6::R6Class("PivotTable",
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getEmptyColumns", "Getting empty columns...")
       if(!private$p_evaluated) stop("PivotTable$getEmptyColumns():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
-      if(is.null(private$p_cells)) stop("PivotTable$getEmptyColumns():  No cells exist to examine", call. = FALSE)
+      if(is.null(private$p_cells)) stop("PivotTable$getEmptyColumns():  No cells exist to examine.", call. = FALSE)
       emptyColumnNumbers <- vector("integer", 0)
       rowCount <- private$p_cells$rowCount
       columnCount <- private$p_cells$columnCount
@@ -2113,7 +2657,7 @@ PivotTable <- R6::R6Class("PivotTable",
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getCell", c, missing(c), allowMissing=FALSE, allowNull=FALSE, allowedClasses=c("integer", "numeric"))
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getCell", "Getting cell...")
-      if(is.null(private$p_cells)) stop("PivotTable$getCells():  No cells exist to retrieve.", call. = FALSE)
+      if(is.null(private$p_cells)) stop("PivotTable$getCell():  No cells exist to retrieve.", call. = FALSE)
       if(length(r)>1) r <- r[1]
       if(length(c)>1) c <- c[1]
       cell <- private$p_cells$getCell(r=r, c=c)
@@ -2125,27 +2669,27 @@ PivotTable <- R6::R6Class("PivotTable",
     #' Retrieve cells by a combination of row and/or column numbers.
     #' See the "Finding and Formatting" vignette for graphical examples.
     #' @details
-    #' when `specifyCellsAsList=TRUE` (the default):
+    #' when `specifyCellsAsList=TRUE` (the default):\cr
     #' Get one or more rows by specifying the row numbers as a vector as
     #' the rowNumbers argument and leaving the columnNumbers argument set
-    #' to the default value of `NULL`, or
+    #' to the default value of `NULL`, or\cr
     #' Get one or more columns by specifying the column numbers as a vector
     #' as the columnNumbers argument and leaving the rowNumbers argument
-    #' set to the default value of `NULL`, or
+    #' set to the default value of `NULL`, or\cr
     #' Get one or more individual cells by specifying the cellCoordinates
     #' argument as a list of vectors of length 2, where each element in the
-    #' list is the row and column number of one cell,
+    #' list is the row and column number of one cell,\cr
     #' e.g. `list(c(1, 2), c(3, 4))` specifies two cells, the first located
-    #' at row 1, column 2 and the second located at row 3, column 4.
-    #' When `specifyCellsAsList=FALSE`:
+    #' at row 1, column 2 and the second located at row 3, column 4.\cr
+    #' When `specifyCellsAsList=FALSE`:\cr
     #' Get one or more rows by specifying the row numbers as a vector as the
     #' rowNumbers argument and leaving the columnNumbers argument set to the
-    #' default value of `NULL`, or
+    #' default value of `NULL`, or\cr
     #' Get one or more columns by specifying the column numbers as a vector
     #' as the columnNumbers argument and leaving the rowNumbers argument set
-    #' to the default value of `NULL`, or
+    #' to the default value of `NULL`, or\cr
     #' Get one or more cells by specifying the row and column numbers as vectors
-    #' for the rowNumbers and columnNumbers arguments, or
+    #' for the rowNumbers and columnNumbers arguments, or\cr
     #' a mixture of the above, where for entire rows/columns the element in the
     #' other vector is set to `NA`, e.g. to retrieve whole rows, specify the row
     #' numbers as the rowNumbers but set the corresponding elements in the
@@ -2154,30 +2698,55 @@ PivotTable <- R6::R6Class("PivotTable",
     #' Default `TRUE`. More information is provided in the details section.
     #' @param rowNumbers A vector of row numbers that specify the rows or
     #' cells to retrieve.
-    #' @param columnNumbers A vector of row numbers that specify the columns
+    #' @param columnNumbers A vector of column numbers that specify the columns
     #' or cells to retrieve.
     #' @param cellCoordinates A list of two-element vectors that specify the
     #' coordinates of cells to retrieve.  Ignored when `specifyCellsAsList=FALSE`.
-    #' @param excludeEmptyCells `TRUE` (default) to also search empty cells.
+    #' @param excludeEmptyCells Default `FALSE`.  Specify `TRUE` to exclude empty
+    #' cells.
+    #' @param groups A `PivotDataGroup` object or a list of `PivotDataGroup`
+    #' objects on either the rows or columns axes.  The cells to be retrieved
+    #' must be related to at least one of these groups.
+    #' @param rowGroups A `PivotDataGroup` object or a list of `PivotDataGroup`
+    #' objects on the rows axis.  The cells to be retrieved must be related to
+    #' at least one of these row groups.  If both `rowGroups` and `columnGroups`
+    #' are specified, then the cells to be retrieved must be related to at least
+    #' one of the specified row groups and one of the specified column groups.
+    #' @param columnGroups A `PivotDataGroup` object or a list of `PivotDataGroup`
+    #' objects on the columns axis.  The cells to be retrieved must be related to
+    #' at least one of these column groups.  If both `rowGroups` and `columnGroups`
+    #' are specified, then the cells to be retrieved must be related to at least
+    #' one of the specified row groups and one of the specified column groups.
+    #' @param matchMode Either "simple" (default) or "combinations":\cr
+    #' "simple" specifies that row and column arguments are considered separately
+    #' (logical OR), e.g. rowNumbers=1 and columnNumbers=2 will match all cells in
+    #' row 1 and all cells in column 2.\cr
+    #' "combinations" specifies that row and column arguments are considered together
+    #' (logical AND), e.g. rowNumbers=1 and columnNumbers=2 will match only the
+    #' cell single at location (1, 2).\cr
+    #' Arguments `rowNumbers`, `columnNumbers`, `rowGroups` and `columnGroups` are
+    #' affected by the match mode.  All other arguments are not.
     #' @return A list of `PivotCell` objects.
-    getCells = function(specifyCellsAsList=TRUE, rowNumbers=NULL, columnNumbers=NULL, cellCoordinates=NULL, excludeEmptyCells=TRUE) {
+    getCells = function(specifyCellsAsList=TRUE, rowNumbers=NULL, columnNumbers=NULL, cellCoordinates=NULL, excludeEmptyCells=FALSE,
+                        groups=NULL, rowGroups=NULL, columnGroups=NULL, matchMode="simple") {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getCells", specifyCellsAsList, missing(specifyCellsAsList), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getCells", rowNumbers, missing(rowNumbers), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getCells", columnNumbers, missing(columnNumbers), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getCells", cellCoordinates, missing(cellCoordinates), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", allowedListElementClasses=c("integer", "numeric"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getCells", excludeEmptyCells, missing(excludeEmptyCells), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getCells", groups, missing(groups), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("PivotDataGroup", "list"), allowedListElementClasses="PivotDataGroup")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getCells", rowGroups, missing(rowGroups), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("PivotDataGroup", "list"), allowedListElementClasses="PivotDataGroup")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getCells", columnGroups, missing(columnGroups), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("PivotDataGroup", "list"), allowedListElementClasses="PivotDataGroup")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "getCells", matchMode, missing(matchMode), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("simple", "combinations"))
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getCells", "Getting cells...")
       if(!private$p_evaluated) stop("PivotTable$getCells():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
       if(is.null(private$p_cells)) stop("PivotTable$getCells():  No cells exist to retrieve.", call. = FALSE)
-      # need to miss the specifyCellsAsList argument out if it is missing here, so the warning message is generated
-      if(missing(specifyCellsAsList)) {
-        cells <- private$p_cells$getCells(rowNumbers=rowNumbers, columnNumber=columnNumbers, cellCoordinates=cellCoordinates, excludeEmptyCells=excludeEmptyCells)
-      }
-      else {
-        cells <- private$p_cells$getCells(specifyCellsAsList=specifyCellsAsList, rowNumbers=rowNumbers, columnNumber=columnNumbers, cellCoordinates=cellCoordinates, excludeEmptyCells=excludeEmptyCells)
-      }
+      cells <- private$p_cells$getCells(specifyCellsAsList=specifyCellsAsList, rowNumbers=rowNumbers, columnNumber=columnNumbers,
+                                        cellCoordinates=cellCoordinates, excludeEmptyCells=excludeEmptyCells,
+                                        groups=groups, rowGroups=rowGroups, columnGroups=columnGroups,
+                                        matchMode=matchMode)
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$getCells", "Got cells.")
       return(invisible(cells))
     },
@@ -2185,14 +2754,27 @@ PivotTable <- R6::R6Class("PivotTable",
     #' @description
     #' Find cells matching specified criteria.
     #' See the "Finding and Formatting" vignette for graphical examples.
+    #' @details
+    #' The valueRanges parameter can be any of the following
+    #' forms:\cr
+    #' (1) a specific value, e.g. 12.\cr
+    #' (2) a specific value equality condition, e.g. "v==12", where v
+    #' represents the cell value.\cr
+    #' (3) a value range expression using the following abbreviated form:
+    #' "value1<=v<value2", e.g. "10<=v<15".  Only "<" or "<=" can be used
+    #' in these value range expressions.\cr
+    #' (4) a standard R logical expression, e.g.
+    #' "10<=v && v<15".\cr
+    #' Basic R functions that test the value can also be
+    #' used, e.g. is.na(v).\cr
     #' @param variableNames A character vector specifying the name/names of the
     #' variables to find.  This is useful generally only in pivot tables with
     #' irregular layouts, since in regular pivot tables every cell is related
     #' to every variable.
     #' @param variableValues A list specifying the variable names and values to find,
-    #' e.g. `variableValues=list("PowerType"=c("DMU", "HST"))`.
-    #' Specify "**" as the variable value to match totals for the specified variable.
-    #' Specify "!*" as the variable value to match non-totals for the specified variable.
+    #' e.g. `variableValues=list("PowerType"=c("DMU", "HST"))`.\cr
+    #' Specify "**" as the variable value to match totals for the specified variable.\cr
+    #' Specify "!*" as the variable value to match non-totals for the specified variable.\cr
     #' NB: The totals/non-totals criteria above won’t work when visual totals are used.
     #' @param totals A word that specifies how totals are matched (overrides the finer
     #' settings above) - must be one of "include" (default), "exclude" or "only".
@@ -2201,18 +2783,55 @@ PivotTable <- R6::R6Class("PivotTable",
     #' @param minValue A numerical value specifying a minimum value threshold.
     #' @param maxValue A numerical value specifying a maximum value threshold.
     #' @param exactValues A vector or list specifying a set of allowed values.
+    #' @param valueRanges A vector specifying one or more value range expressions which
+    #' the cell values must match.  If multiple value range expressions are specified,
+    #' then the cell value must match any of one the specified expressions.  See details.
     #' @param includeNull specify TRUE to include `NULL` in the matched cells,
     #' FALSE to exclude `NULL` values.
     #' @param includeNA specify TRUE to include `NA` in the matched cells,
     #' FALSE to exclude `NA` values.
     #' @param emptyCells A word that specifies how empty cells are matched -
-    #' must be one of "include", "exclude" (default) or "only".
+    #' must be one of "include" (default), "exclude" or "only".
     #' @param outlineCells A word that specifies how outline cells are matched -
     #' must be one of "include", "exclude" (default) or "only".
+    #' @param rowNumbers A vector of row numbers that specify the rows or
+    #' cells to constrain the search.
+    #' @param columnNumbers A vector of column numbers that specify the columns
+    #' or cells to constrain the search.
+    #' @param cellCoordinates A list of two-element vectors that specify the
+    #' coordinates of cells to constrain the search.
+    #' @param groups A `PivotDataGroup` object or a list of `PivotDataGroup`
+    #' objects on either the rows or columns axes.  The cells to be searched
+    #' must be related to at least one of these groups.
+    #' @param rowGroups A `PivotDataGroup` object or a list of `PivotDataGroup`
+    #' objects on the rows axis.  The cells to be searched must be related to
+    #' at least one of these row groups.  If both `rowGroups` and `columnGroups`
+    #' are specified, then the cells to be searched must be related to at least
+    #' one of the specified row groups and one of the specified column groups.
+    #' @param columnGroups A `PivotDataGroup` object or a list of `PivotDataGroup`
+    #' objects on the columns axis.  The cells to be searched must be related to
+    #' at least one of these column groups.  If both `rowGroups` and `columnGroups`
+    #' are specified, then the cells to be searched must be related to at least
+    #' one of the specified row groups and one of the specified column groups.
+    #' @param cells A `PivotCell` object or a list of `PivotCell`
+    #' objects to constrain the scope of the search.
+    #' @param rowColumnMatchMode Either "simple" (default) or "combinations":\cr
+    #' "simple" specifies that row and column arguments are considered separately
+    #' (logical OR), e.g. rowNumbers=1 and columnNumbers=2 will match all cells in
+    #' row 1 and all cells in column 2.\cr
+    #' "combinations" specifies that row and column arguments are considered together
+    #' (logical AND), e.g. rowNumbers=1 and columnNumbers=2 will match only the
+    #' cell single at location (1, 2).\cr
+    #' Arguments `rowNumbers`, `columnNumbers`, `rowGroups` and `columnGroups` are
+    #' affected by the match mode.  All other arguments are not.
     #' @return A list of `PivotCell` objects.
     findCells = function(variableNames=NULL, variableValues=NULL, totals="include", calculationNames=NULL,
-                         minValue=NULL, maxValue=NULL, exactValues=NULL, includeNull=TRUE, includeNA=TRUE,
-                         emptyCells="exclude", outlineCells="exclude") {
+                         minValue=NULL, maxValue=NULL, exactValues=NULL, valueRanges=NULL, includeNull=TRUE, includeNA=TRUE,
+                         emptyCells="include", outlineCells="exclude",
+                         # additional arguments to constrain cells matched
+                         rowNumbers=NULL, columnNumbers=NULL, cellCoordinates=NULL,
+                         groups=NULL, rowGroups=NULL, columnGroups=NULL,
+                         rowColumnMatchMode="simple", cells=NULL) {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", variableNames, missing(variableNames), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", variableValues, missing(variableValues), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", listElementsMustBeAtomic=TRUE)
@@ -2220,31 +2839,61 @@ PivotTable <- R6::R6Class("PivotTable",
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", calculationNames, missing(calculationNames), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", minValue, missing(minValue), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", maxValue, missing(maxValue), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", valueRanges, missing(valueRanges), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", exactValues, missing(exactValues), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer","numeric", "character", "logical", "date", "Date", "POSIXct", "list"), listElementsMustBeAtomic=TRUE)
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", includeNull, missing(includeNull), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", includeNA, missing(includeNA), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", emptyCells, missing(emptyCells), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("include", "exclude", "only"))
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", outlineCells, missing(outlineCells), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character", allowedValues=c("include", "exclude", "only"))
+        # additional arguments to constrain cells matched
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", rowNumbers, missing(rowNumbers), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", columnNumbers, missing(columnNumbers), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", cellCoordinates, missing(cellCoordinates), allowMissing=TRUE, allowNull=TRUE, allowedClasses="list", allowedListElementClasses=c("integer", "numeric"))
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", groups, missing(groups), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("PivotDataGroup", "list"), allowedListElementClasses="PivotDataGroup")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", rowGroups, missing(rowGroups), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("PivotDataGroup", "list"), allowedListElementClasses="PivotDataGroup")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", columnGroups, missing(columnGroups), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("PivotDataGroup", "list"), allowedListElementClasses="PivotDataGroup")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", cells, missing(cells), allowMissing=TRUE, allowNull=TRUE, allowedClasses=c("PivotCell", "list"), allowedListElementClasses="PivotCell")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findCells", rowColumnMatchMode, missing(rowColumnMatchMode), allowMissing=TRUE, allowNull=TRUE, allowedClasses="character", allowedValues=c("simple", "combinations"))
       }
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$findCells", "Finding cells...")
       if(!private$p_evaluated) stop("PivotTable$findCells():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
       if(is.null(private$p_cells)) stop("PivotTable$findCells():  No cells exist to retrieve.", call. = FALSE)
       cells <- private$p_cells$findCells(variableNames=variableNames, variableValues=variableValues, totals=totals, calculationNames=calculationNames,
-                                         minValue=minValue, maxValue=maxValue, exactValues=exactValues, includeNull=includeNull, includeNA=includeNA,
-                                         emptyCells=emptyCells, outlineCells=outlineCells)
+                                         minValue=minValue, maxValue=maxValue, exactValues=exactValues, valueRanges=valueRanges,
+                                         includeNull=includeNull, includeNA=includeNA,
+                                         emptyCells=emptyCells, outlineCells=outlineCells,
+                                         # additional arguments to constrain cells matched
+                                         rowNumbers=rowNumbers, columnNumbers=columnNumbers, cellCoordinates=cellCoordinates,
+                                         groups=groups, rowGroups=rowGroups, columnGroups=columnGroups,
+                                         rowColumnMatchMode=rowColumnMatchMode, cells=cells)
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$findCells", "Found cells.")
       return(invisible(cells))
     },
 
     #' @description
-    #' Find the column numbers associated with a specific data group.
+    #' Find the column numbers associated with a specific data group or
+    #' groups.
     #' @param group A `PivotDataGroup` in the column data groups (i.e. a
-    #' column heading).
-    #' @return A vector of column numbers related to the specified group.
-    findGroupColumnNumbers = function(group=NULL) {
+    #' column heading) or a list of column data groups.
+    #' @param collapse A logical value specifying whether the return value should be
+    #' simplified.  See details.
+    #' @details
+    #' If `group` is a list:  If `collapse` is `FALSE`, then a list of vectors is
+    #' returned, if `collapse` is `TRUE`, then a single combined vector is returned.
+    #' @return Either a vector of column numbers related to the single specified group
+    #' or a list of vectors containing column numbers related to the specified groups.
+    findGroupColumnNumbers = function(group=NULL, collapse=FALSE) {
       if(private$p_argumentCheckMode > 0) {
-        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findGroupColumnNumbers", group, missing(group), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotDataGroup")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findGroupColumnNumbers", group, missing(group), allowMissing=FALSE, allowNull=FALSE, allowedClasses=c("PivotDataGroup", "list"), allowedListElementClasses="PivotDataGroup")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findGroupColumnNumbers", collapse, missing(collapse), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       }
+      # multiple groups
+      if("list" %in% class(group)) {
+        fx <- function(x) { return(self$findGroupColumnNumbers(group=x)) }
+        if(isTRUE(collapse)) return(invisible(unique(unlist(lapply(group, fx)))))
+        else return(invisible(lapply(group, fx)))
+      }
+      # single group
       if(private$p_traceEnabled==TRUE) private$p_parentPivot$trace("PivotTable$findGroupColumnNumbers", "Finding group column numbers...")
       if(!private$p_evaluated) stop("PivotTable$findGroupColumnNumbers():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
       if(is.null(private$p_cells)) stop("PivotTable$findGroupColumnNumbers():  No cells exist to retrieve.", call. = FALSE)
@@ -2254,14 +2903,28 @@ PivotTable <- R6::R6Class("PivotTable",
     },
 
     #' @description
-    #' Find the row numbers associated with a specific data group.
+    #' Find the row numbers associated with a specific data group or groups.
     #' @param group A `PivotDataGroup` in the row data groups (i.e. a
-    #' row heading).
-    #' @return A vector of row numbers related to the specified group.
-    findGroupRowNumbers = function(group=NULL) {
+    #' row heading) or a list of row data groups.
+    #' @param collapse A logical value specifying whether the return value should be
+    #' simplified.  See details.
+    #' @details
+    #' If `group` is a list:  If `collapse` is `FALSE`, then a list of vectors is
+    #' returned, if `collapse` is `TRUE`, then a single combined vector is returned.
+    #' @return Either a vector of row numbers related to the single specified group
+    #' or a list of vectors containing row numbers related to the specified groups.
+    findGroupRowNumbers = function(group=NULL, collapse=FALSE) {
       if(private$p_argumentCheckMode > 0) {
-        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findGroupRowNumbers", group, missing(group), allowMissing=FALSE, allowNull=FALSE, allowedClasses="PivotDataGroup")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findGroupRowNumbers", group, missing(group), allowMissing=FALSE, allowNull=FALSE, allowedClasses=c("PivotDataGroup", "list"), allowedListElementClasses="PivotDataGroup")
+        checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "findGroupRowNumbers", collapse, missing(collapse), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
       }
+      # multiple groups
+      if("list" %in% class(group)) {
+        fx <- function(x) { return(self$findGroupRowNumbers(group=x)) }
+        if(isTRUE(collapse)) return(invisible(unique(unlist(lapply(group, fx)))))
+        else return(invisible(lapply(group, fx)))
+      }
+      # single group
       if(private$p_traceEnabled==TRUE) private$p_parentPivot$trace("PivotTable$findGroupRowNumbers", "Finding group row numbers...")
       if(!private$p_evaluated) stop("PivotTable$findGroupRowNumbers():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
       if(is.null(private$p_cells)) stop("PivotTable$findGroupRowNumbers():  No cells exist to retrieve.", call. = FALSE)
@@ -2782,13 +3445,14 @@ PivotTable <- R6::R6Class("PivotTable",
     #' @param separator Specifies the character value used to concatenate data
     #' group captions where multiple levels exist in the data group hierarchy.
     #' @param stringsAsFactors Specify `TRUE`to convert strings to factors,
-    #' default `default.stringsAsFactors()`.
+    #' default is currently `default.stringsAsFactors()`, though this will change
+    #' to `FALSE` in a future version.
     #' @param forceNumeric Specify `TRUE` to force the conversion of cell values
     #' to a numeric value, default `FALSE`.
     #' @param rowGroupsAsColumns Specify `TRUE` to include the row groups as
     #' additional columns in the data frame.  Default `FALSE`.
     #' @return A data frame.
-    asDataFrame = function(separator=" ", stringsAsFactors=default.stringsAsFactors(), forceNumeric=FALSE, rowGroupsAsColumns=FALSE) {
+    asDataFrame = function(separator=" ", stringsAsFactors=NULL, forceNumeric=FALSE, rowGroupsAsColumns=FALSE) {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asDataFrame", separator, missing(separator), allowMissing=TRUE, allowNull=FALSE, allowedClasses="character")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asDataFrame", stringsAsFactors, missing(stringsAsFactors), allowMissing=TRUE, allowNull=TRUE, allowedClasses="logical")
@@ -2798,6 +3462,24 @@ PivotTable <- R6::R6Class("PivotTable",
       if(private$p_traceEnabled==TRUE) self$trace("PivotTable$asDataFrame", "Getting pivot table as a data frame...", list(separator=separator, stringsAsFactors=stringsAsFactors))
       if(!private$p_evaluated) stop("PivotTable$asDataFrame():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
       if(is.null(private$p_cells)) stop("PivotTable$asDataFrame():  No cells exist to retrieve.", call. = FALSE)
+      # stringsAsFactors default depends on the version of R...
+      if(is.null(stringsAsFactors)) {
+        if(getRversion() < "4.0.0") {
+          # old version, retain existing behaviour with no warning
+          stringsAsFactors <- default.stringsAsFactors()
+        }
+        else if (getRversion() < "4.1.0") {
+          stringsAsFactors <- default.stringsAsFactors()
+          # generate a warning if the default is TRUE as this will change to FALSE in future
+          if(stringsAsFactors) {
+            warning("PivotTable$asDataFrame(): In a future version of R, default.stringsAsFactors() will be deprecated and removed, at which time the 'stringsAsFactors' argument will default to FALSE.  Explictly set the 'stringsAsFactors' argument to remove this warning.")
+          }
+        }
+        else {
+          # default to FALSE for R 4.1.0 onwards
+          stringsAsFactors <- FALSE
+        }
+      }
       # sizing
       rowHeaderLevelCount <- private$p_rowGroup$getLevelCount()
       columnHeaderLevelCount <- private$p_columnGroup$getLevelCount()
@@ -2896,12 +3578,12 @@ PivotTable <- R6::R6Class("PivotTable",
     #' @param separator Specifies the character value used to concatenate
     #' filter values where multiple values exist in a filter.
     #' @param stringsAsFactors Specify `TRUE`to convert strings to factors,
-    #' default `default.stringsAsFactors()`.
+    #' default is currently `default.stringsAsFactors()`, though this will change
+    #' to `FALSE` in a future version.
     #' @param excludeEmptyCells Specify `FALSE` to also include rows for
     #' empty cells in the data frame, default `TRUE`.
     #' @return A data frame.
-    asTidyDataFrame = function(includeGroupCaptions=TRUE, includeGroupValues=TRUE, separator=" ", stringsAsFactors=default.stringsAsFactors(),
-                               excludeEmptyCells=TRUE) {
+    asTidyDataFrame = function(includeGroupCaptions=TRUE, includeGroupValues=TRUE, separator=" ", stringsAsFactors=NULL, excludeEmptyCells=TRUE) {
       if(private$p_argumentCheckMode > 0) {
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asTidyDataFrame", includeGroupCaptions, missing(includeGroupCaptions), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
         checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "asTidyDataFrame", includeGroupValues, missing(includeGroupValues), allowMissing=TRUE, allowNull=FALSE, allowedClasses="logical")
@@ -2913,6 +3595,25 @@ PivotTable <- R6::R6Class("PivotTable",
                    list(includeGroupCaptions=includeGroupCaptions, includeGroupValues=includeGroupValues, separator=separator, stringsAsFactors=stringsAsFactors))
       if(!private$p_evaluated) stop("PivotTable$asTidyDataFrame():  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
       if(is.null(private$p_cells)) stop("PivotTable$asTidyDataFrame():  No cells exist to retrieve.", call. = FALSE)
+      # stringsAsFactors default depends on the version of R...
+      if(is.null(stringsAsFactors)) {
+        if(getRversion() < "4.0.0") {
+          # old version, retain existing behaviour with no warning
+          stringsAsFactors <- default.stringsAsFactors()
+        }
+        else if (getRversion() < "4.1.0") {
+          stringsAsFactors <- default.stringsAsFactors()
+          # generate a warning if the default is TRUE as this will change to FALSE in future
+          if(stringsAsFactors) {
+            warning("PivotTable$asTidyDataFrame(): In a future version of R, default.stringsAsFactors() will be deprecated and removed, at which time the 'stringsAsFactors' argument will default to FALSE.  Explictly set the 'stringsAsFactors' argument to remove this warning.")
+          }
+        }
+        else {
+          # default to FALSE for R 4.1.0 onwards
+          stringsAsFactors <- FALSE
+        }
+      }
+      # convert
       df <- list()
       vals <- list()
       # basic information
@@ -3586,8 +4287,16 @@ PivotTable <- R6::R6Class("PivotTable",
     #' @description
     #' Return the contents of the pivot table as JSON for debugging.
     #' @return A JSON representation of various object properties.
-    asJSON = function() { return(jsonlite::toJSON(self$asList())) },
-
+    asJSON = function() {
+      if (!requireNamespace("jsonlite", quietly = TRUE)) {
+        stop("The jsonlite package is needed to convert to JSON.  Please install the jsonlite package.", call. = FALSE)
+      }
+      jsonliteversion <- utils::packageDescription("jsonlite")$Version
+      if(numeric_version(jsonliteversion) < numeric_version("1.1")) {
+        stop("Version 1.1 or above of the jsonlite package is needed to convert to JSON.  Please install an updated version of the jsonlite package.", call. = FALSE)
+      }
+      return(jsonlite::toJSON(self$asList()))
+    },
 
     #' @description
     #' Use the `listviewer` package to view the pivot table as JSON for debugging.
@@ -3725,9 +4434,17 @@ PivotTable <- R6::R6Class("PivotTable",
     #' last pivot table evaluation.
     batchInfo = function(value) { return(invisible(private$p_lastCellBatchInfo)) },
 
-    #' @field cells A list where each element represents one row in the pivot table.
-    #' Each row is itself a list, where each list element is a `PivotCell` object.
+    #' @field cells A `PivotCells` object that contains all of the cells in the pivot
+    #' table.
     cells = function(value) { return(invisible(private$p_cells)) },
+
+    #' @field allCells A list of all of the cells in the pivot table, where each element
+    #' in the list is a 'PivotCell' object.
+    allCells = function(value) {
+      if(!private$p_evaluated) stop("PivotTable$allCells:  Pivot table has not been evaluated.  Call evaluatePivot() to evaluate the pivot table.", call. = FALSE)
+      if(is.null(private$p_cells)) stop("PivotTable$allCells:  No cells exist.", call. = FALSE)
+      return(invisible(private$p_cells$all))
+    },
 
     #' @field rowCount The number of rows in the pivot table, excluding headings.
     rowCount = function(value) { return(invisible(private$p_cells$rowCount)) },
@@ -3764,7 +4481,7 @@ PivotTable <- R6::R6Class("PivotTable",
           checkArgument(private$p_argumentCheckMode, TRUE, "PivotTable", "theme", value, missing(value), allowMissing=FALSE, allowNull=FALSE, allowedClasses=c("character", "list", "PivotStyles"), allowedListElementClasses="character")
         }
         if("character" %in% class(value)) private$p_styles <- getTheme(parentPivot=self, themeName=value)
-        else if("list" %in% class(value)) private$p_styles <- getSimpleColoredTheme(parentPivot=self, colors=value, fontName=value$fontName)
+        else if("list" %in% class(value)) private$p_styles <- getSimpleColoredTheme(parentPivot=self, theme=value)
         else if("PivotStyles" %in% class(value)) private$p_styles <- value
         return(invisible())
       }

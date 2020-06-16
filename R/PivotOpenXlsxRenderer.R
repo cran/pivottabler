@@ -8,7 +8,6 @@
 #'
 #' @docType class
 #' @importFrom R6 R6Class
-#' @import jsonlite
 #' @format \code{\link{R6Class}} object.
 #' @examples
 #' # This class should only be created by the pivot table.
@@ -344,7 +343,7 @@ PivotOpenXlsxRenderer <- R6::R6Class("PivotOpenXlsxRenderer",
               lastDataGroupInRow <- TRUE
             }
             # style info
-            if(ancg$isOutline) rhs <- outlineRowHeaderStyle
+            if(ancg$isOutline && ancg$styleAsOutline) rhs <- outlineRowHeaderStyle
             else rhs <- rowHeaderStyle
             if(!is.null(ancg$baseStyleName)) rhs <- ancg$baseStyleName
             value <- private$getExportValue(ancg$sortValue, ancg$caption, outputHeadingsAs,
@@ -362,21 +361,21 @@ PivotOpenXlsxRenderer <- R6::R6Class("PivotOpenXlsxRenderer",
         }
         # render the cell values
         if(!(rowMerge$merge && isTRUE(rowMerge$skipCells))) {
-          isOutlineCells <- FALSE
+          styleAsOutline <- FALSE
           rgCellBaseStyleName <- NULL
           rgCellStyle <- NULL
           if(!is.null(rg)) {
-            isOutlineCells <- rg$isOutline
-            rgCellBaseStyleName <- rg$cellBaseStyleName
-            rgCellStyle <- rg$cellStyle
+            styleAsOutline <- rg$isOutline && rg$styleAsOutline
+            rgCellBaseStyleName <- rg$netCellBaseStyleName
+            rgCellStyle <- rg$netCellStyle
           }
           if(rowMerge$mergeCells) {
             # special case of all the cells being merged
             xlRowNumber <- topRowNumber + columnGroupLevelCount + r - 1 + rowOffsetDueToDummyColumn
             xlColumnNumber <- leftMostColumnNumber + rowGroupLevelCount + columnOffsetDueToDummyRow
             cs <- cellStyle
-            if(!is.null(rgCellBaseStyleName)) cs <-  rgCellBaseStyleName
-            else if(isOutlineCells && !is.null(outlineCellStyle)) cs <- outlineCellStyle
+            if(!is.null(rgCellBaseStyleName)) cs <- rgCellBaseStyleName
+            else if(styleAsOutline && !is.null(outlineCellStyle)) cs <- outlineCellStyle
             sd <- NULL
             if(!is.null(rgCellStyle)) sd <- rgCellStyle
             self$writeToCell(wb, wsName, rowNumber=xlRowNumber, columnNumber=xlColumnNumber,
@@ -388,15 +387,37 @@ PivotOpenXlsxRenderer <- R6::R6Class("PivotOpenXlsxRenderer",
             for(c in 1:columnCount) {
               xlRowNumber <- topRowNumber + columnGroupLevelCount + r - 1 + rowOffsetDueToDummyColumn
               xlColumnNumber <- leftMostColumnNumber + rowGroupLevelCount + c - 1 + columnOffsetDueToDummyRow
+              # get the cell
               cell <- private$p_parentPivot$cells$getCell(r, c)
+              # get the column group
+              columnGroup <- private$p_parentPivot$getLeafColumnGroup(c=c)
+              # base style name precedence:  from the cell, from the column group, from the row group,
+              #                              then default outline (if outline), default total (if total), default cell
+              cgBaseStyleName <- columnGroup$netCellBaseStyleName
               if(!is.null(cell$baseStyleName)) cs <- cell$baseStyleName
-              else if(!is.null(rgCellBaseStyleName)) cs <-  rgCellBaseStyleName
-              else if(isOutlineCells && (!is.null(outlineCellStyle))) cs <- outlineCellStyle
+              else if(!is.null(cgBaseStyleName)) cs <- cgBaseStyleName
+              else if(!is.null(rgCellBaseStyleName)) cs <- rgCellBaseStyleName
+              else if(styleAsOutline && (!is.null(outlineCellStyle))) cs <- outlineCellStyle
               else if(cell$isTotal) cs <- totalStyle
               else cs <- cellStyle
+              # style overrides precedence:  from the cell, from the column group, from the row group
+              #                              given these styles are not single values, but lists of declarations, the styles
+              #                              aggregate via a set operation, i.e. intersect/union from row -> col -> cell
               sd <- NULL
-              if(!is.null(cell$style)) sd <- cell$style
-              else if(!is.null(rgCellStyle)) sd <- rgCellStyle
+              if(!is.null(rgCellStyle)) {
+                if(is.null(sd)) { sd <- rgCellStyle$getCopy("") }
+                else { sd$setPropertyValues(rgCellStyle$declarations) }
+              }
+              colGroupStyle <- columnGroup$netCellStyle
+              if(!is.null(colGroupStyle)) {
+                if(is.null(sd)) { sd <- colGroupStyle$getCopy("") }
+                else { sd$setPropertyValues(colGroupStyle$declarations) }
+              }
+              if(!is.null(cell$style)) {
+                if(is.null(sd)) { sd <- cell$style$getCopy("") }
+                else { sd$setPropertyValues(cell$style$declarations) }
+              }
+              # render the cell
               value <- private$getExportValue(cell$rawValue, cell$formattedValue, outputValuesAs,
                                               useCaptionIfRawValueNull=FALSE)
               value <- exportValueAs(cell$rawValue, value, exportOptions, blankValue=character(0))

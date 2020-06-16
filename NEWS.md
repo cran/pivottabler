@@ -1,10 +1,51 @@
+pivottabler 1.5.0
+=================
+
+Overview
+--------
+
+This release includes one potentially breaking change and many small enhancements across various parts of the package.
+
+Reminder:  The package now only contains one introductory vignette (due to the constraints on CRAN).
+The full set of 15+ vignettes can be found at:  http://www.pivottabler.org.uk/articles/ 
+
+Breaking Changes
+----------------
+
+**Stricter definition of empty cells**
+
+When retrieving cells using `pt$getCells()` with the `excludeEmptyCells` parameter, or when  searching cells using `pt$findCells()` with the `emptyCells` parameter, previous versions of the package would only treat cells as empty if they were related to a data group marked as empty.  Cells with NULL values were not considered as empty.
+
+Starting with this version, cells with NULL values (i.e. where `is.null(cell$rawValue)==TRUE`) are also regarded as empty.  This may result in more cells being regarded as empty.  The previous behaviour is still available by specifying `compatibility=list(legacyEmptyCellMatching=TRUE)` as an argument when creating the pivot table, either in `PivotTable$new()` or one of the quick pivot functions such as `qpvt()`.
+
+Improvements
+----------------
+
+* `pt$findRowDataGroups()` and `pt$findColumnDataGroups()` gain new arguments `rowNumbers`, `columnNumbers` and `cells` to restrict the data group search based on combinations of row/column numbers and/or cells.  See the "Finding and Formatting" vignette for details.
+* New property `pt$allCells` provides a simple way to retrieve a list of all cells in the pivot table.
+* `pt$getCells()` gains new arguments `groups`, `rowGroups` and `columnGroups` making it easier to retrieve cells related to specific data groups.  See the "Finding and Formatting" vignette for details.
+* `pt$getCells()` also gains a new `matchMode` argument making it easier to retrieve cells based on combinations of row and column criteria.  See the "Finding and Formatting" vignette for details.
+* `pt$findCells()` gain new arguments `rowNumbers`, `columnNumbers`, `cellCoordinates`, `groups`, `rowGroups`, `columnGroups`, `cells` and `rowColumnMatchMode` to restrict the cell search based on combinations of row, column and cell criteria.  See the "Finding and Formatting" vignette for details.
+* `pt$findCells()` also gains new argument `valueRanges` to enable more granular logic to be specified when matching cell values.  See the "Finding and Formatting" vignette for details.
+* `pt$setStyling()` gains new integer/numeric vector arguments `rowNumbers` and/or `columnNumbers`.  It is now also possible to specify only a set of row numbers and then all cells in those rows will be styled (and similarly for column numbers).  Previously, if only row numbers or only column numbers were specified, then no cells would be styled.  Users who require the old logic can specify the argument `compatibility=list(legacySetStylingRowColumnNumbers=TRUE)` when calling `PivotTable$new()`.
+* New method `pt$mapStyling()` simplifies applying styling to cells based on cell value, e.g. banding by value into different colours or colour gradients.  See the "Styling" vignette for details plus the "Finding and Formatting" vignette for a couple more examples.
+* When using a simple theme (specified as a list) to style a pivot table, it is now possible to specify a font size.  Thanks to @msgoussi for the suggestion (#48).  See the "Styling" vignette for details.
+* The following now accept vector/list arguments: `pt$getColumnGroupsByLevel()`, `pt$getRowGroupsByLevel()`, `pt$getLeafColumnGroup()`, `pt$getLeafRowGroup()`, `pt$findGroupColumnNumbers()` and `pt$findGroupRowNumbers()`.
+* Several new outline parameters are now supported to simplify styling when generating row data groups from a variable depth hierarchy.  See "Variable Depth Hierarchy Example" in the "Regular Layout" vignette for details. 
+
+Bug Fixes
+---------
+
+* Cell styles are now inherited correctly from calculations and data groups (#46).  Thanks to @msgoussi for the bug report.  An explanation of the style inheritance rules has also been added to the "Styling" vignette.
+
+
 pivottabler 1.4.0
 =================
 
 Overview
 --------
 
-This release includes one potential breaking change and many small enhancements across various parts of the package.
+This release includes one potentially breaking change and many small enhancements across various parts of the package.
 
 Reminder:  The package now only contains one introductory vignette (due to the constraints on CRAN).
 The full set of 15+ vignettes can be found at:  http://www.pivottabler.org.uk/articles/ 
