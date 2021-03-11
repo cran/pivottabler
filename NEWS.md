@@ -1,3 +1,19 @@
+pivottabler 1.5.1
+=================
+
+Breaking Changes
+----------------
+
+**stringsAsFactors in R 4.0.x and 4.1.x**
+
+From R 4.1.0, the default value of the `stringsAsFactors` argument in `tbl$asDataFrame()` changes to FALSE due to the deprecation of `default.stringsAsFactors()`.  When the package is used on versions of R < 4.1.0, the package behaviour is unchanged.  When the package used on R 4.0.x versions, a warning message is displayed about the change in future behaviour.  The logic for this change was actually implemented in version 1.5.0 of the package but the impact will be felt with the release of R 4.1.0.
+
+Bug Fixes
+---------
+
+* Resolved error "getSimpleColoredTheme(): colors must be specified." that was sometimes encountered when using a simple theme as a list that is assigned to the pivot table `pt$theme` field.
+
+
 pivottabler 1.5.0
 =================
 
@@ -89,6 +105,7 @@ Deprecated
 The following can still be used but now emits a deprecation warning:
 
 * The `getLevelNumber()` method on data groups has been replaced with the `levelNumber` property.
+
 
 pivottabler 1.3.1
 =================
