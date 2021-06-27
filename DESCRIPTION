@@ -1,7 +1,7 @@
 Package: pivottabler
 Type: Package
 Title: Create Pivot Tables
-Version: 1.5.2
+Version: 1.5.3
 Authors@R: person("Christopher", "Bailiss", email = "cbailiss@gmail.com",
   role = c("aut", "cre"))
 Description: Create regular pivot tables with just a few lines of R.  
@@ -16,7 +16,7 @@ Imports: R6 (>= 2.2.0), dplyr (>= 0.5.0), data.table (>= 1.10.0),
         htmltools(>= 0.3.5), htmlwidgets (>= 0.8)
 Suggests: ggplot2 (>= 2.2.0), jsonlite (>= 1.1), lubridate (>= 1.5.0),
         listviewer (>= 1.4.0), openxlsx (>= 4.0.17), basictabler (>=
-        0.2.0), shiny, knitr, rmarkdown, testthat
+        1.0.2), shiny, knitr, rmarkdown, testthat
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
@@ -26,8 +26,8 @@ BugReports: https://github.com/cbailiss/pivottabler/issues
 VignetteBuilder: knitr
 RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2021-05-12 08:31:42 UTC; cbailiss
+Packaged: 2021-06-27 11:53:22 UTC; cbailiss
 Author: Christopher Bailiss [aut, cre]
 Maintainer: Christopher Bailiss <cbailiss@gmail.com>
 Repository: CRAN
-Date/Publication: 2021-05-12 14:30:07 UTC
+Date/Publication: 2021-06-27 16:00:02 UTC

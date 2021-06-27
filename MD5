@@ -1,6 +1,6 @@
-9674c3450de00a35a1a0304617a1e364 *DESCRIPTION
+92016da5c1bcfa12886d6b961f756e2f *DESCRIPTION
 800e67547f0533564693897e9339481b *NAMESPACE
-a81ecd0c6f0a5bd398866e642942453e *NEWS.md
+bacf98d1b99de70641ce40c17e36fe8d *NEWS.md
 c436ffa97b62f6d4a6a4597c1bf2c445 *R/PivotBatch.R
 e04ae85753ec9be9d7109023ba4c283f *R/PivotBatchCalculator.R
 d4ba2d5250be7ad606fe5082565b8310 *R/PivotBatchStatistics.R
@@ -22,7 +22,7 @@ f26ee70c426a1a34766adb1517fee4de *R/PivotOpenXlsxStyle.R
 1e031a1dfdbed50831d16ad189ade011 *R/PivotOpenXlsxStyles.R
 2370a7d1c79a0b9eed961ea6a2308797 *R/PivotStyle.R
 d7e5b6125d7a6c456725b37500fca55c *R/PivotStyles.R
-0beeb62b3be9e47b0ff5359f922c1cd7 *R/PivotTable.R
+249bf04e6f2f476badaf456815b20a00 *R/PivotTable.R
 b499626b449269c9a9f9c91ba62c9cf7 *R/basicTable.R
 e4565bc2345a01b60481a082dff127a1 *R/checkArgument.R
 66a115c6b03f763c94d82735e76f4117 *R/convertor.R
@@ -33,7 +33,7 @@ ca571872d5e2259d0e4c1e15ad5f5777 *R/pivottabler.R
 7ef4ada52eff081d1fa2f063005a7843 *R/styleParsing.R
 720e2793d4d2a9ff8f975717767b85d0 *R/utilities.R
 5216fac43994069cae0826cd6f1c7b02 *R/valueRangeExpression.R
-75d09d63f1f9282134d3a7b8c49fec7c *build/vignette.rds
+60cfd147af6ea98a03339b6d456a45fa *build/vignette.rds
 3d26dc9693e1a457efa2fcbee2e1b2dc *data/bhmtraindisruption.rda
 57a42a0d29f7ced8e7fd54eab00be9de *data/bhmtrains.rda
 b865a03e00f836ff18b6ac84f80018ae *data/pvtperfresults.rda
@@ -41,7 +41,7 @@ c55d0bbc79ffc116f774793b4fde499b *data/pvtperfsummary.rda
 c383c841279213abdec09b5d63c871ba *data/trainstations.rda
 f78f3ef7db98b5c017aea49cd1141307 *inst/doc/v00-vignettes.R
 37bd8abea05cd09781de6b67a962d5f8 *inst/doc/v00-vignettes.Rmd
-dae8fc71edb556d03af6dd1cbc43b613 *inst/doc/v00-vignettes.html
+1992adc8a2c4ecc909981fb50e107a7c *inst/doc/v00-vignettes.html
 2f37daaaecaeada87ab666643efa1504 *inst/htmlwidgets/lib/pivottabler-0.1.0/themes.css
 fbc6ac40e9982bbb5580c39a4807ce61 *inst/htmlwidgets/pivottabler.js
 a4d587a0dd9831b4404bbecc06f5dc37 *inst/htmlwidgets/pivottabler.yaml
@@ -66,7 +66,7 @@ bd987c114df29dfce0994da71503328f *man/PivotOpenXlsxRenderer.Rd
 4585e5f7ee842858e68347266294b3d7 *man/PivotOpenXlsxStyles.Rd
 3dd9e9edc8154331d4db7f12e7c5b9ce *man/PivotStyle.Rd
 d8c3e836d2b34c02aecd2e06c96401e7 *man/PivotStyles.Rd
-33f97b9c0b5fde7e88a9952f1014f767 *man/PivotTable.Rd
+4fd87e5c31fee0d1fa66a5b18d5e2d95 *man/PivotTable.Rd
 87da6797520e36ffc7c4590001f04ee2 *man/bhmtraindisruption.Rd
 d0d3aa59d398186bd3b533f66b442843 *man/bhmtrains.Rd
 f7f1125a992bd1a50e67b326d7b75f06 *man/checkArgument.Rd
@@ -130,7 +130,7 @@ ecf8cac1fdbb4ca6d84a721ceadbced4 *tests/testthat/test-A-06-dataGroupTests.R
 5a3d218624d0a6966b2bdd76b37c6da7 *tests/testthat/test-A-07-calculationTests.R
 abc1a28b7389ab56eeba06395544d2ad *tests/testthat/test-A-08-visualTotalTests.R
 c6e69393fcb5b51000d407f092714e6e *tests/testthat/test-A-09-dataTypeTests.R
-50897d01ccf744f9d770961d9dca7ee1 *tests/testthat/test-B-10-themingTests.R
+2674a1aaa8dc850aaaa8eb5025a02d75 *tests/testthat/test-B-10-themingTests.R
 f3fa1a03e64d93a5254f37deafb79f0d *tests/testthat/test-B-11-emptyGroupTests.R
 4eaf79488ac0ea3fbfcfc5060767df85 *tests/testthat/test-B-12-exportTests.R
 fa6697a63f2df52053ee685514ca87bc *tests/testthat/test-B-13-latexTests.R
