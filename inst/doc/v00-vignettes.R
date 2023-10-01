@@ -1,9 +1,9 @@
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  library(pivottabler)
 #  # arguments:  qhpvt(dataFrame, rows, columns, calculations, ...)
 #  qhpvt(bhmtrains, "TOC", "TrainCategory", "n()") # TOC = Train Operating Company
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  library(pivottabler)
 #  pt <- PivotTable$new()
 #  pt$addData(bhmtrains)
@@ -12,14 +12,14 @@
 #  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 #  pt$renderPivot()
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  # produces no pivot table
 #  library(pivottabler)
 #  pt <- PivotTable$new()
 #  pt$addData(bhmtrains)
 #  pt$renderPivot()
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  # specify the column headings
 #  library(pivottabler)
 #  pt <- PivotTable$new()
@@ -27,7 +27,7 @@
 #  pt$addColumnDataGroups("TrainCategory")   #    << **** LINE ADDED **** <<
 #  pt$renderPivot()
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  # specify the row headings
 #  library(pivottabler)
 #  pt <- PivotTable$new()
@@ -36,7 +36,7 @@
 #  pt$addRowDataGroups("TOC")                #    << **** LINE ADDED **** <<
 #  pt$renderPivot()
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  # specifying a calculation
 #  library(pivottabler)
 #  pt <- PivotTable$new()
@@ -46,7 +46,7 @@
 #  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 #  pt$renderPivot()
 
-## ---- eval=FALSE, comment=""--------------------------------------------------
+## ----eval=FALSE, comment=""---------------------------------------------------
 #  library(pivottabler)
 #  pt <- PivotTable$new()
 #  pt$addData(bhmtrains)
@@ -56,7 +56,7 @@
 #  pt$evaluatePivot()
 #  pt
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  library(pivottabler)
 #  pt <- PivotTable$new()
 #  pt$addData(bhmtrains)
@@ -66,7 +66,7 @@
 #  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 #  pt$renderPivot()
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  library(pivottabler)
 #  pt <- PivotTable$new()
 #  pt$addData(bhmtrains)
@@ -76,7 +76,7 @@
 #  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 #  pt$renderPivot()
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  library(pivottabler)
 #  pt <- PivotTable$new()
 #  pt$addData(bhmtrains)
@@ -86,7 +86,7 @@
 #  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 #  pt$renderPivot()
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  library(pivottabler)
 #  pt <- PivotTable$new()
 #  pt$addData(bhmtrains)
@@ -97,7 +97,7 @@
 #  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 #  pt$renderPivot()
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  library(pivottabler)
 #  pt <- PivotTable$new()
 #  pt$addData(bhmtrains)
@@ -108,7 +108,7 @@
 #  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 #  pt$renderPivot()
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  library(pivottabler)
 #  pt <- PivotTable$new()
 #  pt$addData(bhmtrains)
@@ -122,7 +122,7 @@
 #  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 #  pt$renderPivot()
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  library(pivottabler)
 #  pt <- PivotTable$new()
 #  pt$addData(bhmtrains)
@@ -139,26 +139,26 @@
 #  pt$defineCalculation(calculationName="TotalTrains", summariseExpression="n()")
 #  pt$renderPivot()
 
-## ---- eval=FALSE, comment=""--------------------------------------------------
+## ----eval=FALSE, comment=""---------------------------------------------------
 #  library(pivottabler)
 #  qpvt(bhmtrains, "TOC", "TrainCategory", "n()")
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  library(pivottabler)
 #  qhpvt(bhmtrains, c("=", "TOC"), c("TrainCategory", "PowerType"),
 #      c("Number of Trains"="n()", "Maximum Speed"="max(SchedSpeedMPH, na.rm=TRUE)"))
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  library(pivottabler)
 #  qhpvt(bhmtrains, "TOC", "TrainCategory", "mean(SchedSpeedMPH, na.rm=TRUE)", format="%.0f")
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  library(pivottabler)
 #  qhpvt(bhmtrains, "TOC", "TrainCategory",
 #       c("Mean Speed"="mean(SchedSpeedMPH, na.rm=TRUE)", "Std Dev Speed"="sd(SchedSpeedMPH, na.rm=TRUE)"),
 #       formats=list("%.0f", "%.1f"))
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  library(pivottabler)
 #  qhpvt(bhmtrains, "TOC", "TrainCategory",
 #       c("Mean Speed"="mean(SchedSpeedMPH, na.rm=TRUE)", "Std Dev Speed"="sd(SchedSpeedMPH, na.rm=TRUE)"),
